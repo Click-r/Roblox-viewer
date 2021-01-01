@@ -12,15 +12,6 @@ import java.util.Random;
 
 public class displayWindow {
 
-    public static Color lerpColor(Color current, Color goal, int percent){
-        float p = (float)percent/100;
-        int r,g,b;
-        r = (int)((float)(goal.getRed() - current.getRed()) * p);
-        g = (int)((float)(goal.getBlue() - current.getBlue()) * p);
-        b = (int)((float)(goal.getGreen() - current.getGreen()) * p);
-        return new Color((int)(current.getRed() + r),(int)(current.getBlue() + g),(int)(current.getGreen() + b));
-    } //fun function don't mind this
-
     public static JComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo){
         JTextPane ioDISP = new JTextPane();
         ioDISP.setText(inpOutInfo + ":");
@@ -61,7 +52,7 @@ public class displayWindow {
             dataMap.forEach((key,pair) -> {
                 key = key.toLowerCase();
                 try {
-                    String formatted = format(pair); // properly display line breaks
+                    String formatted = format(pair); // properly display line breaks and other escaped chars
 
                     if (formatted.contains("\""))
                         formatted = formatted.substring(1, formatted.length()-1);
@@ -74,6 +65,7 @@ public class displayWindow {
 
     final static String version = "0.1a";
     final static String title = "RBLXInfoViewer";
+    final static String author = "Cli_ck";
 
     public static void main(String[] args) {
         JFrame frame = new JFrame(title + " v" + version);
@@ -89,7 +81,7 @@ public class displayWindow {
 
         final int aX,aY;
         aX = 704;
-        aY = 576; //idk why these differ from the frame width and length but ok
+        aY = 576; // for some reason these differ from the frame width and length but ok
 
         frame.setBounds(200,200, x, y);
         frame.setResizable(false);
@@ -104,7 +96,6 @@ public class displayWindow {
         JPanel description = new JPanel();
         description.setBounds(15, 407, 600, 160);
         description.setBackground(infoSectionColor);
-        //description.setLayout(null);
         description.setBorder(new TitledBorder(new EtchedBorder(), "Description"));
 
         JTextArea descriptionText = new JTextArea(8, 51);
@@ -129,16 +120,26 @@ public class displayWindow {
         lastTxt = createIOField(info, "Created", lastTxt, infoSectionColor, false, 200, 25, "",comps);
         lastTxt = createIOField(info, "Banned", lastTxt, infoSectionColor, false, 200, 25, "",comps);
         comps.put(descriptionText.getName(), descriptionText);
-        //status and description to be put somewhere else
+        //status coming soon
 
-        updateVals(getInfo.searchByUsername("ROBLOX"), comps);
+        Random gen = new Random();
+        int chosen = gen.nextInt(48);
+
+        String startUser = "ROBLOX";
+
+        if (chosen == 29) {
+            startUser = author;
+        }
+    
+        updateVals(getInfo.searchByUsername(startUser), comps);
+
 
         Stack<String> cmp = new Stack<String>();
-        cmp.push("ROBLOX");
+
+        cmp.push(startUser);
 
         JButton search = new JButton();
         search.setText("Search");
-        //search.setSize(4, 4);
         search.setBounds(aX/2, aY-5, 80, 45);
         search.addActionListener(new ActionListener(){
             @Override
@@ -191,7 +192,6 @@ public class displayWindow {
 
                     randomize.setEnabled(false);
 
-                    Random gen = new Random();
                     int newId = gen.nextInt(2_000_000_000);
                     // when the total number of roblox users surpasses the 32 bit signed integer limit i'll need to start using the long data type
                     
