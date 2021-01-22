@@ -10,4 +10,4 @@ This will also allow you to view more precise data that you can't view on a ROBL
 I started this project off as something that would help me improve my Java skills, and I intend to keep it that way.
 
 # Use
-You can download the .jar file and simply run it, or you can download a copy of this project and run the displayWindow.java file, which will also run it.
+You can download the .jar file (found in the releases section) and simply run it, or you can download a copy of this project and run the displayWindow.java file, which will also run it.
