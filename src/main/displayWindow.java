@@ -8,7 +8,6 @@ import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.awt.event.*;
 import java.lang.reflect.Field;
-import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Stack;
 import java.util.Random;
@@ -52,14 +51,14 @@ public class displayWindow {
             .replace("\\\"", "\"");
     }
 
-    public static void updateVals(Player player, HashMap<String,JTextComponent> compMap) throws NullPointerException {
+    public static void updateVals(Player player, HashMap<String,JTextComponent> compMap) {
         compMap.forEach((name, comp) -> {
             name = name.toLowerCase();
             try {
                 Field toGet = Player.class.getDeclaredField(name);
                 toGet.setAccessible(true);
                 comp.setText(format(toGet.get(player).toString()));
-            } catch (NoSuchFieldException e) {} catch (IllegalAccessException err) {}
+            } catch (NoSuchFieldException | IllegalAccessException e) {}
         });
     }
 
@@ -168,9 +167,8 @@ public class displayWindow {
                         try {
                             updateVals(new Player(n1), comps);
                             cmp.push(n1);
-
-                        } catch (NumberFormatException err) {
-                            System.out.println("User named " + n1 + " does not exist!");
+                        } catch (NumberFormatException | NullPointerException err) {
+                            System.out.println("API endpoints failed to return user " + n1);
                             cmp.push(n2);
                         }
 

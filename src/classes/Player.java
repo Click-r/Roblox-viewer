@@ -33,11 +33,8 @@ public class Player {
 
             try {
                 converted = Long.valueOf(strContent);
-            } catch (NumberFormatException err) {}
-
-            try {
                 data = getInfo.getInformation(converted);
-            } catch (SocketTimeoutException t) {}
+            } catch (NumberFormatException | SocketTimeoutException err) {}
 
         } else if (String.class.equals(cls)) {
             data = getInfo.searchByUsername(strContent);

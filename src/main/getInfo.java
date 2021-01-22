@@ -12,10 +12,6 @@ import java.net.*;
 
 import java.util.Stack;
 
-//import java.util.Random;
-//import java.util.List;
-//import java.util.ArrayList;
-
 public class getInfo {
 
     @SuppressWarnings("unchecked")
@@ -55,10 +51,8 @@ public class getInfo {
 
                     id.push(Long.valueOf((String)((HashMap<String, Object>)JSONtoHashtable.toHashtable(txtResponse).get("data")).get("id")));
 
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
                 } catch (IOException e) {
-                    System.out.println("User most likely doesn't exist, check the name which you have entered or check your internet connection.");
+                    e.printStackTrace();
                 }
             }
         };
@@ -190,7 +184,7 @@ public class getInfo {
             String beaned = data.get("isBanned");
             
             data.remove("isBanned");
-            data.put("Banned", beaned);
+            data.put("banned", beaned);
         }
         
         return data;
