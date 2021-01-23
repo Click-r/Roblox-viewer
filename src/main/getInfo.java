@@ -63,7 +63,7 @@ public class getInfo {
         long Id = 1L;
 
         try {
-            Id = id.get(1, TimeUnit.SECONDS);
+            Id = id.get(5, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             return requested;
         }
