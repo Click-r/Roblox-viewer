@@ -22,13 +22,11 @@ public class Player {
      * @param identifier
      */
     public Player(Object identifier) {
-        Class<?> cls = identifier.getClass();
-        
         HashMap<String, String> data = new HashMap<String, String>();
 
         String strContent = identifier.toString();
 
-        if ( Long.class.equals(cls) || Integer.class.equals(cls) ) {
+        if (identifier instanceof Number) {
             long converted = 1L;
 
             try {
@@ -36,7 +34,7 @@ public class Player {
                 data = getInfo.getInformation(converted);
             } catch (NumberFormatException | SocketTimeoutException err) {}
 
-        } else if (String.class.equals(cls)) {
+        } else if (identifier instanceof String) {
             data = getInfo.searchByUsername(strContent);
         }
 

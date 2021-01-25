@@ -64,15 +64,8 @@ public class getInfo {
 
         try {
             Id = id.get(5, TimeUnit.SECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            return requested;
-        }
-
-        try {
             requested = getInformation(Id);
-        } catch (SocketTimeoutException err) {
-            System.out.println("Timed out");
-        }
+        } catch (InterruptedException | ExecutionException | TimeoutException | SocketTimeoutException e) {}
 
         return requested;
     }

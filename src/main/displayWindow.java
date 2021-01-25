@@ -10,7 +10,6 @@ import java.awt.event.*;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Stack;
-import java.util.Random;
 
 import classes.*;
 
@@ -126,12 +125,11 @@ public class displayWindow {
         comps.put(descriptionText.getName(), descriptionText);
         //status coming soon
 
-        Random gen = new Random();
-        int chosen = gen.nextInt(48);
+        long chosen = randomLong(1L, 48L);
 
         String startUser = "ROBLOX";
 
-        if (chosen == 29) {
+        if (chosen == 29L) {
             startUser = author;
         }
     
