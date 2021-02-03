@@ -15,7 +15,7 @@ import classes.*;
 
 public class displayWindow {
 
-    public static JComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo){
+    public static JTextComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo){
         JTextPane ioDISP = new JTextPane();
         ioDISP.setText(inpOutInfo + ":");
         if (last == null)
@@ -65,7 +65,7 @@ public class displayWindow {
         return min + (long) (Math.random() * (max - min));
     }
 
-    final static String version = "0.1b";
+    final static String version = "0.2";
     final static String title = "RBLXInfoViewer";
     final static String author = "Cli_ck";
 
@@ -76,7 +76,7 @@ public class displayWindow {
 
         final Color infoSectionColor = new Color(218,218,218);
 
-        JComponent lastTxt = null;
+        JTextComponent lastTxt = null;
 
         int x,y;
         x = 800;
@@ -90,12 +90,14 @@ public class displayWindow {
         frame.setResizable(false);
         frame.setPreferredSize(new Dimension(x,y));
 
+        // general info
         JPanel info = new JPanel();
         info.setBounds(15, 15, 450, 300);
         info.setBackground(infoSectionColor);
         info.setLayout(null);
         info.setBorder(new TitledBorder(new EtchedBorder() , "General Info"));
 
+        // description
         JPanel description = new JPanel();
         description.setBounds(15, 407, 600, 160);
         description.setBackground(infoSectionColor);
@@ -107,11 +109,29 @@ public class displayWindow {
         descriptionText.setEditable(false);
         descriptionText.setName("description");
 
-        JScrollPane scroll = new JScrollPane(descriptionText);
-        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        JScrollPane descScroll = new JScrollPane(descriptionText);
+        descScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
-        description.add(scroll);
+        description.add(descScroll);
         descriptionText.setVisible(true);
+
+        // status
+        JPanel status = new JPanel();
+        status.setBounds(15, description.getY() - 86, 600, 80);
+        status.setBackground(infoSectionColor);
+        status.setBorder(new TitledBorder(new EtchedBorder(), "Status"));
+
+        JTextArea statusText = new JTextArea(3,51);
+        statusText.setLineWrap(true);
+        statusText.setWrapStyleWord(true);
+        statusText.setEditable(false);
+        statusText.setName("status");
+        
+        JScrollPane statScroll = new JScrollPane(statusText);
+        statScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+        status.add(statScroll);
+        statusText.setVisible(true);
 
         HashMap<String, JTextComponent> comps = new HashMap<String, JTextComponent>();
 
@@ -123,6 +143,7 @@ public class displayWindow {
         lastTxt = createIOField(info, "Created", lastTxt, infoSectionColor, false, 200, 25, "",comps);
         lastTxt = createIOField(info, "Banned", lastTxt, infoSectionColor, false, 200, 25, "",comps);
         comps.put(descriptionText.getName(), descriptionText);
+        comps.put(statusText.getName(), statusText);
         //status coming soon
 
         long chosen = randomLong(1L, 48L);
@@ -208,6 +229,7 @@ public class displayWindow {
         frame.add(info);
         frame.add(search);
         frame.add(description);
+        frame.add(status);
 
         frame.setLayout(null);
 

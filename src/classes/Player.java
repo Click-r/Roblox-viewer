@@ -10,34 +10,23 @@ import main.getInfo;
 public class Player {
 
     public long id;
-    public String name;
-    public String created;
-    public String description;
+    public String name, created, description, status;
     public int friends, followings, followers;
     public boolean banned;
 
-    /**
-     * Takes either a user id of type <code>long</code> or a username of type <code>String</code>.  
-     * If the value provided is neither, it will retrieve data from the ROBLOX profile by default.
-     * @param identifier
-     */
-    public Player(Object identifier) {
-        HashMap<String, String> data = new HashMap<String, String>();
+    public Player(Number id) {
+        long num = (long) id;
 
-        String strContent = identifier.toString();
+        try {
+            load(getInfo.getInformation(num));
+        } catch (NumberFormatException | SocketTimeoutException err) {}
+    }
 
-        if (identifier instanceof Number) {
-            long converted = 1L;
+    public Player(String username) {
+        load(getInfo.searchByUsername(username));
+    }
 
-            try {
-                converted = Long.valueOf(strContent);
-                data = getInfo.getInformation(converted);
-            } catch (NumberFormatException | SocketTimeoutException err) {}
-
-        } else if (identifier instanceof String) {
-            data = getInfo.searchByUsername(strContent);
-        }
-
+    private void load(HashMap<String, String> data) {
         this.id = Long.valueOf(data.get("id"));
         this.created = data.get("created");
         this.friends = Integer.valueOf(data.get("friends"));
@@ -50,6 +39,9 @@ public class Player {
         this.description = this.description.substring(1, this.description.length() - 1); 
 
         this.name = data.get("name");
-        this.name = this.name.substring(1, this.name.length()-1);
+        this.name = this.name.substring(1, this.name.length() - 1);
+
+        this.status = data.get("status");
+        this.status = this.status.substring(1, this.status.length() - 1);
     }
 }

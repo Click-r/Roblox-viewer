@@ -90,7 +90,9 @@ public class getInfo {
         // Start of multi-threaded data retrieval
         Stack<Integer> buffer = new Stack<Integer>();
 
-        ThreadPoolExecutor retrieve = (ThreadPoolExecutor) Executors.newFixedThreadPool(5);
+        final int maxThreads = 5;
+
+        ThreadPoolExecutor retrieve = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
 
         for (final String domain : apiDomains){
             retrieve.submit(() -> {
