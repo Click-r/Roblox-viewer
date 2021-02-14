@@ -142,9 +142,9 @@ public class displayWindow {
         lastTxt = createIOField(info, "Followers", lastTxt, infoSectionColor, false, 200, 25, "",comps);
         lastTxt = createIOField(info, "Created", lastTxt, infoSectionColor, false, 200, 25, "",comps);
         lastTxt = createIOField(info, "Banned", lastTxt, infoSectionColor, false, 200, 25, "",comps);
+        lastTxt = createIOField(info, "LastOnline", lastTxt, infoSectionColor, false, 200, 25, "", comps);
         comps.put(descriptionText.getName(), descriptionText);
         comps.put(statusText.getName(), statusText);
-        //status coming soon
 
         long chosen = randomLong(1L, 48L);
 
@@ -216,8 +216,8 @@ public class displayWindow {
                     
                     try {
                         updateVals(new Player(newId), comps);
-                    } catch (NumberFormatException err) {
-                        System.out.println("Thread timed out");
+                    } catch (NumberFormatException | NullPointerException err) {
+                        System.out.println("API endpoints failed to return user with ID of " + newId);
                     }
 
                     randomize.setEnabled(true);

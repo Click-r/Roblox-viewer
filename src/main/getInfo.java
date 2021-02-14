@@ -14,7 +14,11 @@ import java.util.Stack;
 
 import java.util.concurrent.*;
 
+import classes.Link;
+
 public class getInfo {
+
+    final static int numData = classes.Player.class.getDeclaredFields().length;
 
     @SuppressWarnings("unchecked")
 
@@ -70,7 +74,6 @@ public class getInfo {
         return requested;
     }
 
-
     public static HashMap<String, String> getInformation(long userId) throws SocketTimeoutException {
 
         HashMap<String, String> data = new HashMap<String, String>();
@@ -82,7 +85,17 @@ public class getInfo {
             "https://users.roblox.com/v1/users/" + userId + "/status/ ",
             base + "/friends/count",
             base + "/followers/count",
-            base + "/followings/count"
+            base + "/followings/count",
+            "https://api.roblox.com/users/" + userId + "/onlinestatus/"
+        };
+
+        final String[][] toFilter = {
+            new String[]{"displayName"},
+            null,
+            null,
+            null,
+            null,
+            new String[]{"GameId", "LastLocation", "LocationType", "PlaceId", "VisitorId", "PresenceType", "UniverseId"}
         };
 
         boolean properlyParsed = true;
@@ -94,48 +107,47 @@ public class getInfo {
 
         ThreadPoolExecutor retrieve = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
 
+        int index = 0;
+
         for (final String domain : apiDomains){
+            int ind = index;
+
+            Future<HashMap<String, String>> fetched = retrieve.submit(() -> {
+                HashMap<String, String> toReturn = new HashMap<String, String>();
+
+                try {
+                    Link con = new Link(domain);
+
+                    toReturn = con.filter(toFilter[ind]);
+
+                    buffer.push(1); // fill buffer upon thread completion
+
+                } catch (IOException e) {
+                    int remainingBuffer = 5 - buffer.size();
+                    for (int i = 0; i < remainingBuffer; i++)
+                        buffer.push(1);
+                    return toReturn;
+                }
+
+                return toReturn;
+            });
+
             retrieve.submit(() -> {
                 try {
-                    URL api = new URL(domain);
-                    URLConnection apiConnection = api.openConnection();
-                    apiConnection.setConnectTimeout(5000);
-                    apiConnection.connect();
-                    InputStream response = apiConnection.getInputStream();
-                    String textResponse = "NaN";
-            
-                    try (Scanner scanner = new Scanner(response)) {
-                        String responseBody = scanner.useDelimiter("\\A").next();
-                        textResponse = responseBody;
-                    }
-            
-                    HashMap<String,Object> subData = JSONtoHashtable.toHashtable(textResponse);
+                    HashMap<String, String> result = (HashMap<String, String>) fetched.get(3, TimeUnit.SECONDS);
+                    
+                    if (result.size() < 1)
+                        buffer.push(1);
 
-                    subData.forEach( 
-                        (key,val) ->
-                            {
-                                String name = key;
-                                if (subData.size() == 1){
-                                    String[] urlName = domain.split("/");
-                                    name = urlName[urlName.length - 2];
-                                }
-                                data.put(name, (String)val);
-                            }
-                        );
-                            
-                    buffer.push(1); // fill buffer upon thread completion
-            
-                    } catch (IOException e) {
-                        int remainingBuffer = 5 - buffer.size();
-                        for (int i = 0; i < remainingBuffer; i++)
-                            buffer.push(1);
-                        return;
-                    }
-                }
+                    data.putAll(result);
+                } catch (TimeoutException|InterruptedException|ExecutionException timeout) {}
+            }
             );
+
+            index++;
         }
 
-        while (buffer.size() < 5) {
+        while (buffer.size() < apiDomains.length) {
             try {
                 Thread.sleep(2L);
             } catch (InterruptedException inter) {}
@@ -144,20 +156,29 @@ public class getInfo {
         retrieve.shutdownNow();
         //End of multi-threaded data retrieval
 
-        properlyParsed &= data.size() == 10;
+        properlyParsed &= (data.size() == numData);
 
         if (properlyParsed) {
             String creationDate = data.get("created").split("T")[0];
             
             data.replace("created", creationDate.substring(1,creationDate.length()));
-            data.remove("displayName");
 
             String beaned = data.get("isBanned");
             
             data.remove("isBanned");
             data.put("banned", beaned);
+
+            String online = data.get("IsOnline");
+
+            data.remove("IsOnline");
+            data.put("online", online);
+
+            String lastOnline = data.get("LastOnline").split("T")[0];
+
+            data.remove("LastOnline");
+            data.put("lastonline", lastOnline);
         }
-        
+
         return data;
     }
 

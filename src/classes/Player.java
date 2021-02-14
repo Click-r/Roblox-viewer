@@ -10,9 +10,9 @@ import main.getInfo;
 public class Player {
 
     public long id;
-    public String name, created, description, status;
+    public String name, created, description, status, lastonline;
     public int friends, followings, followers;
-    public boolean banned;
+    public boolean banned, isOnline;
 
     public Player(Number id) {
         long num = (long) id;
@@ -43,5 +43,7 @@ public class Player {
 
         this.status = data.get("status");
         this.status = this.status.substring(1, this.status.length() - 1);
+
+        this.lastonline = data.get("lastonline").substring(1);
     }
 }
