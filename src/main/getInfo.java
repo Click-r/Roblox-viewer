@@ -2,8 +2,6 @@ package main;
 
 import java.util.HashMap;
 
-import java.util.Scanner;
-
 import java.io.*;
 
 import java.nio.charset.*;
@@ -22,38 +20,19 @@ public class getInfo {
 
     @SuppressWarnings("unchecked")
 
-    public static HashMap<String, String> searchByUsername(String username){
+    public static HashMap<String, Object> searchByUsername(String username){
         final Charset UTF_8 = StandardCharsets.UTF_8;
         ExecutorService exec = Executors.newSingleThreadExecutor();
 
         Future<Long> id = exec.submit(() -> {
             try {
-                URL apiEndpoint = new URL("https://users.roblox.com/v1/usernames/users");
-
-                URLConnection apiConnect = apiEndpoint.openConnection();
-                HttpURLConnection httpCon = (HttpURLConnection)apiConnect;
-
                 byte[] out = ("{\"usernames\":[\"" + username +"\"], \"excludeBannedUsers\":false}").getBytes(UTF_8);
-                int len = out.length;
 
-                httpCon.setRequestMethod("POST");
-                httpCon.setDoOutput(true);
-                httpCon.setFixedLengthStreamingMode(len);
-                httpCon.setRequestProperty("Content-type", "application/json; charset=UTF-8");
-                httpCon.connect();
+                Link info = new Link("https://users.roblox.com/v1/usernames/users", out);
+                HashMap<String, Object> data = (HashMap<String, Object>) info.data.get("usernames");
+                String Id = (String) data.get("id");
 
-                try (OutputStream os = httpCon.getOutputStream()) {
-                    os.write(out);
-                }
-
-                InputStream response = httpCon.getInputStream();
-                String txtResponse = "NaN";
-
-                try (Scanner scanner = new Scanner(response)){
-                    txtResponse = scanner.useDelimiter("\\A").next();
-                }
-
-                return Long.valueOf((String)((HashMap<String, Object>)JSONtoHashtable.toHashtable(txtResponse).get("data")).get("id"));
+                return Long.valueOf(Id);
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -62,21 +41,22 @@ public class getInfo {
             return 1L;
         });
 
-        HashMap<String, String> requested = new HashMap<String, String>();
+        HashMap<String, Object> requested = new HashMap<String, Object>();
 
         long Id = 1L;
 
         try {
             Id = id.get(5, TimeUnit.SECONDS);
             requested = getInformation(Id);
-        } catch (InterruptedException | ExecutionException | TimeoutException | SocketTimeoutException e) {}
-
+        } catch (InterruptedException | ExecutionException | TimeoutException | SocketTimeoutException e) {
+            e.printStackTrace();
+        }
         return requested;
     }
 
-    public static HashMap<String, String> getInformation(long userId) throws SocketTimeoutException {
+    public static HashMap<String, Object> getInformation(long userId) throws SocketTimeoutException {
 
-        HashMap<String, String> data = new HashMap<String, String>();
+        HashMap<String, Object> data = new HashMap<String, Object>();
 
         final String base = "https://friends.roblox.com/v1/users/" + userId;
 
@@ -112,8 +92,8 @@ public class getInfo {
         for (final String domain : apiDomains){
             int ind = index;
 
-            Future<HashMap<String, String>> fetched = retrieve.submit(() -> {
-                HashMap<String, String> toReturn = new HashMap<String, String>();
+            Future<HashMap<String, Object>> fetched = retrieve.submit(() -> {
+                HashMap<String, Object> toReturn = new HashMap<String, Object>();
 
                 try {
                     Link con = new Link(domain);
@@ -134,7 +114,7 @@ public class getInfo {
 
             retrieve.submit(() -> {
                 try {
-                    HashMap<String, String> result = (HashMap<String, String>) fetched.get(3, TimeUnit.SECONDS);
+                    HashMap<String, Object> result = (HashMap<String, Object>) fetched.get(3, TimeUnit.SECONDS);
                     
                     if (result.size() < 1)
                         buffer.push(1);
@@ -159,21 +139,23 @@ public class getInfo {
         properlyParsed &= (data.size() == numData);
 
         if (properlyParsed) {
-            String creationDate = data.get("created").split("T")[0];
+            String creationDate = (String) data.get("created");
+            creationDate = creationDate.split("T")[0];
             
             data.replace("created", creationDate.substring(1,creationDate.length()));
 
-            String beaned = data.get("isBanned");
+            String beaned = (String) data.get("isBanned");
             
             data.remove("isBanned");
             data.put("banned", beaned);
 
-            String online = data.get("IsOnline");
+            String online = (String) data.get("IsOnline");
 
             data.remove("IsOnline");
             data.put("online", online);
 
-            String lastOnline = data.get("LastOnline").split("T")[0];
+            String lastOnline = (String) data.get("LastOnline");
+            lastOnline = lastOnline.split("T")[0];
 
             data.remove("LastOnline");
             data.put("lastonline", lastOnline);

@@ -1,5 +1,7 @@
 package classes;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import main.getInfo;
@@ -9,10 +11,10 @@ import main.getInfo;
 */
 public class Player {
 
-    public long id;
+    public Long id;
     public String name, created, description, status, lastonline;
-    public int friends, followings, followers;
-    public boolean banned, isOnline;
+    public Integer friends, followings, followers;
+    public Boolean banned, online;
 
     public Player(Number id) {
         long num = (long) id;
@@ -26,24 +28,29 @@ public class Player {
         load(getInfo.searchByUsername(username));
     }
 
-    private void load(HashMap<String, String> data) {
-        this.id = Long.valueOf(data.get("id"));
-        this.created = data.get("created");
-        this.friends = Integer.valueOf(data.get("friends"));
-        this.followings = Integer.valueOf(data.get("followings"));
-        this.followers = Integer.valueOf(data.get("followers"));
-        this.banned = Boolean.valueOf(data.get("banned"));
+    private void load(HashMap<String, Object> data) {
+        data.forEach((key,val) -> {
+            try {
+                Field writeTo = this.getClass().getDeclaredField((String) key);
+                Class<?> type = writeTo.getType();
 
-        //remove the quote marks
-        this.description = data.get("description");
+                if (type.getName().equals("java.lang.String")) {
+                    writeTo.set(this, (String) val);
+                    return;
+                }
+
+                Method cast = type.getMethod("valueOf", String.class);
+                writeTo.set(this, cast.invoke(null, val));
+            } catch (Exception e) {}
+        });
+
+        modify();
+    }
+
+    private void modify(){
         this.description = this.description.substring(1, this.description.length() - 1); 
-
-        this.name = data.get("name");
         this.name = this.name.substring(1, this.name.length() - 1);
-
-        this.status = data.get("status");
         this.status = this.status.substring(1, this.status.length() - 1);
-
-        this.lastonline = data.get("lastonline").substring(1);
+        this.lastonline = this.lastonline.substring(1); 
     }
 }
