@@ -10,12 +10,20 @@ import java.util.Scanner;
 
 import main.*;
 
+/** Establishes a connection and allows interaction with ROBLOX API endpoints. */
+
 public class Link {
     public HashMap<String, Object> data;
     public String method;
     
     private HttpURLConnection connection;
     private byte[] payload;
+
+    /**
+     * Retrieves data from a website via the GET method.
+     * @param link
+     * @throws IOException
+    */
 
     public Link(String link) throws IOException {
         this.method = "GET";
@@ -26,6 +34,13 @@ public class Link {
 
         this.data = getData(link, this.method);
     }
+
+    /**
+     * Sends a JSON payload to a website and attempts to retrieve data via the POST method.
+     * @param link
+     * @param payload - must be of type <code>byte[]</code> and encoded in <code>UTF-8</code>.
+     * @throws IOException
+    */
 
     public Link(String link, byte[] payload) throws IOException {
         this.method = "POST";
@@ -74,6 +89,12 @@ public class Link {
         
         return data;
     }
+
+    /**
+     * <p>Removes any unwanted key-value pairs from the present <code>Link</code> instance's <code>HashMap</code> using the key.</p>
+     * @param unwantedKeys - may be set to <code>null</code> to signfy no keys should be filtered.
+     * @return the current instance's filtered <code>HashMap</code>.
+    */
 
     public HashMap<String, Object> filter(String[] unwantedKeys) {
         if (unwantedKeys == null)

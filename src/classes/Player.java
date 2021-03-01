@@ -6,15 +6,19 @@ import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import main.getInfo;
 
-/** A class for the player which allows for general information to be retrieved.
-* Utilizies ROBLOX API endpoints to retieve the data.
-*/
+/** A class for the player which allows for general information to be retrieved. Utilizies ROBLOX API endpoints to retrieve the data. */
 public class Player {
 
     public Long id;
     public String name, created, description, status, lastonline;
     public Integer friends, followings, followers;
     public Boolean banned, online;
+
+    /**
+     * <p>Takes any <code>Number</code> as a user ID and retrieves information about the user.</p>
+     * <p>May occasionally fail to return a user's information due to API endpoints being wiped of user data.</p>
+     * @param id
+    */
 
     public Player(Number id) {
         long num = (long) id;
@@ -23,6 +27,12 @@ public class Player {
             load(getInfo.getInformation(num));
         } catch (NumberFormatException | SocketTimeoutException err) {}
     }
+
+    /**
+     * <p>Takes any <code>String</code> as a user ID and retrieves information about the user.</p>
+     * <p>May occasionally fail to return a user's information due to API endpoints being wiped of user data.</p>
+     * @param username
+    */
 
     public Player(String username) {
         load(getInfo.searchByUsername(username));
