@@ -1,17 +1,13 @@
 package main;
 
 import java.util.HashMap;
-
+import java.util.List;
+import java.util.Map;
 import java.io.*;
-
 import java.nio.charset.*;
-
 import java.net.*;
-
 import java.util.Stack;
-
 import java.util.concurrent.*;
-
 import classes.Link;
 
 public class getInfo {
@@ -20,17 +16,19 @@ public class getInfo {
 
     @SuppressWarnings("unchecked")
 
-    public static HashMap<String, Object> searchByUsername(String username){
+    public static Map<String, Object> searchByUsername(String username){
         final Charset UTF_8 = StandardCharsets.UTF_8;
         ExecutorService exec = Executors.newSingleThreadExecutor();
 
         Future<Long> id = exec.submit(() -> {
             try {
                 byte[] out = ("{\"usernames\":[\"" + username +"\"], \"excludeBannedUsers\":false}").getBytes(UTF_8);
-
                 Link info = new Link("https://users.roblox.com/v1/usernames/users", out);
-                HashMap<String, Object> data = (HashMap<String, Object>) info.data.get("usernames");
-                String Id = (String) data.get("id");
+
+                List<?> arrData = (List<?>) info.data.get("usernames");
+                Map<String, Object> data = (Map<String, Object>) arrData.get(0);
+
+                String Id = data.get("id").toString();
 
                 return Long.valueOf(Id);
 
@@ -41,7 +39,7 @@ public class getInfo {
             return 1L;
         });
 
-        HashMap<String, Object> requested = new HashMap<String, Object>();
+        Map<String, Object> requested = new HashMap<String, Object>();
 
         long Id = 1L;
 
@@ -54,9 +52,9 @@ public class getInfo {
         return requested;
     }
 
-    public static HashMap<String, Object> getInformation(long userId) throws SocketTimeoutException {
+    public static Map<String, Object> getInformation(long userId) throws SocketTimeoutException {
 
-        HashMap<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> data = new HashMap<String, Object>();
 
         final String base = "https://friends.roblox.com/v1/users/" + userId;
 
@@ -92,8 +90,8 @@ public class getInfo {
         for (final String domain : apiDomains){
             int ind = index;
 
-            Future<HashMap<String, Object>> fetched = retrieve.submit(() -> {
-                HashMap<String, Object> toReturn = new HashMap<String, Object>();
+            Future<Map<String, Object>> fetched = retrieve.submit(() -> {
+                Map<String, Object> toReturn = new HashMap<String, Object>();
 
                 try {
                     Link con = new Link(domain);
@@ -114,7 +112,7 @@ public class getInfo {
 
             retrieve.submit(() -> {
                 try {
-                    HashMap<String, Object> result = (HashMap<String, Object>) fetched.get(3, TimeUnit.SECONDS);
+                    Map<String, Object> result = fetched.get(3, TimeUnit.SECONDS);
                     
                     if (result.size() < 1)
                         buffer.push(1);
@@ -142,14 +140,14 @@ public class getInfo {
             String creationDate = (String) data.get("created");
             creationDate = creationDate.split("T")[0];
             
-            data.replace("created", creationDate.substring(1,creationDate.length()));
+            data.replace("created", creationDate);
 
-            String beaned = (String) data.get("isBanned");
+            boolean beaned = (boolean) data.get("isBanned");
             
             data.remove("isBanned");
             data.put("banned", beaned);
 
-            String online = (String) data.get("IsOnline");
+            boolean online = (boolean) data.get("IsOnline");
 
             data.remove("IsOnline");
             data.put("online", online);
@@ -159,6 +157,9 @@ public class getInfo {
 
             data.remove("LastOnline");
             data.put("lastonline", lastOnline);
+
+            long id = Long.valueOf(data.get("id").toString());
+            data.replace("id", id);
         }
 
         return data;

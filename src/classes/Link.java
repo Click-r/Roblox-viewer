@@ -5,15 +5,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.Scanner;
-
-import main.*;
+import org.json.*;
 
 /** Establishes a connection and allows interaction with ROBLOX API endpoints. */
 
 public class Link {
-    public HashMap<String, Object> data;
+    public Map<String, Object> data;
     public String method;
     
     private HttpURLConnection connection;
@@ -56,8 +56,8 @@ public class Link {
         this.data = getData(link, this.method);
     }
 
-    private HashMap<String, Object> getData(String link, String method) throws IOException {
-        HashMap<String, Object> data = new HashMap<String, Object>();
+    private Map<String, Object> getData(String link, String method) throws IOException {
+        Map<String, Object> data = new HashMap<String, Object>();
 
         this.connection.connect();
 
@@ -74,7 +74,8 @@ public class Link {
             textResponse = responseBody;
         }
 
-        HashMap<String,Object> subData = JSONtoHashtable.toHashtable(textResponse);
+        JSONObject json = new JSONObject(textResponse);
+        Map<String,Object> subData = json.toMap();
 
         subData.forEach((key,val) -> {
             String name = key;
@@ -96,7 +97,7 @@ public class Link {
      * @return the current instance's filtered <code>HashMap</code>.
     */
 
-    public HashMap<String, Object> filter(String[] unwantedKeys) {
+    public Map<String, Object> filter(String[] unwantedKeys) {
         if (unwantedKeys == null)
             return this.data;
 
