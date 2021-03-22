@@ -11,3 +11,6 @@ I started this project off as something that would help me improve my Java skill
 
 # Use
 You can download the .jar file (found in the releases section) and simply run it, or you can download a copy of this project and run the displayWindow.java file, which will also run it.
+
+# External libraries used
+- https://github.com/stleary/JSON-java : Handles JSON for the program.
