@@ -7,10 +7,35 @@ import java.io.*;
 import java.nio.charset.*;
 import java.net.*;
 import java.util.Stack;
+import java.time.*;
+import java.util.Calendar;
 import java.util.concurrent.*;
+
 import classes.Link;
 
 public class getInfo {
+
+    public static String dateLocalTime(String time) {
+        String abbrev = Calendar
+          .getInstance()
+          .getTimeZone()
+          .getDisplayName(false, java.util.TimeZone.SHORT);
+
+        ZoneId zId = Calendar
+          .getInstance()
+          .getTimeZone()
+          .toZoneId();
+
+        String local = Instant
+          .parse(time)
+          .atZone(zId)
+          .toLocalDateTime()
+          .toString()
+          .split("\\.")[0];
+        local = local.replaceAll("T", " @ ");
+
+        return local + " " + abbrev;
+    }
 
     final static int numData = classes.Player.class.getDeclaredFields().length;
 
@@ -138,7 +163,7 @@ public class getInfo {
 
         if (properlyParsed) {
             String creationDate = (String) data.get("created");
-            creationDate = creationDate.split("T")[0];
+            creationDate = dateLocalTime(creationDate);
             
             data.replace("created", creationDate);
 
@@ -153,7 +178,7 @@ public class getInfo {
             data.put("online", online);
 
             String lastOnline = (String) data.get("LastOnline");
-            lastOnline = lastOnline.split("T")[0];
+            lastOnline = dateLocalTime(lastOnline);
 
             data.remove("LastOnline");
             data.put("lastonline", lastOnline);
