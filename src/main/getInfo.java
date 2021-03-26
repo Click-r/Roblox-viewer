@@ -3,13 +3,16 @@ package main;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.io.*;
-import java.nio.charset.*;
-import java.net.*;
 import java.util.Stack;
-import java.time.*;
 import java.util.Calendar;
 import java.util.concurrent.*;
+
+import java.io.*;
+import java.net.*;
+
+import java.nio.charset.*;
+
+import java.time.*;
 
 import classes.Link;
 
@@ -26,13 +29,14 @@ public class getInfo {
           .getTimeZone()
           .toZoneId();
 
-        String local = Instant
+        String local = ZonedDateTime
           .parse(time)
+          .toInstant()
           .atZone(zId)
-          .toLocalDateTime()
           .toString()
           .split("\\.")[0];
         local = local.replaceAll("T", " @ ");
+        
 
         return local + " " + abbrev;
     }

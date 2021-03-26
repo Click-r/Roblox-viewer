@@ -3,17 +3,26 @@ package main;
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
 
 import java.awt.*;
 import java.awt.event.*;
+
 import java.lang.reflect.Field;
+
 import java.util.HashMap;
-import java.util.Stack;
 
 import classes.*;
 
 public class displayWindow {
+    final static String version = "0.4";
+    final static String title = "RBLXInfoViewer";
+    final static String author = "Cli_ck";
+
+    static String lastModifed;
+    static Player last;
 
     public static JTextComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo){
         JTextPane ioDISP = new JTextPane();
@@ -33,6 +42,24 @@ public class displayWindow {
         ioF.setHorizontalAlignment(JTextField.LEFT);
         ioF.setText(Default);
         ioF.setName(inpOutInfo);
+
+        if (editable) 
+            ioF.getDocument().addDocumentListener(new DocumentListener() {
+                @Override
+                public void insertUpdate(DocumentEvent e) {
+                    lastModifed = ioF.getName().toLowerCase();
+                }
+
+                @Override
+                public void removeUpdate(DocumentEvent e) {
+                    lastModifed = ioF.getName().toLowerCase();
+                }
+
+                @Override
+                public void changedUpdate(DocumentEvent e) {
+                    lastModifed = ioF.getName().toLowerCase();
+                }
+            });
         
         parentTo.add(ioDISP);
         parentTo.add(ioF);
@@ -59,15 +86,13 @@ public class displayWindow {
                 comp.setText(format(toGet.get(player).toString()));
             } catch (NoSuchFieldException | IllegalAccessException e) {}
         });
+
+        last = player;
     }
 
     public static long randomLong(long min, long max) {
         return min + (long) (Math.random() * (max - min));
     }
-
-    final static String version = "0.2";
-    final static String title = "RBLXInfoViewer";
-    final static String author = "Cli_ck";
 
     public static void main(String[] args) {
 
@@ -136,7 +161,7 @@ public class displayWindow {
         HashMap<String, JTextComponent> comps = new HashMap<String, JTextComponent>();
 
         lastTxt = createIOField(info, "Name", lastTxt, infoSectionColor, true, 200, 25, "ROBLOX",comps);
-        lastTxt = createIOField(info, "ID", lastTxt, infoSectionColor, false, 200, 25, "1",comps);
+        lastTxt = createIOField(info, "ID", lastTxt, infoSectionColor, true, 200, 25, "1",comps);
         lastTxt = createIOField(info, "Friends", lastTxt, infoSectionColor, false, 200, 25, "",comps);
         lastTxt = createIOField(info, "Followings", lastTxt, infoSectionColor, false, 200, 25, "",comps);
         lastTxt = createIOField(info, "Followers", lastTxt, infoSectionColor, false, 200, 25, "",comps);
@@ -156,11 +181,6 @@ public class displayWindow {
     
         updateVals(new Player(startUser), comps);
 
-
-        Stack<String> cmp = new Stack<String>();
-
-        cmp.push(startUser);
-
         JButton search = new JButton();
         search.setText("Search");
         search.setBounds(aX/2, aY-5, 80, 45);
@@ -171,28 +191,32 @@ public class displayWindow {
 
                     search.setEnabled(false);
 
-                    String name = comps
-                        .get("name")
-                        .getText();
-                    cmp.push(name);
+                    boolean same = false;
 
-                    String n1,n2;
+                    if (lastModifed.equals("name")) {
+                        String name = comps
+                          .get("name")
+                          .getText();
 
-                    n1 = cmp.pop().toLowerCase();
-                    n2 = cmp.pop().toLowerCase();
+                        same = last.name.equals(name);
+                    } else {
+                        long id = Long.valueOf(comps.get("id").getText());
 
-                    if (!n1.equals(n2)) {
+                        same = last.id.equals(id);
+                    }
 
+                    if (!same) {
+                        String input = comps.get(lastModifed.toLowerCase()).getText();
+                        
                         try {
-                            updateVals(new Player(n1), comps);
-                            cmp.push(n1);
+                            if (lastModifed.equals("name"))
+                                updateVals(new Player(input), comps);
+                            else 
+                                updateVals(new Player(Long.valueOf(input)), comps);
                         } catch (NumberFormatException | NullPointerException err) {
-                            System.out.println("API endpoints failed to return user " + n1);
-                            cmp.push(n2);
+                            System.out.println("API endpoints failed to return user with name/id " + input);
                         }
 
-                    } else {
-                        cmp.push(n2);
                     }
                     
                     search.setEnabled(true);
