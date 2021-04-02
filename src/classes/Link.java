@@ -1,13 +1,18 @@
 package classes;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+
 import java.net.HttpURLConnection;
 import java.net.URL;
+
+import java.nio.charset.StandardCharsets;
+
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Scanner;
+
 import org.json.*;
 
 /** Establishes a connection and allows interaction with ROBLOX API endpoints. */
@@ -42,15 +47,15 @@ public class Link {
      * @throws IOException
     */
 
-    public Link(String link, byte[] payload) throws IOException {
+    public Link(String link, String payload) throws IOException {
         this.method = "POST";
-        this.payload = payload;
+        this.payload = payload.getBytes(StandardCharsets.UTF_8);
         URL site = new URL(link);
 
         this.connection = (HttpURLConnection) site.openConnection();
         this.connection.setRequestMethod(this.method);
         this.connection.setDoOutput(true);
-        this.connection.setFixedLengthStreamingMode(payload.length);
+        this.connection.setFixedLengthStreamingMode(this.payload.length);
         this.connection.setRequestProperty("Content-type", "application/json; charset=UTF-8");
 
         this.data = getData(link, this.method);
@@ -66,7 +71,7 @@ public class Link {
             os.write(this.payload);
         }
 
-        InputStream response = this.connection.getInputStream();
+        InputStreamReader response = new InputStreamReader(this.connection.getInputStream(), StandardCharsets.UTF_8);
         String textResponse = "NaN";
 
         try (Scanner scanner = new Scanner(response)) {

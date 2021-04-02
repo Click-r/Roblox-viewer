@@ -10,8 +10,6 @@ import java.util.concurrent.*;
 import java.io.*;
 import java.net.*;
 
-import java.nio.charset.*;
-
 import java.time.*;
 
 import classes.Link;
@@ -46,12 +44,11 @@ public class getInfo {
     @SuppressWarnings("unchecked")
 
     public static Map<String, Object> searchByUsername(String username){
-        final Charset UTF_8 = StandardCharsets.UTF_8;
         ExecutorService exec = Executors.newSingleThreadExecutor();
 
         Future<Long> id = exec.submit(() -> {
             try {
-                byte[] out = ("{\"usernames\":[\"" + username +"\"], \"excludeBannedUsers\":false}").getBytes(UTF_8);
+                String out = "{\"usernames\":[\"" + username +"\"], \"excludeBannedUsers\":false}";
                 Link info = new Link("https://users.roblox.com/v1/usernames/users", out);
 
                 List<?> arrData = (List<?>) info.data.get("usernames");
