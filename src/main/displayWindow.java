@@ -17,7 +17,7 @@ import java.util.HashMap;
 import classes.*;
 
 public class displayWindow {
-    final static String version = "0.4";
+    final static String version = "0.5a";
     final static String title = "RBLXInfoViewer";
     final static String author = "Cli_ck";
 
@@ -84,7 +84,9 @@ public class displayWindow {
                 Field toGet = Player.class.getDeclaredField(name);
                 toGet.setAccessible(true);
                 comp.setText(format(toGet.get(player).toString()));
-            } catch (NoSuchFieldException | IllegalAccessException e) {}
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                ErrorHandler.report(e, player);
+            }
         });
 
         last = player;
@@ -95,7 +97,6 @@ public class displayWindow {
     }
 
     public static void main(String[] args) {
-
         JFrame frame = new JFrame(title + " v" + version);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -120,7 +121,7 @@ public class displayWindow {
         info.setBounds(15, 15, 450, 300);
         info.setBackground(infoSectionColor);
         info.setLayout(null);
-        info.setBorder(new TitledBorder(new EtchedBorder() , "General Info"));
+        info.setBorder(new TitledBorder(new EtchedBorder(), "General Info"));
 
         // description
         JPanel description = new JPanel();

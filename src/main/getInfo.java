@@ -59,7 +59,7 @@ public class getInfo {
                 return Long.valueOf(Id);
 
             } catch (IOException e) {
-                e.printStackTrace();
+                ErrorHandler.report(e);
             }
             
             return 1L;
@@ -128,8 +128,12 @@ public class getInfo {
 
                 } catch (IOException e) {
                     int remainingBuffer = 5 - buffer.size();
+
+                    assert remainingBuffer >= 0;
+
                     for (int i = 0; i < remainingBuffer; i++)
                         buffer.push(1);
+                    
                     return toReturn;
                 }
 
@@ -144,7 +148,9 @@ public class getInfo {
                         buffer.push(1);
 
                     data.putAll(result);
-                } catch (TimeoutException|InterruptedException|ExecutionException timeout) {}
+                } catch (ExecutionException exc) {
+                    ErrorHandler.report(exc);
+                } catch (InterruptedException|TimeoutException timeout) {}
             }
             );
 

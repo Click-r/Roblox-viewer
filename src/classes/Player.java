@@ -1,8 +1,12 @@
 package classes;
 
 import java.lang.reflect.Field;
+
 import java.net.SocketTimeoutException;
+
 import java.util.Map;
+
+import main.ErrorHandler;
 import main.getInfo;
 
 /** A class for the player which allows for general information to be retrieved. Utilizies ROBLOX API endpoints to retrieve the data. */
@@ -21,6 +25,7 @@ public class Player {
 
     public Player(Number id) {
         long num = (long) id;
+        this.id = num;
 
         try {
             load(getInfo.getInformation(num));
@@ -34,6 +39,7 @@ public class Player {
     */
 
     public Player(String username) {
+        this.name = username;
         load(getInfo.searchByUsername(username));
     }
 
@@ -43,7 +49,7 @@ public class Player {
                 Field writeTo = this.getClass().getDeclaredField(key);
                 writeTo.set(this, val);
             } catch (Exception e) {
-                e.printStackTrace();
+                ErrorHandler.report(e, this);
             }
         });
     }
