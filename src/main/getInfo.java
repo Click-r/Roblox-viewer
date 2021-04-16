@@ -94,7 +94,7 @@ public class getInfo {
         };
 
         final String[][] toFilter = {
-            new String[]{"displayName"},
+            null,
             null,
             null,
             null,
@@ -192,6 +192,10 @@ public class getInfo {
 
             long id = Long.valueOf(data.get("id").toString());
             data.replace("id", id);
+
+            String dispname = (String) data.get("displayName");
+            data.remove("displayName");
+            data.put("dispname", dispname);
         }
 
         return data;

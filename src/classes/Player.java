@@ -13,7 +13,7 @@ import main.getInfo;
 public class Player {
 
     public Long id;
-    public String name, created, description, status, lastonline;
+    public String name, created, description, status, lastonline, dispname;
     public Integer friends, followings, followers;
     public Boolean banned, online;
 
