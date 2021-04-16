@@ -1,4 +1,4 @@
-package main;
+package ui;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
@@ -21,10 +21,10 @@ public class displayWindow {
     final static String title = "RBLXInfoViewer";
     final static String author = "Cli_ck";
 
-    static String lastModifed;
-    static Player last;
+    private static String lastModifed;
+    private static Player last;
 
-    public static JTextComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo){
+    private static JTextComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo){
         JTextPane ioDISP = new JTextPane();
         ioDISP.setText(inpOutInfo + ":");
         if (last == null)
@@ -69,7 +69,7 @@ public class displayWindow {
         return ioDISP;
     }
 
-    public static String format(String input) {
+    private static String format(String input) {
         return input
             .replace("\\n", "\n")
             .replace("\\r", "\r")
@@ -77,7 +77,7 @@ public class displayWindow {
             .replace("\\\"", "\"");
     }
 
-    public static void updateVals(Player player, HashMap<String,JTextComponent> compMap) {
+    private static void updateVals(Player player, HashMap<String,JTextComponent> compMap) {
         compMap.forEach((name, comp) -> {
             name = name.toLowerCase();
             try {
@@ -92,11 +92,11 @@ public class displayWindow {
         last = player;
     }
 
-    public static long randomLong(long min, long max) {
+    private static long randomLong(long min, long max) {
         return min + (long) (Math.random() * (max - min));
     }
 
-    public static void main(String[] args) {
+    private static JFrame build() {
         JFrame frame = new JFrame(title + " v" + version);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -259,6 +259,16 @@ public class displayWindow {
 
         frame.setLayout(null);
 
-        frame.setVisible(true);
+        return frame;
+    }
+
+    public static void display() {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                JFrame show = build();
+
+                show.setVisible(true);
+            }
+        });
     }
 }

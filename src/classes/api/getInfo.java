@@ -1,4 +1,4 @@
-package main;
+package classes.api;
 
 import java.util.HashMap;
 import java.util.List;
@@ -14,9 +14,11 @@ import java.time.*;
 
 import classes.Link;
 
+import ui.ErrorHandler;
+
 public class getInfo {
 
-    public static String dateLocalTime(String time) {
+    private static String dateLocalTime(String time) {
         String abbrev = Calendar
           .getInstance()
           .getTimeZone()

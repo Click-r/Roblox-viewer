@@ -6,8 +6,9 @@ import java.net.SocketTimeoutException;
 
 import java.util.Map;
 
-import main.ErrorHandler;
-import main.getInfo;
+import classes.api.getInfo;
+
+import ui.ErrorHandler;
 
 /** A class for the player which allows for general information to be retrieved. Utilizies ROBLOX API endpoints to retrieve the data. */
 public class Player {
