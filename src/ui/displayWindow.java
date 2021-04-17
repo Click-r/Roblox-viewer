@@ -9,6 +9,8 @@ import javax.swing.text.JTextComponent;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
+import java.awt.Image;
 
 import java.lang.reflect.Field;
 
@@ -16,11 +18,9 @@ import java.util.HashMap;
 
 import classes.*;
 
-public class displayWindow {
-    final static String version = "0.5a";
-    final static String title = "RBLXInfoViewer";
-    final static String author = "Cli_ck";
+import main.Controller;
 
+public class displayWindow{
     private static String lastModifed;
     private static Player last;
 
@@ -96,8 +96,22 @@ public class displayWindow {
         return min + (long) (Math.random() * (max - min));
     }
 
+    private static void presentError(JTextPane msgBox, String input) {
+        msgBox.getParent().setVisible(true);
+
+        String datatype = lastModifed.toLowerCase().equals("name") ? "name " : "id ";
+        final String message = "Failed fetching user with " + datatype + input;
+
+        if (message.length() > 34)
+            msgBox.setLocation(40, 3);
+        else
+            msgBox.setLocation(40, 11);
+        
+        msgBox.setText("Failed fetching user with " + datatype + input);
+    }
+
     private static JFrame build() {
-        JFrame frame = new JFrame(title + " v" + version);
+        JFrame frame = new JFrame(Controller.title + " v" + Controller.version);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         final Color infoSectionColor = new Color(218,218,218);
@@ -177,11 +191,42 @@ public class displayWindow {
 
         String startUser = "ROBLOX";
 
-        if (chosen == 29L) {
-            startUser = author;
-        }
+        if (chosen == 29L) 
+            startUser = Controller.author;
     
         updateVals(new Player(startUser), comps);
+
+        final Color errCol = new Color(252, 163, 150);
+
+        JPanel error = new JPanel();
+        error.setBounds(aX/2 - 336, aY-5, 260, 45);
+        error.setBackground(errCol);
+        error.setLayout(null);
+        error.setBorder(BorderFactory.createLineBorder(new Color(255, 0, 0), 1));
+        error.setVisible(false);
+
+        JTextPane errorMsg = new JTextPane();
+        errorMsg.setBounds(40, 11, 200, 45);
+        errorMsg.setText("User not found.");
+        errorMsg.setOpaque(false);
+        errorMsg.setEditable(false);
+        errorMsg.setHighlighter(null);
+        errorMsg.getCaret().deinstall(errorMsg); // fixes weird background formatting bug
+
+        try {
+            final Image scaled = ErrorHandler.getWarningImg().getImage().getScaledInstance(35, 35, Image.SCALE_AREA_AVERAGING);
+
+            JLabel warn = new JLabel(new ImageIcon(scaled));
+            warn.setVisible(true);
+            warn.setOpaque(false);
+            warn.setBounds(2, 2, 40, 40);
+
+            error.add(warn);
+        } catch (IOException ioe) {
+            ErrorHandler.report(ioe);
+        }
+
+        error.add(errorMsg);
 
         JButton search = new JButton();
         search.setText("Search");
@@ -215,8 +260,10 @@ public class displayWindow {
                                 updateVals(new Player(input), comps);
                             else 
                                 updateVals(new Player(Long.valueOf(input)), comps);
+                            
+                            error.setVisible(false);
                         } catch (NumberFormatException | NullPointerException err) {
-                            System.out.println("API endpoints failed to return user with name/id " + input);
+                            presentError(errorMsg, input);
                         }
 
                     }
@@ -242,8 +289,10 @@ public class displayWindow {
                     
                     try {
                         updateVals(new Player(newId), comps);
+
+                        error.setVisible(false);
                     } catch (NumberFormatException | NullPointerException err) {
-                        System.out.println("API endpoints failed to return user with ID of " + newId);
+                        presentError(errorMsg, String.valueOf(newId));
                     }
 
                     randomize.setEnabled(true);
@@ -256,6 +305,7 @@ public class displayWindow {
         frame.add(search);
         frame.add(description);
         frame.add(status);
+        frame.add(error);
 
         frame.setLayout(null);
 

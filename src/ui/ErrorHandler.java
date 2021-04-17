@@ -7,15 +7,20 @@ import java.awt.event.ActionEvent;
 import java.awt.Desktop;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Clipboard;
+import java.awt.Image;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import java.io.IOException;
+import java.io.InputStream;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import classes.Player;
+
+import main.Controller;
 
 @SuppressWarnings("serial")
 
@@ -24,7 +29,7 @@ public class ErrorHandler extends JFrame {
     private static JTextArea writeTo;
 
     private static void build() {
-        window = new JFrame(displayWindow.title + " error report");
+        window = new JFrame(Controller.title + " error report");
         window.setDefaultCloseOperation(EXIT_ON_CLOSE);
 
         final int x,y;
@@ -42,7 +47,7 @@ public class ErrorHandler extends JFrame {
                 
         JTextPane msg = new JTextPane();
         msg.setEditable(false);
-        msg.setText("Uh oh! It appears " + displayWindow.title + " has encountered a critical error. Below you will find a stack trace of the error, please take some time and report the issue on github (preferably copying and pasting the stack trace and providing what you were doing beforehand), if possible.");
+        msg.setText("Uh oh! It appears " + Controller.title + " has encountered a critical error. Below you will find a stack trace of the error, please take some time and report the issue on github (preferably copying and pasting the stack trace and providing what you were doing beforehand), if possible.");
         msg.setBounds(0, 0, 450, 75);
         
         textinfo.add(msg);
@@ -113,12 +118,14 @@ public class ErrorHandler extends JFrame {
         window.setLayout(null);
     }
 
-    private static void display() {
+    private static void display(String msg) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 build();
 
                 window.setVisible(true);
+
+                writeTo.setText(msg);
             }
         });
     }
@@ -131,8 +138,12 @@ public class ErrorHandler extends JFrame {
             errMessage += (e + "\n");
         }
 
-        display();
+        display(errMessage);
+    }
 
-        writeTo.setText(errMessage);
+    public static ImageIcon getWarningImg() throws IOException {
+        InputStream stream = ErrorHandler.class.getResourceAsStream("assets/warning.png");
+        Image warn = ImageIO.read(stream);
+        return new ImageIcon(warn);
     }
 }
