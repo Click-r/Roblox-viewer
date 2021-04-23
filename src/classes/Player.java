@@ -24,7 +24,7 @@ public class Player {
      * @param id
     */
 
-    public Player(Number id) {
+    public Player(Number id) throws UserNotFoundException {
         long num = (long) id;
         this.id = num;
 
@@ -39,7 +39,7 @@ public class Player {
      * @param username
     */
 
-    public Player(String username) {
+    public Player(String username) throws UserNotFoundException {
         this.name = username;
         load(getInfo.searchByUsername(username));
     }

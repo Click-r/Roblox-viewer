@@ -1,7 +1,6 @@
 package classes.api;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.Calendar;
@@ -10,6 +9,8 @@ import java.util.concurrent.*;
 import java.io.*;
 import java.net.*;
 
+import classes.UserNotFoundException;
+
 import java.time.*;
 
 import classes.Link;
@@ -17,6 +18,8 @@ import classes.Link;
 import ui.ErrorHandler;
 
 public class getInfo {
+
+    final static int numData = classes.Player.class.getDeclaredFields().length;
 
     private static String dateLocalTime(String time) {
         String abbrev = Calendar
@@ -41,22 +44,49 @@ public class getInfo {
         return local + " " + abbrev;
     }
 
-    final static int numData = classes.Player.class.getDeclaredFields().length;
+    private static boolean validateData(Map<String, Object> dataSource) {
+        boolean properlyParsed = (dataSource.size() == numData);
 
-    @SuppressWarnings("unchecked")
+        if (properlyParsed) {
+            String creationDate = (String) dataSource.get("created");
+            creationDate = dateLocalTime(creationDate);
+            dataSource.replace("created", creationDate);
 
-    public static Map<String, Object> searchByUsername(String username){
+            boolean beaned = (boolean) dataSource.get("isBanned");
+            dataSource.remove("isBanned");
+            dataSource.put("banned", beaned);
+
+            boolean online = (boolean) dataSource.get("IsOnline");
+            dataSource.remove("IsOnline");
+            dataSource.put("online", online);
+
+            String lastOnline = (String) dataSource.get("LastOnline");
+            lastOnline = dateLocalTime(lastOnline);
+            dataSource.remove("LastOnline");
+            dataSource.put("lastonline", lastOnline);
+
+            long id = Long.valueOf(dataSource.get("id").toString());
+            dataSource.replace("id", id);
+
+            String dispname = (String) dataSource.get("displayName");
+            dataSource.remove("displayName");
+            dataSource.put("dispname", dispname);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public static Map<String, Object> searchByUsername(String username) throws UserNotFoundException {
         ExecutorService exec = Executors.newSingleThreadExecutor();
 
         Future<Long> id = exec.submit(() -> {
             try {
-                String out = "{\"usernames\":[\"" + username +"\"], \"excludeBannedUsers\":false}";
-                Link info = new Link("https://users.roblox.com/v1/usernames/users", out);
+                //String out = "{\"usernames\":[\"" + username +"\"], \"excludeBannedUsers\":false}";
+                Link info = new Link("https://api.roblox.com/users/get-by-username?username=" + username);
 
-                List<?> arrData = (List<?>) info.data.get("usernames");
-                Map<String, Object> data = (Map<String, Object>) arrData.get(0);
-
-                String Id = data.get("id").toString();
+                String Id = info.data.get("Id").toString();
 
                 return Long.valueOf(Id);
 
@@ -75,12 +105,12 @@ public class getInfo {
             Id = id.get(5, TimeUnit.SECONDS);
             requested = getInformation(Id);
         } catch (InterruptedException | ExecutionException | TimeoutException | SocketTimeoutException e) {
-            e.printStackTrace();
+            throw new UserNotFoundException("Failed to fetch user!");
         }
         return requested;
     }
 
-    public static Map<String, Object> getInformation(long userId) throws SocketTimeoutException {
+    public static Map<String, Object> getInformation(long userId) throws SocketTimeoutException, UserNotFoundException {
 
         Map<String, Object> data = new HashMap<String, Object>();
 
@@ -103,8 +133,6 @@ public class getInfo {
             null,
             new String[]{"GameId", "LastLocation", "LocationType", "PlaceId", "VisitorId", "PresenceType", "UniverseId"}
         };
-
-        boolean properlyParsed = true;
 
         // Start of multi-threaded data retrieval
         Stack<Integer> buffer = new Stack<Integer>();
@@ -168,37 +196,10 @@ public class getInfo {
         retrieve.shutdownNow();
         //End of multi-threaded data retrieval
 
-        properlyParsed &= (data.size() == numData);
+        boolean valid = validateData(data);
 
-        if (properlyParsed) {
-            String creationDate = (String) data.get("created");
-            creationDate = dateLocalTime(creationDate);
-            
-            data.replace("created", creationDate);
-
-            boolean beaned = (boolean) data.get("isBanned");
-            
-            data.remove("isBanned");
-            data.put("banned", beaned);
-
-            boolean online = (boolean) data.get("IsOnline");
-
-            data.remove("IsOnline");
-            data.put("online", online);
-
-            String lastOnline = (String) data.get("LastOnline");
-            lastOnline = dateLocalTime(lastOnline);
-
-            data.remove("LastOnline");
-            data.put("lastonline", lastOnline);
-
-            long id = Long.valueOf(data.get("id").toString());
-            data.replace("id", id);
-
-            String dispname = (String) data.get("displayName");
-            data.remove("displayName");
-            data.put("dispname", dispname);
-        }
+        if (!valid)
+            throw new UserNotFoundException("Failed to fetch user!"); // throw exception
 
         return data;
     }

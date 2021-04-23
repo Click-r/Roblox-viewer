@@ -9,8 +9,12 @@ import javax.swing.text.JTextComponent;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.IOException;
 import java.awt.Image;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 
 import java.lang.reflect.Field;
 
@@ -59,6 +63,8 @@ public class displayWindow{
                 public void changedUpdate(DocumentEvent e) {
                     lastModifed = ioF.getName().toLowerCase();
                 }
+
+                // sets lastModified to the textbox that last changed
             });
         
         parentTo.add(ioDISP);
@@ -70,11 +76,15 @@ public class displayWindow{
     }
 
     private static String format(String input) {
-        return input
-            .replace("\\n", "\n")
-            .replace("\\r", "\r")
-            .replace("\\'", "\'")
-            .replace("\\\"", "\"");
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+        try (PrintStream printStream = new PrintStream(stream, true, "utf-8")) {
+            printStream.format(input);
+        } catch (UnsupportedEncodingException uns) {
+            ErrorHandler.report(uns);
+        }
+
+        return stream.toString();
     }
 
     private static void updateVals(Player player, HashMap<String,JTextComponent> compMap) {
@@ -99,7 +109,7 @@ public class displayWindow{
     private static void presentError(JTextPane msgBox, String input) {
         msgBox.getParent().setVisible(true);
 
-        String datatype = lastModifed.toLowerCase().equals("name") ? "name " : "id ";
+        String datatype = lastModifed.toLowerCase().equals("name") ? "name " : "id "; // determines if it's id or name based on lastModified
         final String message = "Failed fetching user with " + datatype + input;
 
         if (message.length() > 34)
@@ -193,8 +203,12 @@ public class displayWindow{
 
         if (chosen == 29L) 
             startUser = Controller.author;
-    
-        updateVals(new Player(startUser), comps);
+        
+        try {
+            Player start = new Player(startUser);
+
+            updateVals(start, comps);
+        } catch (UserNotFoundException uException) {}
 
         final Color errCol = new Color(252, 163, 150);
 
@@ -215,6 +229,7 @@ public class displayWindow{
 
         try {
             final Image scaled = ErrorHandler.getWarningImg().getImage().getScaledInstance(35, 35, Image.SCALE_AREA_AVERAGING);
+            // TODO: make controller distribute the images
 
             JLabel warn = new JLabel(new ImageIcon(scaled));
             warn.setVisible(true);
@@ -247,9 +262,16 @@ public class displayWindow{
 
                         same = last.name.equals(name);
                     } else {
-                        long id = Long.valueOf(comps.get("id").getText());
+                        try {
+                            long id = Long.valueOf(comps.get("id").getText());
 
-                        same = last.id.equals(id);
+                            same = last.id.equals(id);
+                        } catch (NumberFormatException nException) {
+                            presentError(errorMsg, comps.get("id").getText());
+                            
+                            same = true; // so it doesn't look it up
+                            // if it looks it up then the other piece of code below this would error too
+                        }
                     }
 
                     if (!same) {
@@ -262,7 +284,7 @@ public class displayWindow{
                                 updateVals(new Player(Long.valueOf(input)), comps);
                             
                             error.setVisible(false);
-                        } catch (NumberFormatException | NullPointerException err) {
+                        } catch (UserNotFoundException err) {
                             presentError(errorMsg, input);
                         }
 
@@ -291,7 +313,7 @@ public class displayWindow{
                         updateVals(new Player(newId), comps);
 
                         error.setVisible(false);
-                    } catch (NumberFormatException | NullPointerException err) {
+                    } catch (UserNotFoundException err) {
                         presentError(errorMsg, String.valueOf(newId));
                     }
 
@@ -299,6 +321,7 @@ public class displayWindow{
                 }
             }
         });
+
         info.add(randomize);
 
         frame.add(info);
