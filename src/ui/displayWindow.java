@@ -65,6 +65,7 @@ public class displayWindow{
                 }
 
                 // sets lastModified to the textbox that last changed
+                // TODO: make it so you can quick search if you press enter in any one of these text boxes
             });
         
         parentTo.add(ioDISP);
@@ -268,9 +269,9 @@ public class displayWindow{
                             same = last.id.equals(id);
                         } catch (NumberFormatException nException) {
                             presentError(errorMsg, comps.get("id").getText());
-                            
-                            same = true; // so it doesn't look it up
-                            // if it looks it up then the other piece of code below this would error too
+
+                            search.setEnabled(true);
+                            return;
                         }
                     }
 
@@ -287,7 +288,9 @@ public class displayWindow{
                         } catch (UserNotFoundException err) {
                             presentError(errorMsg, input);
                         }
-
+                    
+                    } else {
+                        error.setVisible(false);
                     }
                     
                     search.setEnabled(true);
