@@ -22,8 +22,6 @@ import classes.Player;
 
 import main.Controller;
 
-@SuppressWarnings("serial")
-
 public class ErrorHandler extends JFrame {
     private static JFrame window;
     private static JTextArea writeTo;

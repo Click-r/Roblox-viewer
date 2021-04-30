@@ -7,6 +7,10 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import javax.imageio.*;
+
+import java.awt.Image;
+
 import java.nio.charset.StandardCharsets;
 
 import java.util.Map;
@@ -30,14 +34,14 @@ public class Link {
      * @throws IOException
     */
 
-    public Link(String link) throws IOException {
+    public Link(String link, boolean... shouldInit) throws IOException {
         this.method = "GET";
         URL site = new URL(link);
 
         this.connection = (HttpURLConnection) site.openConnection();
         this.connection.setConnectTimeout(5000);
 
-        this.data = getData(link, this.method);
+        initialize(link, shouldInit);
     }
 
     /**
@@ -47,7 +51,7 @@ public class Link {
      * @throws IOException
     */
 
-    public Link(String link, String payload) throws IOException {
+    public Link(String link, String payload, boolean... shouldInit) throws IOException {
         this.method = "POST";
         this.payload = payload.getBytes(StandardCharsets.UTF_8);
         URL site = new URL(link);
@@ -58,7 +62,20 @@ public class Link {
         this.connection.setFixedLengthStreamingMode(this.payload.length);
         this.connection.setRequestProperty("Content-type", "application/json; charset=UTF-8");
 
-        this.data = getData(link, this.method);
+        initialize(link, shouldInit);
+    }
+
+    public Image getImage() throws IOException {
+        this.connection.setInstanceFollowRedirects(true);
+        HttpURLConnection.setFollowRedirects(true);
+
+        this.connection.connect();
+
+        URL site = this.connection.getURL();
+        
+        Image toReturn = ImageIO.read(site);
+
+        return toReturn;
     }
 
     private Map<String, Object> getData(String link, String method) throws IOException {
@@ -94,6 +111,11 @@ public class Link {
         });
         
         return data;
+    }
+
+    private void initialize(String link, boolean... should) throws IOException {
+        if (should.length == 0 || should[0])
+            this.data = getData(link, this.method);
     }
 
     /**

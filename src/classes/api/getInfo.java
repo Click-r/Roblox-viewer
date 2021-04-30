@@ -9,9 +9,11 @@ import java.util.concurrent.*;
 import java.io.*;
 import java.net.*;
 
-import classes.UserNotFoundException;
-
 import java.time.*;
+
+import java.awt.Image;
+
+import classes.UserNotFoundException;
 
 import classes.Link;
 
@@ -76,6 +78,30 @@ public class getInfo {
         }
 
         return false;
+    }
+
+    public static Image retrieveImage(long userId) {
+        ExecutorService ret = Executors.newSingleThreadExecutor();
+
+        Future<Image> img = ret.submit(() -> {
+            String url = "https://web.roblox.com/Thumbs/Avatar.ashx?x=150&y=150&Format=Png&userid=" + userId;
+
+            try {
+                Link imageLink = new Link(url, false);
+                
+                return imageLink.getImage();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
+        });
+
+        try {
+            return img.get(5, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {}
+        
+        return null;
     }
 
     public static Map<String, Object> searchByUsername(String username) throws UserNotFoundException {
@@ -181,11 +207,12 @@ public class getInfo {
                 } catch (ExecutionException exc) {
                     ErrorHandler.report(exc);
                 } catch (InterruptedException|TimeoutException timeout) {}
-            }
-            );
+            });
 
             index++;
         }
+
+        data.put("image", retrieveImage(userId));
 
         while (buffer.size() < apiDomains.length) {
             try {
@@ -199,7 +226,7 @@ public class getInfo {
         boolean valid = validateData(data);
 
         if (!valid)
-            throw new UserNotFoundException("Failed to fetch user!"); // throw exception
+            throw new UserNotFoundException("Failed to fetch user!");
 
         return data;
     }

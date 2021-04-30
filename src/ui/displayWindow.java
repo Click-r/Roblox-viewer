@@ -88,7 +88,7 @@ public class displayWindow{
         return stream.toString();
     }
 
-    private static void updateVals(Player player, HashMap<String,JTextComponent> compMap) {
+    private static void updateVals(Player player, HashMap<String,JTextComponent> compMap, JLabel... avatar) {
         compMap.forEach((name, comp) -> {
             name = name.toLowerCase();
             try {
@@ -99,6 +99,12 @@ public class displayWindow{
                 ErrorHandler.report(e, player);
             }
         });
+
+        if (avatar.length != 0) {
+            JLabel av = avatar[0];
+
+            av.setIcon(new ImageIcon(player.image));
+        }
 
         last = player;
     }
@@ -184,6 +190,46 @@ public class displayWindow{
         status.add(statScroll);
         statusText.setVisible(true);
 
+        // avatar
+        JPanel imageSection = new JPanel();
+        imageSection.setBounds(info.getX() + info.getWidth() + 30, info.getY(), 230, info.getHeight());
+        imageSection.setBackground(infoSectionColor);
+        imageSection.setName("image");
+        imageSection.setLayout(null);
+
+        Color darkerBg = new Color(infoSectionColor.getRed() - 25,  infoSectionColor.getGreen() - 25, infoSectionColor.getBlue() - 25);
+
+        JLabel av = new JLabel();
+        av.setBounds(40, 20, 150, 150);
+        av.setOpaque(true);
+        av.setBackground(darkerBg);
+        av.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0), 1));
+
+        JPanel subPanel = new JPanel();
+        subPanel.setBounds(40, 19 + av.getHeight(), 150, 30);
+        subPanel.setBackground(new Color(darkerBg.getRed() + 10, darkerBg.getGreen() + 10, darkerBg.getBlue() + 10));
+        subPanel.setLayout(null);
+        subPanel.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0), 1));
+
+        JTextPane onlineText = new JTextPane();
+        onlineText.setBounds(1, 4, 58, 25);
+        onlineText.setText("Is online:");
+        onlineText.setBackground(subPanel.getBackground());
+        onlineText.setEditable(false);
+
+        JTextPane isOnline = new JTextPane();
+        isOnline.setBounds(onlineText.getWidth(), 4, 30, 25);
+        isOnline.setBackground(subPanel.getBackground());
+        isOnline.setEditable(false);
+        isOnline.setName("online"); // this looks a bit of out of place
+        // TODO: somehow make this look more natural
+
+        subPanel.add(onlineText);
+        subPanel.add(isOnline);
+
+        imageSection.add(subPanel);
+        imageSection.add(av);
+
         HashMap<String, JTextComponent> comps = new HashMap<String, JTextComponent>();
 
         lastTxt = createIOField(info, "Name", lastTxt, infoSectionColor, true, 200, 25, "ROBLOX",comps);
@@ -197,6 +243,7 @@ public class displayWindow{
         lastTxt = createIOField(info, "LastOnline", lastTxt, infoSectionColor, false, 200, 25, "", comps);
         comps.put(descriptionText.getName(), descriptionText);
         comps.put(statusText.getName(), statusText);
+        comps.put(isOnline.getName(), isOnline);
 
         long chosen = randomLong(1L, 48L);
 
@@ -208,7 +255,7 @@ public class displayWindow{
         try {
             Player start = new Player(startUser);
 
-            updateVals(start, comps);
+            updateVals(start, comps, av);
         } catch (UserNotFoundException uException) {}
 
         final Color errCol = new Color(252, 163, 150);
@@ -280,9 +327,9 @@ public class displayWindow{
                         
                         try {
                             if (lastModifed.equals("name"))
-                                updateVals(new Player(input), comps);
+                                updateVals(new Player(input), comps, av);
                             else 
-                                updateVals(new Player(Long.valueOf(input)), comps);
+                                updateVals(new Player(Long.valueOf(input)), comps, av);
                             
                             error.setVisible(false);
                         } catch (UserNotFoundException err) {
@@ -313,7 +360,7 @@ public class displayWindow{
                     long newId = randomLong(1L, 2_300_000_000L);
                     
                     try {
-                        updateVals(new Player(newId), comps);
+                        updateVals(new Player(newId), comps, av);
 
                         error.setVisible(false);
                     } catch (UserNotFoundException err) {
@@ -332,6 +379,7 @@ public class displayWindow{
         frame.add(description);
         frame.add(status);
         frame.add(error);
+        frame.add(imageSection);
 
         frame.setLayout(null);
 

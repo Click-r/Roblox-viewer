@@ -6,6 +6,8 @@ import java.net.SocketTimeoutException;
 
 import java.util.Map;
 
+import java.awt.Image;
+
 import classes.api.getInfo;
 
 import ui.ErrorHandler;
@@ -17,6 +19,7 @@ public class Player {
     public String name, created, description, status, lastonline, dispname;
     public Integer friends, followings, followers;
     public Boolean banned, online;
+    public Image image;
 
     /**
      * <p>Takes any <code>Number</code> as a user ID and retrieves information about the user.</p>
@@ -53,5 +56,7 @@ public class Player {
                 ErrorHandler.report(e, this);
             }
         });
+
+        this.image = (Image) data.get("image");
     }
 }
