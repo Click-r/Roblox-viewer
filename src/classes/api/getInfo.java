@@ -90,9 +90,7 @@ public class getInfo {
                 Link imageLink = new Link(url, false);
                 
                 return imageLink.getImage();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            } catch (IOException e) {}
 
             return null;
         });
@@ -110,13 +108,20 @@ public class getInfo {
         Future<Long> id = exec.submit(() -> {
             try {
                 //String out = "{\"usernames\":[\"" + username +"\"], \"excludeBannedUsers\":false}";
-                Link info = new Link("https://api.roblox.com/users/get-by-username?username=" + username);
+                String user = username.replace(' ', '+'); // format properly for http requests
+
+                Link info = new Link("https://api.roblox.com/users/get-by-username?username=" + user);
 
                 String Id = info.data.get("Id").toString();
 
                 return Long.valueOf(Id);
 
             } catch (IOException e) {
+                String stringified = e.toString();
+
+                if (stringified.contains("400")) // http response code 400
+                    throw new UserNotFoundException("Failed to fetch user!");
+
                 ErrorHandler.report(e);
             }
             
