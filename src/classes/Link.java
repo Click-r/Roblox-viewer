@@ -1,7 +1,6 @@
 package classes;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 import java.net.HttpURLConnection;
@@ -10,7 +9,6 @@ import java.net.URL;
 import javax.imageio.*;
 
 import java.awt.Image;
-
 import java.nio.charset.StandardCharsets;
 
 import java.util.Map;
@@ -87,11 +85,10 @@ public class Link {
             OutputStream os = this.connection.getOutputStream();
             os.write(this.payload);
         }
-
-        InputStreamReader response = new InputStreamReader(this.connection.getInputStream(), StandardCharsets.UTF_8);
+        
         String textResponse = "NaN";
 
-        try (Scanner scanner = new Scanner(response)) {
+        try (Scanner scanner = new Scanner(this.connection.getInputStream(), "UTF-8")) {
             String responseBody = scanner.useDelimiter("\\A").next();
             textResponse = responseBody;
         }

@@ -24,9 +24,10 @@ import classes.*;
 
 import main.Controller;
 
-public class displayWindow{
+public class displayWindow {
     private static String lastModifed;
     private static Player last;
+    private static JButton searchKey;
 
     private static JTextComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo){
         JTextPane ioDISP = new JTextPane();
@@ -47,7 +48,9 @@ public class displayWindow{
         ioF.setText(Default);
         ioF.setName(inpOutInfo);
 
-        if (editable) 
+        if (editable) {
+            final int lookingfor = KeyEvent.VK_ENTER;
+
             ioF.getDocument().addDocumentListener(new DocumentListener() {
                 @Override
                 public void insertUpdate(DocumentEvent e) {
@@ -65,8 +68,17 @@ public class displayWindow{
                 }
 
                 // sets lastModified to the textbox that last changed
-                // TODO: make it so you can quick search if you press enter in any one of these text boxes
             });
+
+            ioF.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    if (e.getKeyCode() == lookingfor)
+                        searchKey.doClick();
+                        // assuming the search will always be there could be error prone, but i don't think it's of high priority at the moment
+                }
+            });
+        }
         
         parentTo.add(ioDISP);
         parentTo.add(ioF);
@@ -77,6 +89,7 @@ public class displayWindow{
     }
 
     private static String format(String input) {
+
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
         try (PrintStream printStream = new PrintStream(stream, true, "utf-8")) {
@@ -345,6 +358,8 @@ public class displayWindow{
                 }
             }
         });
+
+        searchKey = search;
 
         JTextField id = (JTextField) comps.get("id");
 
