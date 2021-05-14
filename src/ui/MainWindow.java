@@ -24,10 +24,27 @@ import classes.*;
 
 import main.Controller;
 
-public class displayWindow {
+public class MainWindow {
     private static String lastModifed;
     private static Player last;
     private static JButton searchKey;
+    public static ToolBarManager toolbar;
+
+    static class ToolBarManager {
+        private static HashMap<String, JButton> buttons;
+
+        public ToolBarManager(JFrame target) {
+            CreateToolBar tBar = new CreateToolBar(target);
+
+            buttons = tBar.compDict;
+        }
+
+        public static void onSettingsExit() {
+            JButton settingsButton = buttons.get("Settings");
+
+            settingsButton.setEnabled(true);
+        }
+    }
 
     private static JTextComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo){
         JTextPane ioDISP = new JTextPane();
@@ -150,11 +167,11 @@ public class displayWindow {
 
         int x,y;
         x = 800;
-        y = 660;
+        y = 700;
 
         final int aX,aY;
         aX = 704;
-        aY = 576; // for some reason these differ from the frame width and length but ok
+        aY = 616; // these differ because components are moved from the top-left corner
 
         frame.setBounds(200,200, x, y);
         frame.setResizable(false);
@@ -162,14 +179,14 @@ public class displayWindow {
 
         // general info
         JPanel info = new JPanel();
-        info.setBounds(15, 15, 450, 300);
+        info.setBounds(15, 55, 450, 300);
         info.setBackground(infoSectionColor);
         info.setLayout(null);
         info.setBorder(new TitledBorder(new EtchedBorder(), "General Info"));
 
         // description
         JPanel description = new JPanel();
-        description.setBounds(15, 407, 600, 160);
+        description.setBounds(15, 447, 600, 160);
         description.setBackground(infoSectionColor);
         description.setBorder(new TitledBorder(new EtchedBorder(), "Description"));
 
@@ -242,6 +259,8 @@ public class displayWindow {
 
         imageSection.add(subPanel);
         imageSection.add(av);
+
+        toolbar = new ToolBarManager(frame);
 
         HashMap<String, JTextComponent> comps = new HashMap<String, JTextComponent>();
 

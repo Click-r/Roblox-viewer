@@ -14,7 +14,6 @@ import java.time.*;
 import java.awt.Image;
 
 import classes.UserNotFoundException;
-
 import classes.Link;
 
 import ui.ErrorHandler;

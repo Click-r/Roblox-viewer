@@ -8,6 +8,6 @@ public class Controller {
     public final static String author = "Cli_ck";
 
     public static void main(String[] args) {
-        displayWindow.display();
+        MainWindow.display();
     }
 }
