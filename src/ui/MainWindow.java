@@ -131,9 +131,15 @@ public class MainWindow {
         });
 
         if (avatar.length != 0) {
-            JLabel av = avatar[0];
-
-            av.setIcon(new ImageIcon(player.image));
+            try {
+                JLabel av = avatar[0];
+                ImageIcon img = new ImageIcon(player.image);
+                
+                av.setIcon(img);
+            } catch (NullPointerException noImageFound) {
+                System.out.println("Avatar image not found");
+                // TODO: make error message display if roblox is having connectivity issues/difficulties downloading an image
+            }
         }
 
         last = player;
