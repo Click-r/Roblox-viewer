@@ -19,8 +19,10 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 
 import java.util.HashMap;
+import java.util.UnknownFormatConversionException;
 
 import classes.*;
+import loaders.*;
 
 import main.Controller;
 
@@ -111,14 +113,16 @@ public class MainWindow {
 
         try (PrintStream printStream = new PrintStream(stream, true, "utf-8")) {
             printStream.format(input);
-        } catch (UnsupportedEncodingException uns) {
-            ErrorHandler.report(uns);
+        } catch (UnsupportedEncodingException|UnknownFormatConversionException uns) {
+            ErrorHandler.report(uns, last);
         }
 
         return stream.toString();
     }
 
     private static void updateVals(Player player, HashMap<String,JTextComponent> compMap, JLabel... avatar) {
+        last = player;
+
         compMap.forEach((name, comp) -> {
             name = name.toLowerCase();
             try {
@@ -141,8 +145,6 @@ public class MainWindow {
                 // TODO: make error message display if roblox is having connectivity issues/difficulties downloading an image
             }
         }
-
-        last = player;
     }
 
     private static long randomLong(long min, long max) {
@@ -396,8 +398,20 @@ public class MainWindow {
             public void actionPerformed(ActionEvent e) {
                 if (randomize.isEnabled()){
                     randomize.setEnabled(false);
+                    long min, max;
+                    min = 1L;
+                    max = 2_300_000_000L;
 
-                    long newId = randomLong(1L, 2_300_000_000L);
+                    try {
+                        SearchSettings srch = new SearchSettings();
+
+                        min = Long.valueOf(srch.get("min_id")).longValue();
+                        max = Long.valueOf(srch.get("max_id")).longValue();
+                    } catch (IOException ioexc) {
+                        ErrorHandler.report(ioexc);
+                    }
+
+                    long newId = randomLong(min, max);
                     
                     try {
                         updateVals(new Player(newId), comps, av);
