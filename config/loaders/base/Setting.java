@@ -1,6 +1,7 @@
 package loaders.base;
 
 import java.awt.Rectangle;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,8 +42,7 @@ public abstract class Setting {
     }
 
     public static Properties getConfig() throws IOException {
-        String idStr = id.toString().toLowerCase();
-        InputStream stream = ClassLoader.getSystemResourceAsStream("settings/" + idStr + "/" + idStr + ".properties");
+        InputStream stream = ClassLoader.getSystemResourceAsStream("settings/" + id + "/" + id + ".properties");
 
         Properties property = new Properties();
         property.load(stream);
@@ -59,6 +59,4 @@ public abstract class Setting {
     abstract public Map<String, JComponent> getComponents();
 
     abstract public void applyChanges(Map<String, JComponent> setterComponents);
-
-    // TODO: finish this off
 }

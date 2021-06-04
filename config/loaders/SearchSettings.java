@@ -26,20 +26,16 @@ public class SearchSettings extends Setting {
     private static Properties configFile;
     private static Map<String, JComponent> components = new HashMap<String, JComponent>();
 
-    @SuppressWarnings("unused")
-
     private boolean isLongValid(String numberString) {
         if (numberString.matches("\\d+")) {
-            long val = 0L;
-
             try {
-                val = Long.valueOf(numberString);
+                Long.valueOf(numberString);
                 return true;
             } catch (NumberFormatException tooLarge) {
                 System.out.println("Number is too large!");
             }
         }
-
+        
         return false;
     }
 

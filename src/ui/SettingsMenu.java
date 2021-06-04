@@ -16,12 +16,13 @@ import javax.swing.JTabbedPane;
 import main.Controller;
 
 import loaders.*;
+import loaders.base.*;
 
 public class SettingsMenu extends JFrame {
     @SuppressWarnings("static-access")
 
     public SettingsMenu() {
-        HashMap<String, loaders.base.Setting> setters = new HashMap<String, loaders.base.Setting>();
+        HashMap<String, Setting> setters = new HashMap<String, Setting>();
 
         JFrame window = new JFrame(Controller.title + " - Settings (Coming soon)");
         window.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -43,7 +44,7 @@ public class SettingsMenu extends JFrame {
 
         try {
             SearchSettings searchSettings = new SearchSettings();
-            setters.put("SearchSettings", searchSettings);
+            setters.put("Search", searchSettings);
             JPanel searchOptions = searchSettings.getSettingPanel(primary.getBounds());
 
             tabbed.addTab(searchSettings.getId().toString(), searchOptions);
@@ -81,6 +82,17 @@ public class SettingsMenu extends JFrame {
         reset.setSize(resetDefault.getSize());
         reset.setLocation(resetDefault.getX() + resetDefault.getWidth() + 30, resetDefault.getY());
         reset.setText("Reset");
+        reset.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String current = tabbed.getTitleAt(tabbed.getSelectedIndex());
+                    Setting toReset = setters.get(current);
+                    toReset.resetToDefaults();
+                } catch (IOException resErr) {
+                    ErrorHandler.report(resErr);
+                }
+            }
+        });
 
         JButton apply = new JButton();
         apply.setSize(resetDefault.getSize());
