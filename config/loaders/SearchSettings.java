@@ -2,14 +2,21 @@ package loaders;
 
 import java.awt.Rectangle;
 import java.awt.Color;
+import java.awt.event.*;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TimeZone;
 
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -41,6 +48,8 @@ public class SearchSettings extends Setting {
 
     public SearchSettings() throws IOException {
         id = SettingId.SEARCH;
+        String use = id.toString().toLowerCase();
+        path = "settings/" + use + "/" + use + ".properties";
 
         configFile = getConfig();
     }
@@ -100,10 +109,56 @@ public class SearchSettings extends Setting {
         idSetting.add(maxText);
         idSetting.add(maxInput);
 
+        JPanel timezoneSetting = new JPanel();
+        timezoneSetting.setBounds(idSetting.getX(), idSetting.getY() + idSetting.getHeight() + 20, idSetting.getWidth(), idSetting.getHeight() + 130);
+        timezoneSetting.setLayout(null);
+        timezoneSetting.setBackground(highlighted);
+        timezoneSetting.setBorder(new TitledBorder(new EtchedBorder(), "Time Zone"));
+
+        Set<String> valid = new HashSet<String>(Arrays.asList(TimeZone.getAvailableIDs()));
+        valid.removeIf(zone -> zone.toUpperCase() != zone);
+
+        String[] validZones = new String[valid.size()];
+        byte ind = 0;
+
+        for (String zone: valid) {
+            validZones[ind] = zone;
+            ind++;
+        }
+
+        Arrays.sort(validZones);
+
+        boolean local = Boolean.valueOf(get("local"));
+
+        JComboBox<String> pickZone = new JComboBox<String>(validZones);
+        pickZone.setBounds(8, 20, 250, 30);
+        pickZone.setEditable(false);
+        pickZone.setMaximumRowCount(7);
+        pickZone.setName("timezone");
+        pickZone.setEnabled(!local);
+        pickZone.setSelectedItem(get("timezone"));
+        
+        JCheckBox useLocal = new JCheckBox("Local", local); // sets whether it uses local timezone
+        //TODO: add tooltip text to this
+        useLocal.setBounds(pickZone.getX() + pickZone.getWidth() + 20, pickZone.getY(), 60, 20);
+        useLocal.setBackground(highlighted);
+        useLocal.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent ie) {
+                pickZone.setEnabled(ie.getStateChange() == ItemEvent.SELECTED ? false : true);
+            }
+        });
+        useLocal.setName("local");
+
+        timezoneSetting.add(pickZone);
+        timezoneSetting.add(useLocal);
+
         panel.add(idSetting);
+        panel.add(timezoneSetting);
 
         components.put(minInput.getName(), minInput);
         components.put(maxInput.getName(), maxInput);
+        components.put(pickZone.getName(), pickZone);
+        components.put(useLocal.getName(), useLocal);
 
         return panel;
     }
@@ -129,14 +184,17 @@ public class SearchSettings extends Setting {
             }
         }
 
+        String local = ((JCheckBox) setterComponents.get("local")).isSelected() ? "true" : "false";
+        String timezone = ((JComboBox<?>) setterComponents.get("timezone")).getSelectedItem().toString();
+
+        set("local", local);
+        set("timezone", timezone);
+
         try {
-            FileOutputStream save = new FileOutputStream(ClassLoader.getSystemResource("settings/search/search.properties").getFile());
+            FileOutputStream save = new FileOutputStream(SearchSettings.class.getClassLoader().getResource(path).getFile());
             configFile.store(save, "Changed values");
         } catch (IOException writingexc) {
             ErrorHandler.report(writingexc);
         }
-
-        //TODO: if there is a more efficient way of applying the settings, then implement it
     }
-    
 }

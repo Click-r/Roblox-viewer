@@ -5,7 +5,6 @@ import java.awt.Rectangle;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
 import java.util.Properties;
 import java.util.Map;
 
@@ -14,6 +13,7 @@ import javax.swing.JPanel;
 
 public abstract class Setting {
     protected static SettingId id;
+    protected static String path;
 
     public static SettingId getId() {
         return id;
@@ -37,12 +37,12 @@ public abstract class Setting {
             }
         });
 
-        FileOutputStream save = new FileOutputStream(ClassLoader.getSystemResource("settings/" + id + "/" + id + ".properties").getFile());
+        FileOutputStream save = new FileOutputStream(Setting.class.getClassLoader().getResource(path).getFile());
         properties.store(save, "Reset to defaults");
     }
 
     public static Properties getConfig() throws IOException {
-        InputStream stream = ClassLoader.getSystemResourceAsStream("settings/" + id + "/" + id + ".properties");
+        InputStream stream = Setting.class.getClassLoader().getResourceAsStream(path);
 
         Properties property = new Properties();
         property.load(stream);
