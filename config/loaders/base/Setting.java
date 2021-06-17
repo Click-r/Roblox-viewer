@@ -5,11 +5,14 @@ import java.awt.Rectangle;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.Map;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+
+import main.Controller;
 
 public abstract class Setting {
     protected static SettingId id;
@@ -17,6 +20,10 @@ public abstract class Setting {
 
     public static SettingId getId() {
         return id;
+    }
+
+    public static String getPath() {
+        return path;
     }
 
     public static void resetToDefaults() throws IOException {
@@ -37,12 +44,16 @@ public abstract class Setting {
             }
         });
 
-        FileOutputStream save = new FileOutputStream(Setting.class.getClassLoader().getResource(path).getFile());
+        String file = Controller.runningAsJar ? path : Setting.class.getClassLoader().getResource(path).getFile();
+        // make sure it can run both in the IDE and jar file
+
+        FileOutputStream save = new FileOutputStream(file);
         properties.store(save, "Reset to defaults");
     }
 
     public static Properties getConfig() throws IOException {
-        InputStream stream = Setting.class.getClassLoader().getResourceAsStream(path);
+        InputStream stream = Controller.runningAsJar ? Paths.get(path).toUri().toURL().openStream() : Setting.class.getClassLoader().getResourceAsStream(path);
+        // make sure it can run both in the IDE and jar file (again)
 
         Properties property = new Properties();
         property.load(stream);

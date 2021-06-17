@@ -6,9 +6,9 @@ public enum SettingId {
             return "Search";
         }
     },
-    THEME {
+    DISPLAY {
         public String toString() {
-            return "Theme";
+            return "Display";
         }
     }
 }

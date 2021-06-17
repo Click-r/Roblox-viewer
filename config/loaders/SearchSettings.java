@@ -27,6 +27,8 @@ import javax.swing.text.JTextComponent;
 
 import loaders.base.*;
 
+import main.Controller;
+
 import ui.ErrorHandler;
 
 public class SearchSettings extends Setting {
@@ -48,8 +50,10 @@ public class SearchSettings extends Setting {
 
     public SearchSettings() throws IOException {
         id = SettingId.SEARCH;
+
         String use = id.toString().toLowerCase();
         path = "settings/" + use + "/" + use + ".properties";
+        path = Controller.runningAsJar ? System.getProperty("user.dir") + "/" + path : path; // distinction between IDE and jar
 
         configFile = getConfig();
     }
@@ -191,7 +195,9 @@ public class SearchSettings extends Setting {
         set("timezone", timezone);
 
         try {
-            FileOutputStream save = new FileOutputStream(SearchSettings.class.getClassLoader().getResource(path).getFile());
+            String file = Controller.runningAsJar ? path : Setting.class.getClassLoader().getResource(path).getFile();
+
+            FileOutputStream save = new FileOutputStream(file);
             configFile.store(save, "Changed values");
         } catch (IOException writingexc) {
             ErrorHandler.report(writingexc);
