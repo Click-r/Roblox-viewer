@@ -12,8 +12,6 @@ public class Controller {
 
     public final static boolean runningAsJar = Controller.class.getResource("").getProtocol().equals("jar");
 
-    @SuppressWarnings("static-access")
-
     private static void initFiles() {
         String current = System.getProperty("user.dir");
         String target = current + "\\settings";

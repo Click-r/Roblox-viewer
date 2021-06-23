@@ -5,12 +5,17 @@ import java.awt.Rectangle;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
 import java.nio.file.Paths;
+
 import java.util.Properties;
 import java.util.Map;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import main.Controller;
 
@@ -61,6 +66,23 @@ public abstract class Setting {
         return property;
     }
 
+    public static byte[] getHash() throws IOException, NoSuchAlgorithmException {
+        Properties config = getConfig();
+
+        MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
+
+        config.forEach((name, value) -> {
+            String strVal = (String) value;
+
+            if (((String)name).endsWith("_DEFAULT"))
+                mDigest.update(strVal.getBytes());
+        });
+
+        byte[] output = mDigest.digest();
+
+        return output;
+    }
+
     abstract public JPanel getSettingPanel(Rectangle bounds);
 
     abstract public void set(String key, String value);
@@ -70,4 +92,6 @@ public abstract class Setting {
     abstract public Map<String, JComponent> getComponents();
 
     abstract public void applyChanges(Map<String, JComponent> setterComponents);
+
+    abstract public void isModified();
 }

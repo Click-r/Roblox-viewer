@@ -3,9 +3,13 @@ package loaders;
 import java.awt.Rectangle;
 import java.awt.Color;
 import java.awt.event.*;
+import java.awt.event.ActionListener;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -23,6 +27,8 @@ import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.JTextComponent;
 
 import loaders.base.*;
@@ -30,6 +36,7 @@ import loaders.base.*;
 import main.Controller;
 
 import ui.ErrorHandler;
+import ui.SettingsMenu;
 
 public class SearchSettings extends Setting {
     private static Properties configFile;
@@ -148,13 +155,42 @@ public class SearchSettings extends Setting {
         useLocal.setBackground(highlighted);
         useLocal.addItemListener(new ItemListener() {
             public void itemStateChanged(ItemEvent ie) {
-                pickZone.setEnabled(ie.getStateChange() == ItemEvent.SELECTED ? false : true);
+                pickZone.setEnabled(ie.getStateChange() != ItemEvent.SELECTED);
             }
         });
         useLocal.setName("local");
 
         timezoneSetting.add(pickZone);
         timezoneSetting.add(useLocal);
+
+        ActionListener actListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                isModified();
+            }
+        };
+
+        DocumentListener docListener = new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                isModified();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                isModified();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                isModified();
+            }
+        };
+
+        minInput.getDocument().addDocumentListener(docListener);
+        maxInput.getDocument().addDocumentListener(docListener);
+        pickZone.addActionListener(actListener);
+        useLocal.addActionListener(actListener);
 
         panel.add(idSetting);
         panel.add(timezoneSetting);
@@ -201,6 +237,28 @@ public class SearchSettings extends Setting {
             configFile.store(save, "Changed values");
         } catch (IOException writingexc) {
             ErrorHandler.report(writingexc);
+        }
+    }
+
+    @Override
+    public void isModified() {
+        try {
+            MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = getHash();
+
+            mDigest.update(String.valueOf(((JCheckBox) components.get("local")).isSelected()).getBytes());
+            mDigest.update(((JTextComponent) components.get("min_id")).getText().getBytes());
+            mDigest.update(((JTextComponent) components.get("max_id")).getText().getBytes());
+            mDigest.update(((JComboBox<?>) components.get("timezone")).getSelectedItem().toString().getBytes());
+            // can't wait to have to add more to this manually as settings expand e.e
+
+            byte[] output = mDigest.digest();
+
+            boolean equal = MessageDigest.isEqual(hash, output);
+
+            SettingsMenu.saveNotify(equal);
+        } catch (IOException|NoSuchAlgorithmException errs) {
+            ErrorHandler.report(errs);
         }
     }
 }

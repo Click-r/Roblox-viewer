@@ -1,10 +1,12 @@
 package ui;
 
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.*;
 import java.awt.Color;
 
 import java.io.IOException;
+
 import java.util.HashMap;
 
 import javax.swing.BorderFactory;
@@ -12,6 +14,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextPane;
 
 import main.Controller;
 
@@ -19,12 +22,15 @@ import loaders.*;
 import loaders.base.*;
 
 public class SettingsMenu extends JFrame {
+    private static JFrame self;
+    private static JTextPane saveStatus;
+
     @SuppressWarnings("static-access")
 
     public SettingsMenu() {
         HashMap<String, Setting> setters = new HashMap<String, Setting>();
 
-        JFrame window = new JFrame(Controller.title + " - Settings (Coming soon)");
+        JFrame window = new JFrame(Controller.title + " - Settings");
         window.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         final int x = 450;
@@ -56,12 +62,10 @@ public class SettingsMenu extends JFrame {
 
         primary.add(tabbed);
 
-        int combined = primary.getY() + primary.getHeight();
-
         JButton resetDefault = new JButton();
         resetDefault.setBounds(
             x/6 - 25,
-            combined + ((y - combined) / 2) - 40,
+            y - 97,
             90, 
             40
         );
@@ -71,6 +75,7 @@ public class SettingsMenu extends JFrame {
                 setters.forEach((name, setter) -> {
                     try {
                         setter.resetToDefaults();
+                        saveNotify(true);
                     } catch (IOException resetErr) {
                         ErrorHandler.report(resetErr);
                     }
@@ -88,6 +93,7 @@ public class SettingsMenu extends JFrame {
                     String current = tabbed.getTitleAt(tabbed.getSelectedIndex());
                     Setting toReset = setters.get(current);
                     toReset.resetToDefaults();
+                    saveNotify(true);
                 } catch (IOException resErr) {
                     ErrorHandler.report(resErr);
                 }
@@ -101,8 +107,20 @@ public class SettingsMenu extends JFrame {
         apply.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setters.forEach((name, setter) -> setter.applyChanges(setter.getComponents()));
+                saveNotify(true);
             }
         });
+
+        JTextPane desc = new JTextPane();
+        desc.setEditable(false);
+        desc.setText("Good to go!");
+        desc.setBounds(-1, y - 55, 95, 16);
+        desc.setBackground(window.getBackground());
+        desc.setFont(new Font(desc.getFont().getName(), Font.PLAIN, 10));
+        desc.setHighlighter(null);
+        desc.getCaret().deinstall(desc);
+        
+        saveStatus = desc;
 
         window.addWindowListener(new WindowAdapter() {
             @Override
@@ -115,9 +133,22 @@ public class SettingsMenu extends JFrame {
         window.add(resetDefault);
         window.add(reset);
         window.add(apply);
+        window.add(desc);
 
         window.setLayout(null);
 
         window.setVisible(true);
+
+        self = window;
+    }
+
+    public static void saveNotify(boolean saved) {
+        if (saved) {
+            self.setTitle(Controller.title + " - Settings");
+            saveStatus.setText("Good to go!");
+        } else {
+            self.setTitle(Controller.title + " - Settings*");
+            saveStatus.setText("Unsaved changes!");
+        }
     }
 }
