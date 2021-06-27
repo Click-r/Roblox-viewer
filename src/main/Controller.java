@@ -46,6 +46,7 @@ public class Controller {
     public static void main(String[] args) throws URISyntaxException {
         initFiles();
 
-        MainWindow.display();
+        MainWindow mw = new MainWindow();
+        mw.display();
     }
 }

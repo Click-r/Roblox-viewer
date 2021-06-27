@@ -20,18 +20,18 @@ import java.security.NoSuchAlgorithmException;
 import main.Controller;
 
 public abstract class Setting {
-    protected static SettingId id;
-    protected static String path;
+    protected SettingId id;
+    protected String path;
 
-    public static SettingId getId() {
-        return id;
+    public SettingId getId() {
+        return this.id;
     }
 
-    public static String getPath() {
-        return path;
+    public String getPath() {
+        return this.path;
     }
 
-    public static void resetToDefaults() throws IOException {
+    public void resetToDefaults() throws IOException {
         Properties properties = getConfig();
 
         final String suffix = "_DEFAULT";
@@ -49,15 +49,15 @@ public abstract class Setting {
             }
         });
 
-        String file = Controller.runningAsJar ? path : Setting.class.getClassLoader().getResource(path).getFile();
+        String file = Controller.runningAsJar ? this.path : Setting.class.getClassLoader().getResource(this.path).getFile();
         // make sure it can run both in the IDE and jar file
 
         FileOutputStream save = new FileOutputStream(file);
         properties.store(save, "Reset to defaults");
     }
 
-    public static Properties getConfig() throws IOException {
-        InputStream stream = Controller.runningAsJar ? Paths.get(path).toUri().toURL().openStream() : Setting.class.getClassLoader().getResourceAsStream(path);
+    public Properties getConfig() throws IOException {
+        InputStream stream = Controller.runningAsJar ? Paths.get(this.path).toUri().toURL().openStream() : Setting.class.getClassLoader().getResourceAsStream(this.path);
         // make sure it can run both in the IDE and jar file (again)
 
         Properties property = new Properties();
@@ -66,7 +66,7 @@ public abstract class Setting {
         return property;
     }
 
-    public static byte[] getHash() throws IOException, NoSuchAlgorithmException {
+    public byte[] getHash() throws IOException, NoSuchAlgorithmException {
         Properties config = getConfig();
 
         MessageDigest mDigest = MessageDigest.getInstance("SHA-256");

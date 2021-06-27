@@ -27,9 +27,9 @@ import loaders.*;
 import main.Controller;
 
 public class MainWindow {
-    private static String lastModifed;
-    private static Player last;
-    private static JButton searchKey;
+    private String lastModifed;
+    private Player last;
+    private JButton searchKey;
     public static ToolBarManager toolbar;
 
     static class ToolBarManager {
@@ -48,7 +48,7 @@ public class MainWindow {
         }
     }
 
-    private static JTextComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo){
+    private JTextComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo){
         JTextPane ioDISP = new JTextPane();
         ioDISP.setText(inpOutInfo + ":");
         if (last == null)
@@ -107,7 +107,7 @@ public class MainWindow {
         return ioDISP;
     }
 
-    private static String format(String input) {
+    private String format(String input) {
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
@@ -120,7 +120,7 @@ public class MainWindow {
         return stream.toString();
     }
 
-    private static void updateVals(Player player, HashMap<String,JTextComponent> compMap, JLabel... avatar) {
+    private void updateVals(Player player, HashMap<String,JTextComponent> compMap, JLabel... avatar) {
         last = player;
 
         compMap.forEach((name, comp) -> {
@@ -147,11 +147,11 @@ public class MainWindow {
         }
     }
 
-    private static long randomLong(long min, long max) {
+    private long randomLong(long min, long max) {
         return min + (long) (Math.random() * (max - min));
     }
 
-    private static void presentError(JTextPane msgBox, String input) {
+    private void presentError(JTextPane msgBox, String input) {
         msgBox.getParent().setVisible(true);
 
         String datatype = lastModifed.toLowerCase().equals("name") ? "name " : "id "; // determines if it's id or name based on lastModified
@@ -165,7 +165,7 @@ public class MainWindow {
         msgBox.setText("Failed fetching user with " + datatype + input);
     }
 
-    private static JFrame build() {
+    private JFrame build() {
         JFrame frame = new JFrame(Controller.title + " v" + Controller.version);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -440,7 +440,7 @@ public class MainWindow {
         return frame;
     }
 
-    public static void display() {
+    public void display() {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 JFrame show = build();

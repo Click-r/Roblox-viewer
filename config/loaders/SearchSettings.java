@@ -3,7 +3,6 @@ package loaders;
 import java.awt.Rectangle;
 import java.awt.Color;
 import java.awt.event.*;
-import java.awt.event.ActionListener;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -11,24 +10,11 @@ import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.JTextPane;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
+import javax.swing.*;
+import javax.swing.border.*;
+import javax.swing.event.*;
 import javax.swing.text.JTextComponent;
 
 import loaders.base.*;
@@ -39,8 +25,8 @@ import ui.ErrorHandler;
 import ui.SettingsMenu;
 
 public class SearchSettings extends Setting {
-    private static Properties configFile;
-    private static Map<String, JComponent> components = new HashMap<String, JComponent>();
+    private Properties configFile;
+    private Map<String, JComponent> components = new HashMap<String, JComponent>();
 
     private boolean isLongValid(String numberString) {
         if (numberString.matches("\\d+")) {
