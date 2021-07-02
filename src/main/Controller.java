@@ -1,29 +1,31 @@
 package main;
 
 import java.net.URISyntaxException;
+
 import java.nio.file.*;
+
+import java.io.IOException;
 
 import ui.*;
 
 public class Controller {
-    public final static String version = "0.7b";
+    public final static String version = "0.7c";
     public final static String title = "RBLXInfoViewer";
     public final static String author = "Cli_ck";
 
     public final static boolean runningAsJar = Controller.class.getResource("").getProtocol().equals("jar");
 
     private static void initFiles() {
+        ClassLoader controllerLoader = Controller.class.getClassLoader();
+
         String current = System.getProperty("user.dir");
         String target = current + "\\settings";
 
-        Path exists = Paths.get(target);
+        Path settingsDir = Paths.get(target);
 
-        if (Files.isDirectory(exists) || !runningAsJar) {
+        if (Files.isDirectory(settingsDir) || !runningAsJar) {
             System.out.println("Settings directory exists.");
         } else {
-            Path settingsDir = Paths.get(target);
-            ClassLoader controllerLoader = Controller.class.getClassLoader();
-
             try {
                 Files.createDirectory(settingsDir); // creates initial settings directory
 
@@ -37,10 +39,27 @@ public class Controller {
                 Files.copy(controllerLoader.getResourceAsStream("settings/display/display.properties"), Paths.get(displayDir + "\\display.properties"));
                 // display directory and display properties file
 
-            } catch (Exception iex) {
+            } catch (IOException iex) {
                 ErrorHandler.report(iex);
             }
-        }
+        } // deals with the settings directory
+
+        target = current + "\\misc";
+
+        Path misc = Paths.get(target);
+
+        if (Files.isDirectory(misc) || !runningAsJar) {
+            System.out.println("Misc directory exists.");
+        } else {
+            try {
+                Files.createDirectory(misc);
+                Files.copy(controllerLoader.getResourceAsStream("misc/CreateShortcut.vbs"), Paths.get(target + "\\CreateShortcut.vbs"));
+            } catch (IOException iex) {
+                ErrorHandler.report(iex);
+            }
+        } // deals with misc directory
+
+        // TODO: clean this up sometime
     }
 
     public static void main(String[] args) throws URISyntaxException {

@@ -231,12 +231,18 @@ public class SearchSettings extends Setting {
         try {
             MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
             byte[] hash = getHash();
+            
+            List<String> strList = new ArrayList<String>();
 
-            mDigest.update(String.valueOf(((JCheckBox) components.get("local")).isSelected()).getBytes());
-            mDigest.update(((JTextComponent) components.get("min_id")).getText().getBytes());
-            mDigest.update(((JTextComponent) components.get("max_id")).getText().getBytes());
-            mDigest.update(((JComboBox<?>) components.get("timezone")).getSelectedItem().toString().getBytes());
+            strList.add(String.valueOf(((JCheckBox) components.get("local")).isSelected()));
+            strList.add(((JTextComponent) components.get("min_id")).getText());
+            strList.add(((JTextComponent) components.get("max_id")).getText());
+            strList.add(((JComboBox<?>) components.get("timezone")).getSelectedItem().toString());
             // can't wait to have to add more to this manually as settings expand e.e
+
+            strList.sort((str1, str2) -> str1.length() - str2.length());
+
+            strList.forEach((string) -> mDigest.update(string.getBytes()));
 
             byte[] output = mDigest.digest();
 

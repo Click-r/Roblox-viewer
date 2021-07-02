@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.nio.file.Paths;
 
 import java.util.Properties;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JComponent;
@@ -71,12 +73,16 @@ public abstract class Setting {
 
         MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
 
-        config.forEach((name, value) -> {
-            String strVal = (String) value;
+        List<String> strList = new ArrayList<String>();
 
-            if (((String)name).endsWith("_DEFAULT"))
-                mDigest.update(strVal.getBytes());
+        config.forEach((name, value) -> {
+            if (!((String)name).endsWith("_DEFAULT"))
+                strList.add(value.toString());
         });
+
+        strList.sort((str1, str2) -> str1.length() - str2.length());
+
+        strList.forEach((string) -> mDigest.update(string.getBytes()));
 
         byte[] output = mDigest.digest();
 

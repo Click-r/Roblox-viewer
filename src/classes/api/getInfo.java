@@ -183,7 +183,7 @@ public class getInfo {
         };
 
         final String[][] toFilter = {
-            null,
+            new String[]{"externalAppDisplayName"},
             null,
             null,
             null,

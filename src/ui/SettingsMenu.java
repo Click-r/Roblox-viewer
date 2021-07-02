@@ -18,6 +18,8 @@ import javax.swing.JTextPane;
 
 import main.Controller;
 
+import misc.ExecuteCreateShortcut;
+
 import loaders.*;
 import loaders.base.*;
 
@@ -41,7 +43,7 @@ public class SettingsMenu extends JFrame {
         window.setPreferredSize(new Dimension(x, y));
 
         JPanel primary = new JPanel();
-        primary.setBounds(0, 0, x, y - 100);
+        primary.setBounds(0, 0, x, y - 140);
         primary.setLayout(null);
         primary.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0), 1));
 
@@ -65,7 +67,7 @@ public class SettingsMenu extends JFrame {
         JButton resetDefault = new JButton();
         resetDefault.setBounds(
             x/6 - 25,
-            y - 97,
+            y - 137,
             90, 
             40
         );
@@ -111,6 +113,17 @@ public class SettingsMenu extends JFrame {
             }
         });
 
+        JButton shortcutCreate = new JButton();
+        shortcutCreate.setSize(resetDefault.getSize());
+        shortcutCreate.setLocation(resetDefault.getX(), resetDefault.getY() + resetDefault.getHeight() + 4);
+        shortcutCreate.setText("Shortcut");
+        shortcutCreate.setToolTipText("Creates a desktop shortcut to the jar file.");
+        shortcutCreate.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                ExecuteCreateShortcut.RunScript();
+            }
+        });
+
         JTextPane desc = new JTextPane();
         desc.setEditable(false);
         desc.setText("Good to go!");
@@ -133,6 +146,7 @@ public class SettingsMenu extends JFrame {
         window.add(resetDefault);
         window.add(reset);
         window.add(apply);
+        window.add(shortcutCreate);
         window.add(desc);
 
         window.setLayout(null);
