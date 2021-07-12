@@ -289,6 +289,14 @@ public class MainWindow {
 
         String startUser = "ROBLOX";
 
+        try {
+            DisplaySettings dispSettings = new DisplaySettings();
+            startUser = dispSettings.get("start_user");
+
+        } catch (IOException ioexcept) {
+            ErrorHandler.report(ioexcept);
+        }
+
         if (chosen == 29L) 
             startUser = Controller.author;
         

@@ -25,8 +25,6 @@ import ui.ErrorHandler;
 import ui.SettingsMenu;
 
 public class SearchSettings extends Setting {
-    private Properties configFile;
-    private Map<String, JComponent> components = new HashMap<String, JComponent>();
 
     private boolean isLongValid(String numberString) {
         if (numberString.matches("\\d+")) {
@@ -49,21 +47,12 @@ public class SearchSettings extends Setting {
         path = Controller.runningAsJar ? System.getProperty("user.dir") + "/" + path : path; // distinction between IDE and jar
 
         configFile = getConfig();
-    }
-
-    @Override
-    public void set(String key, String value) {
-        configFile.setProperty(key, value);
-    }
-
-    @Override
-    public String get(String key) {
-        return configFile.getProperty(key);
+        components = new HashMap<String, JComponent>();
     }
 
     @Override
     public JPanel getSettingPanel(Rectangle bounds) {
-        final Color highlighted = new Color(218,218,218);
+        final Color highlighted = new Color(218, 218, 218);
 
         JPanel panel = new JPanel();
         panel.setBounds(bounds);
@@ -136,7 +125,7 @@ public class SearchSettings extends Setting {
         pickZone.setSelectedItem(get("timezone"));
         
         JCheckBox useLocal = new JCheckBox("Local", local); // sets whether it uses local timezone
-        //TODO: add tooltip text to this
+        useLocal.setToolTipText("Tells the program whether to use local time or the selected time.");
         useLocal.setBounds(pickZone.getX() + pickZone.getWidth() + 20, pickZone.getY(), 60, 20);
         useLocal.setBackground(highlighted);
         useLocal.addItemListener(new ItemListener() {
@@ -190,14 +179,11 @@ public class SearchSettings extends Setting {
     }
 
     @Override
-    public Map<String, JComponent> getComponents() {
-        return components;
-    }
+    public boolean applyChanges() {
+        boolean valid = true;
 
-    @Override
-    public void applyChanges(Map<String, JComponent> setterComponents) {
-        String min_id = ((JTextComponent) setterComponents.get("min_id")).getText();
-        String max_id = ((JTextComponent) setterComponents.get("max_id")).getText();
+        String min_id = ((JTextComponent) components.get("min_id")).getText();
+        String max_id = ((JTextComponent) components.get("max_id")).getText();
 
         if (isLongValid(min_id) && isLongValid(max_id)) {
             Long textA,textB;
@@ -207,11 +193,11 @@ public class SearchSettings extends Setting {
             if ((textA > 0 && textB > 0) && (textA < textB)) {
                 set("min_id", textA.toString());
                 set("max_id", textB.toString());
-            }
-        }
+            } else valid = false;
+        } else valid = false;
 
-        String local = ((JCheckBox) setterComponents.get("local")).isSelected() ? "true" : "false";
-        String timezone = ((JComboBox<?>) setterComponents.get("timezone")).getSelectedItem().toString();
+        String local = ((JCheckBox) components.get("local")).isSelected() ? "true" : "false";
+        String timezone = ((JComboBox<?>) components.get("timezone")).getSelectedItem().toString();
 
         set("local", local);
         set("timezone", timezone);
@@ -221,9 +207,13 @@ public class SearchSettings extends Setting {
 
             FileOutputStream save = new FileOutputStream(file);
             configFile.store(save, "Changed values");
+
+            return valid;
         } catch (IOException writingexc) {
             ErrorHandler.report(writingexc);
         }
+
+        return false; // if it goes past the try-catch block we return invalid
     }
 
     @Override
@@ -249,7 +239,7 @@ public class SearchSettings extends Setting {
             boolean equal = MessageDigest.isEqual(hash, output);
 
             SettingsMenu.saveNotify(equal);
-        } catch (IOException|NoSuchAlgorithmException errs) {
+        } catch (IOException | NoSuchAlgorithmException errs) {
             ErrorHandler.report(errs);
         }
     }

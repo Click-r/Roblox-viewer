@@ -24,6 +24,8 @@ import main.Controller;
 public abstract class Setting {
     protected SettingId id;
     protected String path;
+    protected Properties configFile;
+    protected Map<String, JComponent> components;
 
     public SettingId getId() {
         return this.id;
@@ -89,15 +91,17 @@ public abstract class Setting {
         return output;
     }
 
+    public void set(String key, String value) {
+        configFile.setProperty(key, value);
+    }
+
+    public String get(String key) {
+        return configFile.getProperty(key);
+    }
+
     abstract public JPanel getSettingPanel(Rectangle bounds);
 
-    abstract public void set(String key, String value);
-
-    abstract public String get(String key);
-
-    abstract public Map<String, JComponent> getComponents();
-
-    abstract public void applyChanges(Map<String, JComponent> setterComponents);
+    abstract public boolean applyChanges();
 
     abstract public void isModified();
 }

@@ -53,9 +53,11 @@ public class SettingsMenu extends JFrame {
         try {
             SearchSettings searchSettings = new SearchSettings();
             setters.put("Search", searchSettings);
-            JPanel searchOptions = searchSettings.getSettingPanel(primary.getBounds());
 
-            tabbed.addTab(searchSettings.getId().toString(), searchOptions);
+            DisplaySettings displaySettings = new DisplaySettings();
+            setters.put("Display", displaySettings);
+
+            setters.forEach((name, settingOption) -> tabbed.addTab(name, settingOption.getSettingPanel(primary.getBounds())));
         } catch (IOException io) {
             ErrorHandler.report(io);
         }
@@ -108,8 +110,16 @@ public class SettingsMenu extends JFrame {
         apply.setText("Apply");
         apply.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                setters.forEach((name, setter) -> setter.applyChanges(setter.getComponents()));
-                saveNotify(true);
+                boolean allValid = true;
+
+                for (Setting setter : setters.values()) {
+                    boolean isValid = setter.applyChanges();
+                    
+                    if (!isValid)
+                        allValid = false;
+                }
+
+                saveNotify(allValid);
             }
         });
 
