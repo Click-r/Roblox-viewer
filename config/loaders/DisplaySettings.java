@@ -58,7 +58,7 @@ public class DisplaySettings extends Setting {
         themeSetting.setBorder(new TitledBorder(new EtchedBorder(), "Theme"));
         themeSetting.setBackground(highlighted);
 
-        JComboBox<String> themeSelection = new JComboBox<String>(new String[]{"Light", "Dark"});
+        JComboBox<String> themeSelection = new JComboBox<String>(new String[]{"Light", "Dark (beta)"});
         themeSelection.setBounds(8, 15, 130, 25);
         themeSelection.setEditable(false);
         themeSelection.setMaximumRowCount(2);
