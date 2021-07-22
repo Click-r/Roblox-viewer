@@ -2,6 +2,7 @@ package ui;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
+import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -17,17 +18,19 @@ import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 
 import java.lang.reflect.Field;
-
 import java.util.HashMap;
+import java.util.Map;
+import java.util.UnknownFormatConversionException;
 
 import classes.*;
+import loaders.*;
 
 import main.Controller;
 
 public class MainWindow {
-    private static String lastModifed;
-    private static Player last;
-    private static JButton searchKey;
+    private String lastModifed;
+    private Player last;
+    private JButton searchKey;
     public static ToolBarManager toolbar;
 
     static class ToolBarManager {
@@ -46,7 +49,9 @@ public class MainWindow {
         }
     }
 
-    private static JTextComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo){
+    private JTextComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo, Map<String, Color> palette){
+        final Color text = palette.get("text");
+        
         JTextPane ioDISP = new JTextPane();
         ioDISP.setText(inpOutInfo + ":");
         if (last == null)
@@ -56,16 +61,24 @@ public class MainWindow {
         ioDISP.setEditable(false);
         ioDISP.setBackground(backG);
         ioDISP.setOpaque(true);
+        ioDISP.setForeground(text);
 
         JTextField ioF = new JTextField();
+        ioF.setBorder(null);
         ioF.setColumns(1);
         ioF.setBounds(ioDISP.getWidth() + 4, ioDISP.getY(), w, h);
         ioF.setEditable(editable);
         ioF.setHorizontalAlignment(JTextField.LEFT);
+        ioF.setBackground(palette.get("background"));
+        ioF.setForeground(text);
+        Color back = ioF.getBackground();
+        ioF.setCaretColor(new Color(255 - back.getRed(), 255 - back.getGreen(), 255 - back.getBlue())); // invert background colour
         ioF.setText(Default);
         ioF.setName(inpOutInfo);
 
         if (editable) {
+            ioF.setBackground(palette.get("amplified"));
+
             final int lookingfor = KeyEvent.VK_ENTER;
 
             ioF.getDocument().addDocumentListener(new DocumentListener() {
@@ -105,20 +118,22 @@ public class MainWindow {
         return ioDISP;
     }
 
-    private static String format(String input) {
+    private String format(String input) {
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
         try (PrintStream printStream = new PrintStream(stream, true, "utf-8")) {
             printStream.format(input);
-        } catch (UnsupportedEncodingException uns) {
-            ErrorHandler.report(uns);
+        } catch (UnsupportedEncodingException|UnknownFormatConversionException uns) {
+            ErrorHandler.report(uns, last);
         }
 
         return stream.toString();
     }
 
-    private static void updateVals(Player player, HashMap<String,JTextComponent> compMap, JLabel... avatar) {
+    private void updateVals(Player player, HashMap<String,JTextComponent> compMap, JLabel... avatar) {
+        last = player;
+
         compMap.forEach((name, comp) -> {
             name = name.toLowerCase();
             try {
@@ -131,19 +146,23 @@ public class MainWindow {
         });
 
         if (avatar.length != 0) {
-            JLabel av = avatar[0];
-
-            av.setIcon(new ImageIcon(player.image));
+            try {
+                JLabel av = avatar[0];
+                ImageIcon img = new ImageIcon(player.image);
+                
+                av.setIcon(img);
+            } catch (NullPointerException noImageFound) {
+                System.out.println("Avatar image not found");
+                // TODO: make error message display if roblox is having connectivity issues/difficulties downloading an image
+            }
         }
-
-        last = player;
     }
 
-    private static long randomLong(long min, long max) {
+    private long randomLong(long min, long max) {
         return min + (long) (Math.random() * (max - min));
     }
 
-    private static void presentError(JTextPane msgBox, String input) {
+    private void presentError(JTextPane msgBox, String input) {
         msgBox.getParent().setVisible(true);
 
         String datatype = lastModifed.toLowerCase().equals("name") ? "name " : "id "; // determines if it's id or name based on lastModified
@@ -157,11 +176,16 @@ public class MainWindow {
         msgBox.setText("Failed fetching user with " + datatype + input);
     }
 
-    private static JFrame build() {
+    private JFrame build(Map<String, Color> palette) {
         JFrame frame = new JFrame(Controller.title + " v" + Controller.version);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        final Color infoSectionColor = new Color(218,218,218);
+        final Color infoSectionColor = palette.get("info");
+        final Color textColor = palette.get("text");
+        final Color backgroundColor = palette.get("background");
+        final Color amplifiedColor = palette.get("amplified");
+
+        String stringRep = (amplifiedColor.equals(new Color(255, 255, 255))) ? "White" : "Dark";
 
         JTextComponent lastTxt = null;
 
@@ -176,27 +200,39 @@ public class MainWindow {
         frame.setBounds(200,200, x, y);
         frame.setResizable(false);
         frame.setPreferredSize(new Dimension(x,y));
+        frame.getContentPane().setBackground(backgroundColor);
 
         // general info
         JPanel info = new JPanel();
         info.setBounds(15, 55, 450, 300);
         info.setBackground(infoSectionColor);
         info.setLayout(null);
-        info.setBorder(new TitledBorder(new EtchedBorder(), "General Info"));
+
+        TitledBorder infoBorder = new TitledBorder(new EtchedBorder(), "General Info");
+        infoBorder.setTitleColor(textColor);
+
+        info.setBorder(infoBorder);
 
         // description
         JPanel description = new JPanel();
         description.setBounds(15, 447, 600, 160);
         description.setBackground(infoSectionColor);
-        description.setBorder(new TitledBorder(new EtchedBorder(), "Description"));
+
+        TitledBorder descBorder = new TitledBorder(new EtchedBorder(), "Description");
+        descBorder.setTitleColor(textColor);
+
+        description.setBorder(descBorder);
 
         JTextArea descriptionText = new JTextArea(8, 51);
         descriptionText.setLineWrap(true);
         descriptionText.setWrapStyleWord(true);
         descriptionText.setEditable(false);
+        descriptionText.setBackground(amplifiedColor);
+        descriptionText.setForeground(textColor);
         descriptionText.setName("description");
 
         JScrollPane descScroll = new JScrollPane(descriptionText);
+        descScroll.setBorder(null);
         descScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
         description.add(descScroll);
@@ -206,15 +242,22 @@ public class MainWindow {
         JPanel status = new JPanel();
         status.setBounds(15, description.getY() - 86, 600, 80);
         status.setBackground(infoSectionColor);
-        status.setBorder(new TitledBorder(new EtchedBorder(), "Status"));
+
+        TitledBorder statusBorder = new TitledBorder(new EtchedBorder(), "Status");
+        statusBorder.setTitleColor(textColor);
+
+        status.setBorder(statusBorder);
 
         JTextArea statusText = new JTextArea(3,51);
         statusText.setLineWrap(true);
         statusText.setWrapStyleWord(true);
         statusText.setEditable(false);
+        statusText.setBackground(amplifiedColor);
+        statusText.setForeground(textColor);
         statusText.setName("status");
         
         JScrollPane statScroll = new JScrollPane(statusText);
+        statScroll.setBorder(null);
         statScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
         status.add(statScroll);
@@ -246,12 +289,14 @@ public class MainWindow {
         onlineText.setText("Is online:");
         onlineText.setBackground(subPanel.getBackground());
         onlineText.setEditable(false);
+        onlineText.setForeground(textColor);
 
         JTextPane isOnline = new JTextPane();
         isOnline.setBounds(onlineText.getWidth(), 4, 30, 25);
         isOnline.setBackground(subPanel.getBackground());
         isOnline.setEditable(false);
         isOnline.setName("online"); // this looks a bit of out of place
+        isOnline.setForeground(textColor);
         // TODO: somehow make this look more natural
 
         subPanel.add(onlineText);
@@ -264,15 +309,15 @@ public class MainWindow {
 
         HashMap<String, JTextComponent> comps = new HashMap<String, JTextComponent>();
 
-        lastTxt = createIOField(info, "Name", lastTxt, infoSectionColor, true, 200, 25, "ROBLOX",comps);
-        lastTxt = createIOField(info, "ID", lastTxt, infoSectionColor, true, 200, 25, "1",comps);
-        lastTxt = createIOField(info, "DispName", lastTxt, infoSectionColor, false, 200, 25, "", comps);
-        lastTxt = createIOField(info, "Friends", lastTxt, infoSectionColor, false, 200, 25, "",comps);
-        lastTxt = createIOField(info, "Followings", lastTxt, infoSectionColor, false, 200, 25, "",comps);
-        lastTxt = createIOField(info, "Followers", lastTxt, infoSectionColor, false, 200, 25, "",comps);
-        lastTxt = createIOField(info, "Created", lastTxt, infoSectionColor, false, 200, 25, "",comps);
-        lastTxt = createIOField(info, "Banned", lastTxt, infoSectionColor, false, 200, 25, "",comps);
-        lastTxt = createIOField(info, "LastOnline", lastTxt, infoSectionColor, false, 200, 25, "", comps);
+        lastTxt = createIOField(info, "Name", lastTxt, infoSectionColor, true, 200, 25, "ROBLOX",comps, palette);
+        lastTxt = createIOField(info, "ID", lastTxt, infoSectionColor, true, 200, 25, "1", comps, palette);
+        lastTxt = createIOField(info, "DispName", lastTxt, infoSectionColor, false, 200, 25, "", comps, palette);
+        lastTxt = createIOField(info, "Friends", lastTxt, infoSectionColor, false, 200, 25, "",comps, palette);
+        lastTxt = createIOField(info, "Followings", lastTxt, infoSectionColor, false, 200, 25, "",comps, palette);
+        lastTxt = createIOField(info, "Followers", lastTxt, infoSectionColor, false, 200, 25, "",comps, palette);
+        lastTxt = createIOField(info, "Created", lastTxt, infoSectionColor, false, 200, 25, "",comps, palette);
+        lastTxt = createIOField(info, "Banned", lastTxt, infoSectionColor, false, 200, 25, "",comps, palette);
+        lastTxt = createIOField(info, "LastOnline", lastTxt, infoSectionColor, false, 200, 25, "", comps, palette);
         comps.put(descriptionText.getName(), descriptionText);
         comps.put(statusText.getName(), statusText);
         comps.put(isOnline.getName(), isOnline);
@@ -280,6 +325,14 @@ public class MainWindow {
         long chosen = randomLong(1L, 48L);
 
         String startUser = "ROBLOX";
+
+        try {
+            DisplaySettings dispSettings = new DisplaySettings();
+            startUser = dispSettings.get("start_user");
+
+        } catch (IOException ioexcept) {
+            ErrorHandler.report(ioexcept);
+        }
 
         if (chosen == 29L) 
             startUser = Controller.author;
@@ -302,6 +355,7 @@ public class MainWindow {
         JTextPane errorMsg = new JTextPane();
         errorMsg.setBounds(40, 11, 200, 45);
         errorMsg.setText("User not found.");
+        errorMsg.setForeground(textColor);
         errorMsg.setOpaque(false);
         errorMsg.setEditable(false);
         errorMsg.setHighlighter(null);
@@ -390,8 +444,20 @@ public class MainWindow {
             public void actionPerformed(ActionEvent e) {
                 if (randomize.isEnabled()){
                     randomize.setEnabled(false);
+                    long min, max;
+                    min = 1L;
+                    max = 2_300_000_000L;
 
-                    long newId = randomLong(1L, 2_300_000_000L);
+                    try {
+                        SearchSettings srch = new SearchSettings();
+
+                        min = Long.valueOf(srch.get("min_id")).longValue();
+                        max = Long.valueOf(srch.get("max_id")).longValue();
+                    } catch (IOException ioexc) {
+                        ErrorHandler.report(ioexc);
+                    }
+
+                    long newId = randomLong(min, max);
                     
                     try {
                         updateVals(new Player(newId), comps, av);
@@ -405,6 +471,20 @@ public class MainWindow {
                 }
             }
         });
+
+        if (stringRep.equals("Dark")) {
+            LineBorder border = new LineBorder(new Color(0, 0, 0), 1);
+
+            search.setBackground(amplifiedColor);
+            search.setContentAreaFilled(false);
+            search.setBorder(border);
+            search.setForeground(textColor);
+
+            randomize.setBackground(amplifiedColor);
+            randomize.setContentAreaFilled(false);
+            randomize.setBorder(border);
+            randomize.setForeground(textColor);
+        }
 
         info.add(randomize);
 
@@ -420,10 +500,23 @@ public class MainWindow {
         return frame;
     }
 
-    public static void display() {
+    public void display() {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                JFrame show = build();
+                HashMap<String, Color> selected = new HashMap<String, Color>();
+
+                try {
+                    DisplaySettings dispSettings = new DisplaySettings();
+
+                    int themeSelected = Integer.valueOf(dispSettings.get("current_theme"));
+                    Themes theme = (themeSelected == 0) ? Themes.LIGHT : Themes.DARK;
+
+                    selected = new Themes.Palette(theme).colourPalette;
+                } catch (IOException e) {
+                    ErrorHandler.report(e);
+                }
+
+                JFrame show = build(selected);
 
                 show.setVisible(true);
             }

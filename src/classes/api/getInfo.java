@@ -3,6 +3,7 @@ package classes.api;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
+import java.util.TimeZone;
 import java.util.Calendar;
 import java.util.concurrent.*;
 
@@ -14,6 +15,7 @@ import java.time.*;
 import java.awt.Image;
 
 import classes.UserNotFoundException;
+import loaders.SearchSettings;
 import classes.Link;
 
 import ui.ErrorHandler;
@@ -22,16 +24,29 @@ public class getInfo {
 
     final static int numData = classes.Player.class.getDeclaredFields().length;
 
-    private static String dateLocalTime(String time) {
+    @SuppressWarnings("static-access")
+
+    private static String dateLocalTime(String time, String... prefered) {
         String abbrev = Calendar
           .getInstance()
           .getTimeZone()
-          .getDisplayName(false, java.util.TimeZone.SHORT);
+          .getDisplayName(false, TimeZone.SHORT);
 
         ZoneId zId = Calendar
           .getInstance()
           .getTimeZone()
           .toZoneId();
+        
+        Calendar.getInstance().getTimeZone().setDefault(TimeZone.getTimeZone(zId)); // set default time zone to local
+        
+        if (prefered.length == 1) {
+            String timezone = prefered[0].toUpperCase();
+            TimeZone chosen = Calendar.getInstance().getTimeZone().getTimeZone(timezone); // resorts to the default set earlier if it can't find it
+            String timezoneDisp = chosen.getDisplayName(false, TimeZone.SHORT);
+
+            zId = chosen.toZoneId();
+            abbrev = timezoneDisp;
+        }
 
         String local = ZonedDateTime
           .parse(time)
@@ -39,9 +54,9 @@ public class getInfo {
           .atZone(zId)
           .toString()
           .split("\\.")[0];
+        
         local = local.replaceAll("T", " @ ");
         
-
         return local + " " + abbrev;
     }
 
@@ -49,8 +64,20 @@ public class getInfo {
         boolean properlyParsed = (dataSource.size() == numData);
 
         if (properlyParsed) {
+            String prefered = "";
+
+            try {
+                SearchSettings searchSettings = new SearchSettings();
+
+                prefered = Boolean.valueOf(searchSettings.get("local")) ? TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT) : searchSettings.get("timezone");
+            } catch (IOException ioex) {
+                ErrorHandler.report(ioex);
+                // note: the dateLocalTime method could handle if it was fed incorrect input due to an io exception, but if
+                // an io exception occurs then it is best to inform the user as something is most likely very wrong
+            }
+
             String creationDate = (String) dataSource.get("created");
-            creationDate = dateLocalTime(creationDate);
+            creationDate = dateLocalTime(creationDate, prefered);
             dataSource.replace("created", creationDate);
 
             boolean beaned = (boolean) dataSource.get("isBanned");
@@ -62,7 +89,7 @@ public class getInfo {
             dataSource.put("online", online);
 
             String lastOnline = (String) dataSource.get("LastOnline");
-            lastOnline = dateLocalTime(lastOnline);
+            lastOnline = dateLocalTime(lastOnline, prefered);
             dataSource.remove("LastOnline");
             dataSource.put("lastonline", lastOnline);
 
@@ -156,7 +183,7 @@ public class getInfo {
         };
 
         final String[][] toFilter = {
-            null,
+            new String[]{"externalAppDisplayName"},
             null,
             null,
             null,
@@ -188,8 +215,6 @@ public class getInfo {
 
                 } catch (IOException e) {
                     int remainingBuffer = 5 - buffer.size();
-
-                    assert remainingBuffer >= 0;
 
                     for (int i = 0; i < remainingBuffer; i++)
                         buffer.push(1);
