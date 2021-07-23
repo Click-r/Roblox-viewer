@@ -1,15 +1,23 @@
-Set shell = CreateObject("WScript.Shell")
-Set fso = CreateObject("Scripting.FileSystemObject")
+set shell = CreateObject("WScript.Shell")
+set fso = CreateObject("Scripting.FileSystemObject")
 
-Dim project_path
+dim project_path
 project_path = fso.GetParentFolderName(WScript.ScriptFullName) 'aka the current directory
 project_path = Mid(project_path, 1, Len(project_path) - 5)
 
 desktop_path = Shell.SpecialFolders("Desktop") 'get desktop directory
-Set link = Shell.CreateShortcut(desktop_path & "\RBLXInfoViewer.lnk")
+set link = Shell.CreateShortcut(desktop_path & "\RBLXInfoViewer.lnk")
 
-link.TargetPath = "%JAVA_HOME%\bin\javaw.exe"
-link.Arguments = "-jar -Dfile.encoding=UTF-8 " & project_path & "\RBLXInfoViewer.jar" 'make sure to set encoding to UTF-8
+dim jarName
+
+for each objFile in fso.getFolder(project_path).Files
+    if Lcase(fso.getExtensionName(objFile.Name)) = "jar" then 'find file with the .jar extension
+        jarName = objFile.Name
+    end if
+next
+
+link.TargetPath = "javaw"
+link.Arguments = "-jar -Dfile.encoding=UTF-8 " & project_path & "\" & jarName 'make sure to set encoding to UTF-8
 link.WorkingDirectory = project_path
 link.Save
 

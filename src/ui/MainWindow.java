@@ -184,6 +184,7 @@ public class MainWindow {
         final Color textColor = palette.get("text");
         final Color backgroundColor = palette.get("background");
         final Color amplifiedColor = palette.get("amplified");
+        final Color errCol = palette.get("error");
 
         String stringRep = (amplifiedColor.equals(new Color(255, 255, 255))) ? "White" : "Dark";
 
@@ -342,8 +343,6 @@ public class MainWindow {
 
             updateVals(start, comps, av);
         } catch (UserNotFoundException uException) {}
-
-        final Color errCol = new Color(252, 163, 150);
 
         JPanel error = new JPanel();
         error.setBounds(aX/2 - 336, aY-5, 260, 45);
