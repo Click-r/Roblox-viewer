@@ -40,14 +40,7 @@ public class SearchSettings extends Setting {
     }
 
     public SearchSettings() throws IOException {
-        id = SettingId.SEARCH;
-
-        String use = id.toString().toLowerCase();
-        path = "settings/" + use + "/" + use + ".properties";
-        path = Controller.runningAsJar ? System.getProperty("user.dir") + "/" + path : path; // distinction between IDE and jar
-
-        configFile = getConfig();
-        components = new HashMap<String, JComponent>();
+        super(SettingId.SEARCH);
     }
 
     @Override

@@ -7,7 +7,7 @@ import java.awt.Color;
 
 import java.io.IOException;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -30,7 +30,7 @@ public class SettingsMenu extends JFrame {
     @SuppressWarnings("static-access")
 
     public SettingsMenu() {
-        HashMap<String, Setting> setters = new HashMap<String, Setting>();
+        LinkedHashMap<String, Setting> setters = new LinkedHashMap<String, Setting>();
 
         JFrame window = new JFrame(Controller.title + " - Settings");
         window.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -56,6 +56,9 @@ public class SettingsMenu extends JFrame {
 
             DisplaySettings displaySettings = new DisplaySettings();
             setters.put("Display", displaySettings);
+
+            AdvancedSettings advancedSettings = new AdvancedSettings();
+            setters.put("Advanced", advancedSettings);
 
             setters.forEach((name, settingOption) -> tabbed.addTab(name, settingOption.getSettingPanel(primary.getBounds())));
         } catch (IOException io) {

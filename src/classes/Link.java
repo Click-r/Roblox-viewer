@@ -17,6 +17,8 @@ import java.util.Scanner;
 
 import org.json.*;
 
+import loaders.AdvancedSettings;
+
 /** Establishes a connection and allows interaction with ROBLOX API endpoints. */
 
 public class Link {
@@ -33,11 +35,14 @@ public class Link {
     */
 
     public Link(String link, boolean... shouldInit) throws IOException {
+        AdvancedSettings advSettings = new AdvancedSettings();
+        int timeout = Integer.valueOf(advSettings.get("connectionTimeout"));
+
         this.method = "GET";
         URL site = new URL(link);
 
         this.connection = (HttpURLConnection) site.openConnection();
-        this.connection.setConnectTimeout(5000);
+        this.connection.setConnectTimeout(timeout);
 
         initialize(link, shouldInit);
     }

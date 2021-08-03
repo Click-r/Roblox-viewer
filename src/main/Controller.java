@@ -39,6 +39,11 @@ public class Controller {
                 Files.copy(controllerLoader.getResourceAsStream("settings/display/display.properties"), Paths.get(displayDir + "\\display.properties"));
                 // display directory and display properties file
 
+                Path advancedDir = Paths.get(settingsDir + "\\advanced");
+                Files.createDirectory(advancedDir);
+                Files.copy(controllerLoader.getResourceAsStream("settings/advanced/advanced.properties"), Paths.get(advancedDir + "\\advanced.properties"));
+                // advanced directory and advanced properties file
+
             } catch (IOException iex) {
                 ErrorHandler.report(iex);
             }

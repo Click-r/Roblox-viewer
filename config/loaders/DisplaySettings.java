@@ -13,11 +13,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
@@ -27,22 +25,15 @@ import javax.swing.event.*;
 import loaders.base.*;
 
 import main.Controller;
+
 import ui.ErrorHandler;
 import ui.SettingsMenu;
 
 public class DisplaySettings extends Setting {
 
     public DisplaySettings() throws IOException {
-        id = SettingId.DISPLAY;
-
-        String use = id.toString().toLowerCase();
-        path = "settings/" + use + "/" + use + ".properties";
-        path = Controller.runningAsJar ? System.getProperty("user.dir") + "/" + path : path; // distinction between IDE and jar
-
-        configFile = getConfig();
-        components = new HashMap<String, JComponent>();
+        super(SettingId.DISPLAY);
     }
-    // TODO: implement dark theme using colour palettes 
 
     @Override
     public JPanel getSettingPanel(Rectangle bounds) {

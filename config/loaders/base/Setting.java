@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 
 import java.util.Properties;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,17 @@ public abstract class Setting {
     protected String path;
     protected Properties configFile;
     protected Map<String, JComponent> components;
+
+    public Setting(SettingId create) throws IOException {
+        id = create;
+
+        String use = create.toString().toLowerCase();
+        path = "settings/" + use + "/" + use + ".properties";
+        path = Controller.runningAsJar ? System.getProperty("user.dir") + "/" + path : path; // distinction between IDE and jar
+
+        configFile = getConfig();
+        components = new HashMap<String, JComponent>();
+    }
 
     public SettingId getId() {
         return this.id;

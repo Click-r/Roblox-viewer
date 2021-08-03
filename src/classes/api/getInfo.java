@@ -8,6 +8,7 @@ import java.util.Calendar;
 import java.util.concurrent.*;
 
 import java.io.*;
+
 import java.net.*;
 
 import java.time.*;
@@ -15,8 +16,9 @@ import java.time.*;
 import java.awt.Image;
 
 import classes.UserNotFoundException;
-import loaders.SearchSettings;
 import classes.Link;
+import loaders.AdvancedSettings;
+import loaders.SearchSettings;
 
 import ui.ErrorHandler;
 
@@ -168,7 +170,6 @@ public class getInfo {
     }
 
     public static Map<String, Object> getInformation(long userId) throws SocketTimeoutException, UserNotFoundException {
-
         Map<String, Object> data = new HashMap<String, Object>();
 
         final String base = "https://friends.roblox.com/v1/users/" + userId;
@@ -191,10 +192,19 @@ public class getInfo {
             new String[]{"GameId", "LastLocation", "LocationType", "PlaceId", "VisitorId", "PresenceType", "UniverseId"}
         };
 
+        int chosen = 5;
+
+        try {
+            AdvancedSettings advSettings = new AdvancedSettings();
+            chosen = Integer.valueOf(advSettings.get("threadsToUse"));
+        } catch (IOException iex) {
+            ErrorHandler.report(iex);
+        }
+
         // Start of multi-threaded data retrieval
         Stack<Integer> buffer = new Stack<Integer>();
 
-        final int maxThreads = 5;
+        final int maxThreads = chosen;
 
         ThreadPoolExecutor retrieve = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
 
