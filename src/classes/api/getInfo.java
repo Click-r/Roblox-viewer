@@ -17,6 +17,7 @@ import java.awt.Image;
 
 import classes.UserNotFoundException;
 import classes.Link;
+
 import loaders.AdvancedSettings;
 import loaders.SearchSettings;
 
@@ -24,7 +25,7 @@ import ui.ErrorHandler;
 
 public class getInfo {
 
-    final static int numData = classes.Player.class.getDeclaredFields().length;
+    final public static int numData = classes.Player.class.getDeclaredFields().length;
 
     @SuppressWarnings("static-access")
 

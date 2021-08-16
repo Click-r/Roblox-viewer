@@ -2,13 +2,19 @@ package loaders;
 
 import java.awt.Rectangle;
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
@@ -39,7 +45,7 @@ public class AdvancedSettings extends Setting {
         panel.setLayout(null);
 
         JPanel ioPanel = new JPanel();
-        ioPanel.setBounds(4, 5, 180, 90);
+        ioPanel.setBounds(4, 5, 250, 90);
         ioPanel.setLayout(null);
         ioPanel.setBorder(new TitledBorder(new EtchedBorder(), "I/O"));
         ioPanel.setBackground(highlighted);
@@ -74,10 +80,18 @@ public class AdvancedSettings extends Setting {
         threadInput.setText(get("threadsToUse"));
         threadInput.setName("threadsToUse");
 
+        boolean showPing = Boolean.valueOf(get("displayPing"));
+
+        JCheckBox pingInput = new JCheckBox("Show Ping", showPing);
+        pingInput.setBounds(timeoutInput.getX() + timeoutInput.getWidth() + 15, timeoutInput.getY(), 85, 20);
+        pingInput.setBackground(highlighted);
+        pingInput.setName("displayPing");
+
         ioPanel.add(timeoutText);
         ioPanel.add(timeoutInput);
         ioPanel.add(threadText);
         ioPanel.add(threadInput);
+        ioPanel.add(pingInput);
 
         DocumentListener docListen = new DocumentListener(){
             @Override
@@ -92,16 +106,25 @@ public class AdvancedSettings extends Setting {
             public void changedUpdate(DocumentEvent e) {
                 isModified();
             }
-        }; 
+        };
+
+        ActionListener actListener = new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                isModified();
+            }
+        };
 
         timeoutInput.getDocument().addDocumentListener(docListen);
         threadInput.getDocument().addDocumentListener(docListen);
+
+        pingInput.addActionListener(actListener);
 
         panel.add(ioPanel);
 
         components.put("connectionTimeout", timeoutInput);
         components.put("threadsToUse", threadInput);
-        // TODO: add ping display
+        components.put("displayPing", pingInput);
         // TODO: also add option to see the log (changing the vm launch flags)
 
         return panel;
@@ -113,6 +136,7 @@ public class AdvancedSettings extends Setting {
 
         String timeoutValue = ((JTextField) components.get("connectionTimeout")).getText();
         String threadValue = ((JTextField) components.get("threadsToUse")).getText();
+        String pingValue = ((JCheckBox) components.get("displayPing")).isSelected() ? "true" : "false";
 
         if (timeoutValue.matches("[0-9]+") && threadValue.matches("[0-9]+")) {
             try {
@@ -127,6 +151,8 @@ public class AdvancedSettings extends Setting {
                 valid = false;
             }
         } else valid = false;
+
+        set("displayPing", pingValue);
 
         try {
             String file = Controller.runningAsJar ? path : Setting.class.getClassLoader().getResource(path).getFile();
@@ -150,12 +176,13 @@ public class AdvancedSettings extends Setting {
 
             String timeoutValue = ((JTextField) components.get("connectionTimeout")).getText();
             String threadValue = ((JTextField) components.get("threadsToUse")).getText();
+            String pingValue = ((JCheckBox) components.get("displayPing")).isSelected() ? "true" : "false";
 
             List<String> valList = new ArrayList<String>();
 
             valList.add(timeoutValue);
             valList.add(threadValue);
-            valList.add("false"); // temporary until i implement the ping display option
+            valList.add(pingValue); // temporary until i implement the ping display option
 
             valList.sort((str1, str2) -> str1.length() - str2.length());
 
