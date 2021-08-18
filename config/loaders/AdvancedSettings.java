@@ -82,16 +82,24 @@ public class AdvancedSettings extends Setting {
 
         boolean showPing = Boolean.valueOf(get("displayPing"));
 
-        JCheckBox pingInput = new JCheckBox("Show Ping", showPing);
-        pingInput.setBounds(timeoutInput.getX() + timeoutInput.getWidth() + 15, timeoutInput.getY(), 85, 20);
+        JCheckBox pingInput = new JCheckBox("Show Ping*", showPing);
+        pingInput.setBounds(timeoutInput.getX() + timeoutInput.getWidth() + 15, timeoutInput.getY(), 90, 20);
         pingInput.setBackground(highlighted);
         pingInput.setName("displayPing");
+
+        JTextPane pingRestartReminder = new JTextPane();
+        pingRestartReminder.setBounds(threadText.getX(), threadText.getY() + threadText.getHeight() + 5, 150, 18);
+        pingRestartReminder.setEditable(false);
+        pingRestartReminder.setText("*Restart required");
+        pingRestartReminder.setForeground(new Color(237, 19, 19));
+        pingRestartReminder.setBackground(highlighted);
 
         ioPanel.add(timeoutText);
         ioPanel.add(timeoutInput);
         ioPanel.add(threadText);
         ioPanel.add(threadInput);
         ioPanel.add(pingInput);
+        ioPanel.add(pingRestartReminder);
 
         DocumentListener docListen = new DocumentListener(){
             @Override

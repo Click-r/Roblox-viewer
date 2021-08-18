@@ -56,6 +56,13 @@ public class DisplaySettings extends Setting {
         themeSelection.setSelectedIndex(Integer.valueOf(get("current_theme")));
         themeSelection.setName("current_theme");
 
+        JTextPane restartReminder = new JTextPane();
+        restartReminder.setBounds(themeSelection.getX() - 2, themeSelection.getY() + themeSelection.getHeight() + 5, 150, 18);
+        restartReminder.setEditable(false);
+        restartReminder.setText("Restart required");
+        restartReminder.setForeground(new Color(237, 19, 19));
+        restartReminder.setBackground(highlighted);
+
         JPanel userDisplaySetting = new JPanel();
         userDisplaySetting.setLocation(themeSetting.getX(), themeSetting.getY() + themeSetting.getHeight() + 5);
         userDisplaySetting.setSize(300, themeSetting.getHeight());
@@ -78,6 +85,7 @@ public class DisplaySettings extends Setting {
         usernameInput.setName("start_user");
 
         themeSetting.add(themeSelection);
+        themeSetting.add(restartReminder);
 
         userDisplaySetting.add(startUserText);
         userDisplaySetting.add(usernameInput);
