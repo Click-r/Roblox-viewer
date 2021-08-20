@@ -3,8 +3,9 @@ package classes;
 import java.lang.reflect.Field;
 
 import java.net.SocketTimeoutException;
-
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import java.awt.Image;
 
@@ -47,13 +48,29 @@ public class Player {
         load(getInfo.searchByUsername(username));
     }
 
+    /**
+     * <p>This method is only used in cases when an extra piece of data may be found in returned json from end points</p>
+     * @return A set containing all the valid key names the player class stores.
+    */
+    public static Set<String> getValidKeys() {
+        Set<String> keyNames = new HashSet<String>();
+
+        Field[] validFields = Player.class.getFields();
+
+        for (Field f: validFields)
+            keyNames.add(f.getName());
+
+        return keyNames;
+    }
+
     private void load(Map<String, Object> data) {
         data.forEach((key,val) -> {
             try {
                 Field writeTo = this.getClass().getDeclaredField(key);
                 writeTo.set(this, val);
-            } catch (Exception e) {
-                ErrorHandler.report(e, this);
+            } catch (NoSuchFieldException e) {}
+            catch (IllegalAccessException iae) {
+                ErrorHandler.report(iae, this);
             }
         });
 

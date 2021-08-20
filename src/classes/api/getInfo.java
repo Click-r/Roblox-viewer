@@ -2,6 +2,7 @@ package classes.api;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 import java.util.TimeZone;
 import java.util.Calendar;
@@ -17,7 +18,7 @@ import java.awt.Image;
 
 import classes.UserNotFoundException;
 import classes.Link;
-
+import classes.Player;
 import loaders.AdvancedSettings;
 import loaders.SearchSettings;
 
@@ -66,7 +67,7 @@ public class getInfo {
     private static boolean validateData(Map<String, Object> dataSource) {
         boolean properlyParsed = (dataSource.size() == numData);
 
-        if (properlyParsed) {
+        if (properlyParsed || dataSource.size() > numData) {
             String prefered = "";
 
             try {
@@ -102,6 +103,23 @@ public class getInfo {
             String dispname = (String) dataSource.get("displayName");
             dataSource.remove("displayName");
             dataSource.put("dispname", dispname);
+
+            if (dataSource.size() > numData) {
+                Map<String, Object> dataSrcCopy = new HashMap<String, Object>();
+                dataSource.forEach((key, val) -> dataSrcCopy.put(key.toLowerCase(), val));
+    
+                Set<String> validKeys = Player.getValidKeys();
+                Set<String> receivedKeys = dataSrcCopy.keySet();
+    
+                receivedKeys.removeAll(validKeys);
+    
+                receivedKeys.forEach((key) -> {
+                    String keyStr = key.toString();
+    
+                    System.out.println("Removed unexpected key: " + keyStr);
+                    dataSource.remove(key);
+                });
+            }
 
             return true;
         }
@@ -190,7 +208,7 @@ public class getInfo {
             null,
             null,
             null,
-            new String[]{"GameId", "LastLocation", "LocationType", "PlaceId", "VisitorId", "PresenceType", "UniverseId"}
+            new String[]{"GameId", "LastLocation", "LocationType", "PlaceId", "VisitorId", "PresenceType", "UniverseId", "Visibility"}
         };
 
         int chosen = 5;
@@ -262,11 +280,10 @@ public class getInfo {
 
         retrieve.shutdownNow();
         //End of multi-threaded data retrieval
-
         boolean valid = validateData(data);
 
         if (!valid)
-            throw new UserNotFoundException("Failed to fetch user!");
+            throw new UserNotFoundException("Failed to fetch user! Received " + (numData - data.size()) + " less keys");
 
         return data;
     }
