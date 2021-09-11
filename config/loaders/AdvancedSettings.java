@@ -151,7 +151,7 @@ public class AdvancedSettings extends Setting {
                 short timeoutNumVal = Short.valueOf(timeoutValue);
                 byte threadNumVal = Byte.valueOf(threadValue);
 
-                if (timeoutNumVal >= 0 && threadNumVal >= 0) {
+                if (timeoutNumVal > 0 && threadNumVal > 0) {
                     set("connectionTimeout", timeoutValue);
                     set("threadsToUse", threadValue);
                 } else valid = false;

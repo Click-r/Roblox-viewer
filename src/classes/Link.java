@@ -9,10 +9,12 @@ import java.net.URL;
 import javax.imageio.*;
 
 import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.nio.charset.StandardCharsets;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Scanner;
 
 import org.json.*;
@@ -71,12 +73,22 @@ public class Link {
     public Image getImage() throws IOException {
         this.connection.setInstanceFollowRedirects(true);
         HttpURLConnection.setFollowRedirects(true);
-
         this.connection.connect();
 
         URL site = this.connection.getURL();
+
+        String Etag = connection.getHeaderField("ETag"); // error tag? not sure
+
+        Hashtable<String, String> imgProperties = new Hashtable<String, String>();
+
+        if (Etag != null) { // only exists if the image data is placeholder due to some reason
+            Etag = Etag.substring(1, Etag.length() - 1); // get rid of quotation marks
+
+            imgProperties.put("error", Etag);
+        }
         
-        Image toReturn = ImageIO.read(site);
+        BufferedImage toReturn = (BufferedImage) ImageIO.read(site);
+        toReturn = new BufferedImage(toReturn.getColorModel(), toReturn.getRaster(), toReturn.isAlphaPremultiplied(), imgProperties);
 
         return toReturn;
     }

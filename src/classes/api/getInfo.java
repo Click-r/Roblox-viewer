@@ -19,6 +19,7 @@ import java.awt.Image;
 import classes.UserNotFoundException;
 import classes.Link;
 import classes.Player;
+
 import loaders.AdvancedSettings;
 import loaders.SearchSettings;
 
@@ -65,9 +66,9 @@ public class getInfo {
     }
 
     private static boolean validateData(Map<String, Object> dataSource) {
-        boolean properlyParsed = (dataSource.size() == numData);
+        boolean properlyParsed = (dataSource.size() >= numData);
 
-        if (properlyParsed || dataSource.size() > numData) {
+        if (properlyParsed) {
             String prefered = "";
 
             try {

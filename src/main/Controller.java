@@ -9,7 +9,7 @@ import java.io.IOException;
 import ui.*;
 
 public class Controller {
-    public final static String version = "0.8";
+    public final static String version = "0.9a";
     public final static String title = "RBLXInfoViewer";
     public final static String author = "Cli_ck";
 

@@ -1,9 +1,7 @@
 package ui;
 
 import javax.swing.*;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.LineBorder;
-import javax.swing.border.TitledBorder;
+import javax.swing.border.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.*;
@@ -11,6 +9,9 @@ import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.Image;
+
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -35,6 +36,8 @@ public class MainWindow {
     private Player last;
     private JButton searchKey;
     private JTextPane pingTextPane = null;
+    private boolean showingError = false;
+
     public static ToolBarManager toolbar;
 
     static class ToolBarManager {
@@ -52,6 +55,11 @@ public class MainWindow {
             settingsButton.setEnabled(true);
         }
     }
+
+    enum ErrorType {
+        PLAYER,
+        IMAGE
+    };
 
     private JTextComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo, Map<String, Color> palette){
         final Color text = palette.get("text");
@@ -157,7 +165,6 @@ public class MainWindow {
                 av.setIcon(img);
             } catch (NullPointerException noImageFound) {
                 System.out.println("Avatar image not found");
-                // TODO: make error message display if roblox is having connectivity issues/difficulties downloading an image
             }
         }
     }
@@ -166,18 +173,39 @@ public class MainWindow {
         return min + (long) (Math.random() * (max - min));
     }
 
-    private void presentError(JTextPane msgBox, String input) {
+    private void presentError(JTextPane msgBox, ErrorType type, String input) {
+        showingError = true;
         msgBox.getParent().setVisible(true);
 
-        String datatype = lastModifed.toLowerCase().equals("name") ? "name " : "id "; // determines if it's id or name based on lastModified
-        final String message = "Failed fetching user with " + datatype + input;
+        String msg = "";
+        switch (type) {
+            case PLAYER:
+                String datatype = lastModifed.toLowerCase().equals("name") ? "name " : "id "; // determines if it's id or name based on lastModified
+                final String message = "Failed fetching user with " + datatype + input;
+                
+                msg = message;
+                break;
+            case IMAGE:
+                final String deletedImageContentCdn = "b561617d22628c1d01dd10f02e80c384"; // usually when image data was manually removed
+                final String missingImageContentCdn = "894dca84231352d56ec346174a3c0cf9"; // the content provider link for the usual missing content image
+                final String failedImageLoadCdn = "5228e2fd54377f39e87d3c25a58dd018"; // usually when the content delivery network could not provide the image
 
-        if (message.length() > 34)
+                HashMap<String, String> errorLookup = new HashMap<String, String>();
+                errorLookup.put(deletedImageContentCdn, "Image data was moderated.");
+                errorLookup.put(missingImageContentCdn, "Image data not found.");
+                errorLookup.put(failedImageLoadCdn, "Image failed to load, please try again.");
+
+                String res = errorLookup.getOrDefault(input, "Hash: " + input);
+
+                msg = res;
+                break;
+        }
+        msgBox.setText(msg);
+
+        if (msg.length() > 34)
             msgBox.setLocation(40, 3);
         else
             msgBox.setLocation(40, 11);
-        
-        msgBox.setText("Failed fetching user with " + datatype + input);
     }
 
     private void setPing(long result) {
@@ -291,11 +319,57 @@ public class MainWindow {
 
         Color darkerBg = new Color(infoSectionColor.getRed() - 25,  infoSectionColor.getGreen() - 25, infoSectionColor.getBlue() - 25);
 
+        JPanel error = new JPanel();
+        error.setBounds(aX/2 - 336, aY-5, 260, 45);
+        error.setBackground(errCol);
+        error.setLayout(null);
+        error.setBorder(BorderFactory.createLineBorder(new Color(255, 0, 0), 1));
+        error.setVisible(false);
+
+        JTextPane errorMsg = new JTextPane();
+        errorMsg.setBounds(40, 11, 200, 45);
+        errorMsg.setText("User not found.");
+        errorMsg.setForeground(textColor);
+        errorMsg.setOpaque(false);
+        errorMsg.setEditable(false);
+        errorMsg.setHighlighter(null);
+        errorMsg.getCaret().deinstall(errorMsg); // fixes weird background formatting bug
+
+        try {
+            final Image scaled = ErrorHandler.getWarningImg().getImage().getScaledInstance(35, 35, Image.SCALE_AREA_AVERAGING);
+            // TODO: make controller distribute the images
+
+            JLabel warn = new JLabel(new ImageIcon(scaled));
+            warn.setVisible(true);
+            warn.setOpaque(false);
+            warn.setBounds(2, 2, 40, 40);
+
+            error.add(warn);
+        } catch (IOException ioe) {
+            ErrorHandler.report(ioe);
+        }
+
         JLabel av = new JLabel();
         av.setBounds(40, 20, 150, 150);
         av.setOpaque(true);
         av.setBackground(darkerBg);
         av.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0), 1));
+        av.addPropertyChangeListener(new PropertyChangeListener(){
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                String changed = evt.getPropertyName();
+
+                if (changed.equals("icon")) {
+                    ImageIcon newIcon = (ImageIcon) evt.getNewValue();
+                    Image newImg = newIcon.getImage();
+
+                    Object errCode = newImg.getProperty("error", av);
+
+                    if (errCode != Image.UndefinedProperty) // undefined property is returned when the property does not exist
+                        presentError(errorMsg, ErrorType.IMAGE, errCode.toString());
+                }
+            }
+        });
 
         JPanel subPanel = new JPanel();
         subPanel.setBounds(40, 19 + av.getHeight(), 150, 30);
@@ -395,36 +469,6 @@ public class MainWindow {
             updateVals(start, comps, av);
         } catch (UserNotFoundException uException) {}
 
-        JPanel error = new JPanel();
-        error.setBounds(aX/2 - 336, aY-5, 260, 45);
-        error.setBackground(errCol);
-        error.setLayout(null);
-        error.setBorder(BorderFactory.createLineBorder(new Color(255, 0, 0), 1));
-        error.setVisible(false);
-
-        JTextPane errorMsg = new JTextPane();
-        errorMsg.setBounds(40, 11, 200, 45);
-        errorMsg.setText("User not found.");
-        errorMsg.setForeground(textColor);
-        errorMsg.setOpaque(false);
-        errorMsg.setEditable(false);
-        errorMsg.setHighlighter(null);
-        errorMsg.getCaret().deinstall(errorMsg); // fixes weird background formatting bug
-
-        try {
-            final Image scaled = ErrorHandler.getWarningImg().getImage().getScaledInstance(35, 35, Image.SCALE_AREA_AVERAGING);
-            // TODO: make controller distribute the images
-
-            JLabel warn = new JLabel(new ImageIcon(scaled));
-            warn.setVisible(true);
-            warn.setOpaque(false);
-            warn.setBounds(2, 2, 40, 40);
-
-            error.add(warn);
-        } catch (IOException ioe) {
-            ErrorHandler.report(ioe);
-        }
-
         error.add(errorMsg);
 
         JButton search = new JButton();
@@ -434,8 +478,8 @@ public class MainWindow {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (search.isEnabled()) {
-
                     search.setEnabled(false);
+                    showingError = false;
 
                     boolean same = false;
 
@@ -451,7 +495,7 @@ public class MainWindow {
 
                             same = last.id.equals(id);
                         } catch (NumberFormatException nException) {
-                            presentError(errorMsg, comps.get("id").getText());
+                            presentError(errorMsg, ErrorType.PLAYER, comps.get("id").getText());
 
                             search.setEnabled(true);
                             return;
@@ -481,13 +525,13 @@ public class MainWindow {
                                 updateVals(plr, comps, av);
                             }
 
-                            error.setVisible(false);
+                            error.setVisible(showingError);
                         } catch (UserNotFoundException err) {
-                            presentError(errorMsg, input);
+                            presentError(errorMsg, ErrorType.PLAYER, input);
                         }
                     
                     } else {
-                        error.setVisible(false);
+                        error.setVisible(showingError);
                     }
                     
                     search.setEnabled(true);
@@ -508,6 +552,8 @@ public class MainWindow {
             public void actionPerformed(ActionEvent e) {
                 if (randomize.isEnabled()){
                     randomize.setEnabled(false);
+                    showingError = false;
+
                     long min, max;
                     min = 1L;
                     max = 2_300_000_000L;
@@ -534,9 +580,9 @@ public class MainWindow {
 
                         updateVals(plr, comps, av);
 
-                        error.setVisible(false);
+                        error.setVisible(showingError);
                     } catch (UserNotFoundException err) {
-                        presentError(errorMsg, String.valueOf(newId));
+                        presentError(errorMsg, ErrorType.PLAYER, String.valueOf(newId));
                     }
 
                     randomize.setEnabled(true);
