@@ -115,12 +115,8 @@ public class SettingsMenu extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 boolean allValid = true;
 
-                for (Setting setter : setters.values()) {
-                    boolean isValid = setter.applyChanges();
-                    
-                    if (!isValid)
-                        allValid = false;
-                }
+                for (Setting setter : setters.values()) // TODO: figure out a way to highlight which tab has invalid settings
+                    allValid &= setter.applyChanges();
 
                 saveNotify(allValid);
             }

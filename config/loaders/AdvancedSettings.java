@@ -5,7 +5,6 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import java.security.MessageDigest;
@@ -24,8 +23,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import loaders.base.*;
-
-import main.Controller;
 
 import ui.ErrorHandler;
 import ui.SettingsMenu;
@@ -163,10 +160,7 @@ public class AdvancedSettings extends Setting {
         set("displayPing", pingValue);
 
         try {
-            String file = Controller.runningAsJar ? path : Setting.class.getClassLoader().getResource(path).getFile();
-
-            FileOutputStream save = new FileOutputStream(file);
-            configFile.store(save, "Changed values");
+            saveToFile();
 
             return valid;
         } catch (IOException writingexc) {

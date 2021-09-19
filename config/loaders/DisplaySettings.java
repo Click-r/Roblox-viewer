@@ -4,7 +4,6 @@ import java.awt.Rectangle;
 import java.awt.Color;
 import java.awt.event.*;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import java.nio.charset.Charset;
@@ -23,8 +22,6 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 
 import loaders.base.*;
-
-import main.Controller;
 
 import ui.ErrorHandler;
 import ui.SettingsMenu;
@@ -145,10 +142,7 @@ public class DisplaySettings extends Setting {
         }
 
         try {
-            String file = Controller.runningAsJar ? path : Setting.class.getClassLoader().getResource(path).getFile();
-
-            FileOutputStream save = new FileOutputStream(file);
-            configFile.store(save, "Changed values");
+            saveToFile();
 
             return valid;
         } catch (IOException writingexc) {

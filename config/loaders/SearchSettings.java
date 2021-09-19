@@ -4,7 +4,6 @@ import java.awt.Rectangle;
 import java.awt.Color;
 import java.awt.event.*;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 import java.security.MessageDigest;
@@ -18,8 +17,6 @@ import javax.swing.event.*;
 import javax.swing.text.JTextComponent;
 
 import loaders.base.*;
-
-import main.Controller;
 
 import ui.ErrorHandler;
 import ui.SettingsMenu;
@@ -196,10 +193,7 @@ public class SearchSettings extends Setting {
         set("timezone", timezone);
 
         try {
-            String file = Controller.runningAsJar ? path : Setting.class.getClassLoader().getResource(path).getFile();
-
-            FileOutputStream save = new FileOutputStream(file);
-            configFile.store(save, "Changed values");
+            saveToFile();
 
             return valid;
         } catch (IOException writingexc) {

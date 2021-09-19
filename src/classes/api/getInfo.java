@@ -66,9 +66,7 @@ public class getInfo {
     }
 
     private static boolean validateData(Map<String, Object> dataSource) {
-        boolean properlyParsed = (dataSource.size() >= numData);
-
-        if (properlyParsed) {
+        if (dataSource.size() >= numData) {
             String prefered = "";
 
             try {

@@ -40,11 +40,11 @@ public abstract class Setting {
     }
 
     public SettingId getId() {
-        return this.id;
+        return id;
     }
 
     public String getPath() {
-        return this.path;
+        return path;
     }
 
     public void resetToDefaults() throws IOException {
@@ -65,15 +65,22 @@ public abstract class Setting {
             }
         });
 
-        String file = Controller.runningAsJar ? this.path : Setting.class.getClassLoader().getResource(this.path).getFile();
+        String file = Controller.runningAsJar ? path : Setting.class.getClassLoader().getResource(path).getFile();
         // make sure it can run both in the IDE and jar file
 
         FileOutputStream save = new FileOutputStream(file);
         properties.store(save, "Reset to defaults");
     }
 
+    public void saveToFile() throws IOException {
+        String file = Controller.runningAsJar ? path : Setting.class.getClassLoader().getResource(path).getFile();
+
+        FileOutputStream save = new FileOutputStream(file);
+        configFile.store(save, "Changed values");
+    }
+
     public Properties getConfig() throws IOException {
-        InputStream stream = Controller.runningAsJar ? Paths.get(this.path).toUri().toURL().openStream() : Setting.class.getClassLoader().getResourceAsStream(this.path);
+        InputStream stream = Controller.runningAsJar ? Paths.get(path).toUri().toURL().openStream() : Setting.class.getClassLoader().getResourceAsStream(path);
         // make sure it can run both in the IDE and jar file (again)
 
         Properties property = new Properties();
