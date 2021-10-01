@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.UnknownFormatConversionException;
 
 import classes.*;
-import classes.api.getInfo;
 
 import loaders.*;
 
@@ -35,7 +34,6 @@ public class MainWindow {
     private String lastModifed;
     private Player last;
     private JButton searchKey;
-    private JTextPane pingTextPane = null;
     private boolean showingError = false;
 
     public static ToolBarManager toolbar;
@@ -167,6 +165,13 @@ public class MainWindow {
                 System.out.println("Avatar image not found");
             }
         }
+
+        compMap.computeIfPresent("delay", (key, comp) -> {
+            long delay = player.getDelay();
+            comp.setText(String.valueOf(delay) + "ms");
+
+            return comp;
+        });
     }
 
     private long randomLong(long min, long max) {
@@ -208,10 +213,6 @@ public class MainWindow {
             msgBox.setLocation(40, 11);
     }
 
-    private void setPing(long result) {
-        pingTextPane.setText(String.valueOf(result) + "ms");
-    }
-
     private JFrame build(Map<String, Color> palette) {
         JFrame frame = new JFrame(Controller.title + " v" + Controller.version);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -222,7 +223,7 @@ public class MainWindow {
         final Color amplifiedColor = palette.get("amplified");
         final Color errCol = palette.get("error");
 
-        boolean showPing = false;
+        boolean showPing = true;
         try {
             AdvancedSettings advSettings = new AdvancedSettings();
             showPing = Boolean.valueOf(advSettings.get("displayPing"));
@@ -230,8 +231,6 @@ public class MainWindow {
             ErrorHandler.report(ioex);
         }
 
-        final boolean isPingShowing = showPing;
-        
         String stringRep = (amplifiedColor.equals(new Color(255, 255, 255))) ? "White" : "Dark";
 
         JTextComponent lastTxt = null;
@@ -392,33 +391,6 @@ public class MainWindow {
         isOnline.setForeground(textColor);
         // TODO: somehow make this look more natural
 
-        JTextPane pingText = new JTextPane();
-        JTextPane pingVal = new JTextPane();
-
-        if (showPing) {
-            StyleContext context = new StyleContext();
-            StyledDocument document = new DefaultStyledDocument(context);
-            Style style = context.getStyle(StyleContext.DEFAULT_STYLE);
-            StyleConstants.setAlignment(style, StyleConstants.ALIGN_RIGHT);
-
-            pingText = new JTextPane();
-            pingText.setBounds(aX - 18, aY + 25, 35, 18);
-            pingText.setEditable(false);
-            pingText.setText("Ping:");
-            pingText.setBackground(backgroundColor);
-            pingText.setForeground(textColor);
-
-            pingVal = new JTextPane(document);
-            pingVal.setBounds(pingText.getX() + pingText.getWidth(), pingText.getY(), 60, 16);
-            pingVal.setEditable(false);
-            pingVal.setBackground(backgroundColor);
-            pingVal.setForeground(textColor);
-            pingTextPane = pingVal;
-
-            frame.add(pingText);
-            frame.add(pingVal);
-        }
-
         subPanel.add(onlineText);
         subPanel.add(isOnline);
 
@@ -442,6 +414,34 @@ public class MainWindow {
         comps.put(statusText.getName(), statusText);
         comps.put(isOnline.getName(), isOnline);
 
+        JTextPane pingText = new JTextPane();
+        JTextPane pingVal = new JTextPane();
+
+        if (showPing) {
+            StyleContext context = new StyleContext();
+            StyledDocument document = new DefaultStyledDocument(context);
+            Style style = context.getStyle(StyleContext.DEFAULT_STYLE);
+            StyleConstants.setAlignment(style, StyleConstants.ALIGN_RIGHT);
+
+            pingText = new JTextPane();
+            pingText.setBounds(aX - 18, aY + 25, 35, 18);
+            pingText.setEditable(false);
+            pingText.setText("Ping:");
+            pingText.setBackground(backgroundColor);
+            pingText.setForeground(textColor);
+
+            pingVal = new JTextPane(document);
+            pingVal.setBounds(pingText.getX() + pingText.getWidth(), pingText.getY(), 60, 16);
+            pingVal.setEditable(false);
+            pingVal.setBackground(backgroundColor);
+            pingVal.setForeground(textColor);
+            pingVal.setName("delay");
+
+            frame.add(pingText);
+            frame.add(pingVal);
+            comps.put(pingVal.getName(), pingVal);
+        }
+
         long chosen = randomLong(1L, 48L);
 
         String startUser = "ROBLOX";
@@ -458,16 +458,10 @@ public class MainWindow {
             startUser = Controller.author;
         
         try {
-            long time = System.currentTimeMillis();
-
             Player start = new Player(startUser);
 
-            long finished = (System.currentTimeMillis() - time) / getInfo.numData;
-            if (showPing)
-                setPing(finished);
-
             updateVals(start, comps, av);
-        } catch (UserNotFoundException uException) {}
+        } catch (UserNotFoundException uException) {} // TODO: add error message and make data display that of ROBLOX
 
         error.add(errorMsg);
 
@@ -506,24 +500,10 @@ public class MainWindow {
                         String input = comps.get(lastModifed.toLowerCase()).getText();
                         
                         try {
-                            Player plr;
-                            long now = System.currentTimeMillis();
-
-                            if (lastModifed.equals("name")) {
-                                plr = new Player(input);
-                                long ping = (System.currentTimeMillis() - now) / getInfo.numData;
-                                if (isPingShowing)
-                                    setPing(ping);
-
-                                updateVals(plr, comps, av);
-                            } else {
-                                plr = new Player(Long.valueOf(input));
-                                long ping = (System.currentTimeMillis() - now) / getInfo.numData;
-                                if (isPingShowing)
-                                    setPing(ping);
-
-                                updateVals(plr, comps, av);
-                            }
+                            if (lastModifed.equals("name"))
+                                updateVals(new Player(input), comps, av);
+                            else 
+                                updateVals(new Player(Long.valueOf(input)), comps, av);
 
                             error.setVisible(showingError);
                         } catch (UserNotFoundException err) {
@@ -570,15 +550,7 @@ public class MainWindow {
                     long newId = randomLong(min, max);
                     
                     try {
-                        long now = System.currentTimeMillis();
-
-                        Player plr = new Player(newId);
-
-                        long ping = (System.currentTimeMillis() - now) / getInfo.numData;
-                        if (isPingShowing)
-                            setPing(ping);
-
-                        updateVals(plr, comps, av);
+                        updateVals(new Player(newId), comps, av);
 
                         error.setVisible(showingError);
                     } catch (UserNotFoundException err) {

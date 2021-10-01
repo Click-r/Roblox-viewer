@@ -27,7 +27,7 @@ import ui.ErrorHandler;
 
 public class getInfo {
 
-    final public static int numData = classes.Player.class.getDeclaredFields().length;
+    final public static int numData = classes.Player.class.getFields().length;
 
     @SuppressWarnings("static-access")
 
@@ -60,7 +60,7 @@ public class getInfo {
           .toString()
           .split("\\.")[0];
         
-        local = local.replaceAll("T", " @ ");
+        local = local.replaceFirst("T", " @ ");
         
         return local + " " + abbrev;
     }

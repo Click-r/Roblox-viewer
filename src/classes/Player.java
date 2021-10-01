@@ -3,6 +3,7 @@ package classes;
 import java.lang.reflect.Field;
 
 import java.net.SocketTimeoutException;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +16,8 @@ import ui.ErrorHandler;
 
 /** A class for the player which allows for general information to be retrieved. Utilizies ROBLOX API endpoints to retrieve the data. */
 public class Player {
+
+    private long delay = -1L; // ping
 
     public Long id;
     public String name, created, description, status, lastonline, dispname;
@@ -33,7 +36,9 @@ public class Player {
         this.id = num;
 
         try {
+            long now = System.currentTimeMillis();
             load(getInfo.getInformation(num));
+            delay = (System.currentTimeMillis() - now) / getInfo.numData;
         } catch (NumberFormatException | SocketTimeoutException err) {}
     }
 
@@ -45,7 +50,10 @@ public class Player {
 
     public Player(String username) throws UserNotFoundException {
         this.name = username;
+
+        long now = System.currentTimeMillis();
         load(getInfo.searchByUsername(username));
+        delay = (System.currentTimeMillis() - now) / getInfo.numData;
     }
 
     /**
@@ -61,6 +69,10 @@ public class Player {
             keyNames.add(f.getName());
 
         return keyNames;
+    }
+
+    public long getDelay() {
+        return delay;
     }
 
     private void load(Map<String, Object> data) {
