@@ -147,7 +147,7 @@ public class SettingsMenu extends JFrame {
         window.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
-                MainWindow.toolbar.onSettingsExit();
+                MainWindow.toolbar.onMenuExit("Settings");
             }
         });
 

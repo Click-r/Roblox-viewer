@@ -17,6 +17,7 @@ public class CreateToolBar {
         JToolBar toolbar = new JToolBar();
 
         JButton settings = new JButton("Settings");
+        JButton about = new JButton("About");
 
         settings.addActionListener(new ActionListener() {
             @Override
@@ -27,11 +28,24 @@ public class CreateToolBar {
             }
         });
 
+        about.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new AboutMenu();
+
+                about.setEnabled(false);
+            }
+        });
+
         settings.setName("Settings");
+        about.setName("About");
 
         compDict.put(settings.getName(), settings);
+        compDict.put(about.getName(), about);
 
         toolbar.add(settings);
+        toolbar.addSeparator();
+        toolbar.add(about);
         toolbar.setBounds(0, 0, target.getWidth(), 40);
 
         bar = toolbar;

@@ -47,8 +47,8 @@ public class MainWindow {
             buttons = tBar.compDict;
         }
 
-        public static void onSettingsExit() {
-            JButton settingsButton = buttons.get("Settings");
+        public static void onMenuExit(String buttonName) {
+            JButton settingsButton = buttons.get(buttonName);
 
             settingsButton.setEnabled(true);
         }
@@ -142,6 +142,7 @@ public class MainWindow {
     }
 
     private void updateVals(Player player, HashMap<String,JTextComponent> compMap, JLabel... avatar) {
+        System.gc(); // free up unneeded, occupied memory
         last = player;
 
         compMap.forEach((name, comp) -> {
