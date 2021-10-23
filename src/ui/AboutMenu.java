@@ -5,7 +5,6 @@ import java.util.Scanner;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -21,8 +20,44 @@ import main.Controller;
 
 public class AboutMenu extends JFrame {
 
-    private static HashMap<String, JComponent> comps = new HashMap<String, JComponent>();
+    private static HashMap<String, JButton> comps = new HashMap<String, JButton>();
     private static String currentlyLoadedLicense = null;
+
+    private static ActionListener constructListener(String viewing, JPanel licensePanel, JTextArea licenseDisplay, JTextArea licenseDescription) {
+        String defaultDesc = "This is the license that %s is licensed under. The license defines how, and in what manner, the software may be used.";
+
+        return new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (currentlyLoadedLicense == null || !currentlyLoadedLicense.equals(viewing)) {
+                    currentlyLoadedLicense = viewing;
+                    licenseDisplay.setText("");
+                    
+                    InputStream inp = AboutMenu.class.getResourceAsStream("assets/licenses/" + viewing + "_LICENSE.txt");
+                    
+                    try (Scanner reader = new Scanner(inp)) {
+                        licenseDisplay.append(reader.nextLine());
+
+                        while (reader.hasNext()) {
+                            licenseDisplay.append("\n");
+                            licenseDisplay.append(reader.nextLine());
+                        }
+                    }
+
+                    licenseDisplay.setCaretPosition(0);
+                }
+
+                licenseDescription.setText(String.format(defaultDesc, viewing));
+
+                licensePanel.setVisible(true);
+
+                comps.forEach((name, comp) -> {
+                    comp.setVisible(false);
+                    comp.setEnabled(false);
+                });
+            }
+        };
+    }
 
     @SuppressWarnings("static-access")
     public AboutMenu() {
@@ -41,15 +76,12 @@ public class AboutMenu extends JFrame {
         licenseView.setVisible(false);
         licenseView.setLayout(null);
 
-        String defaultDesc = "This is the license that %s is licensed under. The license defines how, and in what manner, the software may be used.";
-
         JTextArea description = new JTextArea(3, 50);
         description.setBounds(-1, -1, window.getWidth() - 15, 50);
         description.setBackground(window.getBackground());
         description.setEditable(false);
         description.setLineWrap(true);
         description.setWrapStyleWord(true);
-        description.setText(defaultDesc);
         description.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0), 1));
 
         JTextArea licenseText = new JTextArea(1024, 64);
@@ -68,7 +100,7 @@ public class AboutMenu extends JFrame {
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                description.setText(defaultDesc);
+                description.setText("");
                 licenseView.setVisible(false);
 
                 comps.forEach((name, comp) -> {
@@ -103,79 +135,14 @@ public class AboutMenu extends JFrame {
 
         JButton rblxinfoviewerLicense = new JButton("RBLXInfoViewer");
         rblxinfoviewerLicense.setBounds(30, 20, 150, 50);
-        rblxinfoviewerLicense.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String viewing = rblxinfoviewerLicense.getText();
-
-                if (currentlyLoadedLicense == null || !currentlyLoadedLicense.equals(viewing)) {
-                    currentlyLoadedLicense = viewing;
-                    licenseText.setText("");
-                    
-                    InputStream inp = AboutMenu.class.getResourceAsStream("assets/licenses/" + viewing + "_LICENSE.txt");
-                    
-                    try (Scanner reader = new Scanner(inp)) {
-                        licenseText.append(reader.nextLine());
-
-                        while (reader.hasNext()) {
-                            licenseText.append("\n");
-                            licenseText.append(reader.nextLine());
-                        }
-                    }
-
-                    licenseText.setCaretPosition(0);
-                }
-
-                description.setText(String.format(defaultDesc, viewing));
-
-                licenseView.setVisible(true);
-
-                comps.forEach((name, comp) -> {
-                    comp.setVisible(false);
-                    comp.setEnabled(false);
-                });
-            }
-        });
-
-        comps.put("RBLXInfoViewer", rblxinfoviewerLicense);
 
         JButton jsonjavaLicense = new JButton("JSON-Java");
         jsonjavaLicense.setBounds(window.getWidth() - 200, 20, 150, 50);
-        jsonjavaLicense.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String viewing = jsonjavaLicense.getText();
 
-                if (currentlyLoadedLicense == null || !currentlyLoadedLicense.equals(viewing)) {
-                    currentlyLoadedLicense = viewing;
-                    licenseText.setText("");
-
-                    InputStream inp = AboutMenu.class.getResourceAsStream("assets/licenses/" + viewing + "_LICENSE.txt");
-                    
-                    try (Scanner reader = new Scanner(inp)) {
-                        licenseText.append(reader.nextLine());
-
-                        while (reader.hasNext()) {
-                            licenseText.append("\n");
-                            licenseText.append(reader.nextLine());
-                        }
-                    }
-
-                    licenseText.setCaretPosition(0);
-                }
-
-                description.setText(String.format(defaultDesc, viewing));
-
-                licenseView.setVisible(true);
-                
-                comps.forEach((name, comp) -> {
-                    comp.setVisible(false);
-                    comp.setEnabled(false);
-                });
-            }
-        }); // TODO: shorten this copy and paste code
-
+        comps.put("RBLXInfoViewer", rblxinfoviewerLicense);
         comps.put("JSON-Java", jsonjavaLicense);
+
+        comps.forEach((name, button) -> button.addActionListener(constructListener(name, licenseView, licenseText, description)));
 
         licenseInfo.add(rblxinfoviewerLicense);
         licenseInfo.add(jsonjavaLicense);
