@@ -129,12 +129,11 @@ public class MainWindow {
     }
 
     private String format(String input) {
-
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
 
         try (PrintStream printStream = new PrintStream(stream, true, "utf-8")) {
-            printStream.format(input);
-        } catch (UnsupportedEncodingException|UnknownFormatConversionException uns) {
+            printStream.format(input.replace("%", "%%"));
+        } catch (UnsupportedEncodingException | UnknownFormatConversionException uns) {
             ErrorHandler.report(uns, last);
         }
 
