@@ -13,16 +13,12 @@ import java.awt.Image;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.io.UnsupportedEncodingException;
 
 import java.lang.reflect.Field;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UnknownFormatConversionException;
 
 import classes.*;
 
@@ -128,28 +124,18 @@ public class MainWindow {
         return ioDISP;
     }
 
-    private String format(String input) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-
-        try (PrintStream printStream = new PrintStream(stream, true, "utf-8")) {
-            printStream.format(input.replace("%", "%%"));
-        } catch (UnsupportedEncodingException | UnknownFormatConversionException uns) {
-            ErrorHandler.report(uns, last);
-        }
-
-        return stream.toString();
-    }
-
     private void updateVals(Player player, HashMap<String,JTextComponent> compMap, JLabel... avatar) {
         System.gc(); // free up unneeded, occupied memory
         last = player;
 
         compMap.forEach((name, comp) -> {
             name = name.toLowerCase();
+
             try {
                 Field toGet = Player.class.getDeclaredField(name);
                 toGet.setAccessible(true);
-                comp.setText(format(toGet.get(player).toString()));
+                comp.setText(String.format(toGet.get(player).toString().replace("%", "%%"))); 
+                // format string to print escape characters properly and to escape printf formatting
             } catch (NoSuchFieldException | IllegalAccessException e) {
                 ErrorHandler.report(e, player);
             }
@@ -468,53 +454,37 @@ public class MainWindow {
         JButton search = new JButton();
         search.setText("Search");
         search.setBounds(aX/2, aY-5, 80, 45);
-        search.addActionListener(new ActionListener(){
+        search.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (search.isEnabled()) {
                     search.setEnabled(false);
-                    showingError = false;
 
-                    boolean same = false;
+                    String input = comps.get(lastModifed.toLowerCase()).getText();
 
-                    if (lastModifed.equals("name")) {
-                        String name = comps
-                          .get("name")
-                          .getText();
+                    try {
+                        if (lastModifed.equals("name")) {
+                            String name = comps.get("name").getText();
 
-                        same = last.name.equals(name);
-                    } else {
-                        try {
-                            long id = Long.valueOf(comps.get("id").getText());
-
-                            same = last.id.equals(id);
-                        } catch (NumberFormatException nException) {
-                            presentError(errorMsg, ErrorType.PLAYER, comps.get("id").getText());
-
-                            search.setEnabled(true);
-                            return;
-                        }
-                    }
-
-                    if (!same) {
-                        String input = comps.get(lastModifed.toLowerCase()).getText();
-                        
-                        try {
-                            if (lastModifed.equals("name"))
+                            if (!last.name.equals(name)) {
+                                showingError = false; // order matters here and in the corresponding else block, when the player image updates, the image could error
                                 updateVals(new Player(input), comps, av);
-                            else 
-                                updateVals(new Player(Long.valueOf(input)), comps, av);
+                            }
+                        } else {
+                            long id = Long.valueOf(comps.get("id").getText()); // NumberFormatException can be thrown here
 
-                            error.setVisible(showingError);
-                        } catch (UserNotFoundException err) {
-                            presentError(errorMsg, ErrorType.PLAYER, input);
+                            if (last.id != id) {
+                                showingError = false;
+                                updateVals(new Player(Long.valueOf(input)), comps, av);
+                            }
                         }
-                    
-                    } else {
+                    } catch (UserNotFoundException | NumberFormatException err) {
+                        presentError(errorMsg, ErrorType.PLAYER, input);
+                    } finally {
                         error.setVisible(showingError);
+
+                        search.setEnabled(true);
                     }
-                    
-                    search.setEnabled(true);
 
                 }
             }
@@ -534,30 +504,29 @@ public class MainWindow {
                     randomize.setEnabled(false);
                     showingError = false;
 
-                    long min, max;
+                    long min, max, newId;
                     min = 1L;
                     max = 2_300_000_000L;
+                    newId = min;
 
                     try {
                         SearchSettings srch = new SearchSettings();
 
                         min = Long.valueOf(srch.get("min_id")).longValue();
                         max = Long.valueOf(srch.get("max_id")).longValue();
-                    } catch (IOException ioexc) {
-                        ErrorHandler.report(ioexc);
-                    }
 
-                    long newId = randomLong(min, max);
-                    
-                    try {
+                        newId = randomLong(min, max);
+
                         updateVals(new Player(newId), comps, av);
-
-                        error.setVisible(showingError);
                     } catch (UserNotFoundException err) {
                         presentError(errorMsg, ErrorType.PLAYER, String.valueOf(newId));
-                    }
+                    } catch (IOException ioexc) {
+                        ErrorHandler.report(ioexc);
+                    } finally {
+                        error.setVisible(showingError); // presentError sets showingError (global private variable) to true if there is an error
 
-                    randomize.setEnabled(true);
+                        randomize.setEnabled(true);
+                    }
                 }
             }
         });
