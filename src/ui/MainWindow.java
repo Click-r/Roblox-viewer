@@ -21,8 +21,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import classes.*;
+import classes.api.getInfo;
 
 import loaders.*;
+import loaders.Themes.*;
 
 import main.Controller;
 
@@ -186,7 +188,7 @@ public class MainWindow {
                 errorLookup.put(missingImageContentCdn, "Image data not found.");
                 errorLookup.put(failedImageLoadCdn, "Image failed to load, please try again.");
 
-                String res = errorLookup.getOrDefault(input, "Hash: " + input);
+                String res = errorLookup.getOrDefault(input, input);
 
                 msg = res;
                 break;
@@ -199,15 +201,17 @@ public class MainWindow {
             msgBox.setLocation(40, 11);
     }
 
-    private JFrame build(Map<String, Color> palette) {
+    private JFrame build(Palette palette) {
         JFrame frame = new JFrame(Controller.title + " v" + Controller.version);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        final Color infoSectionColor = palette.get("info");
-        final Color textColor = palette.get("text");
-        final Color backgroundColor = palette.get("background");
-        final Color amplifiedColor = palette.get("amplified");
-        final Color errCol = palette.get("error");
+        final HashMap<String, Color> paletteCols = palette.colourPalette;
+
+        final Color infoSectionColor = paletteCols.get("info");
+        final Color textColor = paletteCols.get("text");
+        final Color backgroundColor = paletteCols.get("background");
+        final Color amplifiedColor = paletteCols.get("amplified");
+        final Color errCol = paletteCols.get("error");
 
         boolean showPing = true;
         try {
@@ -216,8 +220,6 @@ public class MainWindow {
         } catch (IOException ioex) {
             ErrorHandler.report(ioex);
         }
-
-        String stringRep = (amplifiedColor.equals(new Color(255, 255, 255))) ? "White" : "Dark";
 
         JTextComponent lastTxt = null;
 
@@ -295,15 +297,6 @@ public class MainWindow {
         status.add(statScroll);
         statusText.setVisible(true);
 
-        // avatar
-        JPanel imageSection = new JPanel();
-        imageSection.setBounds(info.getX() + info.getWidth() + 30, info.getY(), 230, info.getHeight());
-        imageSection.setBackground(infoSectionColor);
-        imageSection.setName("image");
-        imageSection.setLayout(null);
-
-        Color darkerBg = new Color(infoSectionColor.getRed() - 25,  infoSectionColor.getGreen() - 25, infoSectionColor.getBlue() - 25);
-
         JPanel error = new JPanel();
         error.setBounds(aX/2 - 336, aY-5, 260, 45);
         error.setBackground(errCol);
@@ -319,6 +312,15 @@ public class MainWindow {
         errorMsg.setEditable(false);
         errorMsg.setHighlighter(null);
         errorMsg.getCaret().deinstall(errorMsg); // fixes weird background formatting bug
+
+        Color darkerBg = new Color(infoSectionColor.getRed() - 25,  infoSectionColor.getGreen() - 25, infoSectionColor.getBlue() - 25);
+
+        // avatar
+        JPanel imageSection = new JPanel();
+        imageSection.setBounds(info.getX() + info.getWidth() + 30, info.getY(), 230, info.getHeight());
+        imageSection.setBackground(infoSectionColor);
+        imageSection.setName("image");
+        imageSection.setLayout(null);
 
         try {
             final Image scaled = ErrorHandler.getWarningImg().getImage().getScaledInstance(35, 35, Image.SCALE_AREA_AVERAGING);
@@ -375,27 +377,42 @@ public class MainWindow {
         isOnline.setEditable(false);
         isOnline.setName("online"); // this looks a bit of out of place
         isOnline.setForeground(textColor);
-        // TODO: somehow make this look more natural
+        
+        JButton reload = new JButton("Reload Image");
+        reload.setBounds(subPanel.getX(), subPanel.getY() + subPanel.getHeight() + 8, subPanel.getWidth(), 25);
+        reload.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                reload.setEnabled(false);
+                showingError = false;
+
+                av.setIcon(new ImageIcon(getInfo.retrieveImage(last.id)));
+                error.setVisible(showingError);
+
+                reload.setEnabled(true);
+            }
+        });
 
         subPanel.add(onlineText);
         subPanel.add(isOnline);
 
         imageSection.add(subPanel);
         imageSection.add(av);
+        imageSection.add(reload);
 
         toolbar = new ToolBarManager(frame);
 
         HashMap<String, JTextComponent> comps = new HashMap<String, JTextComponent>();
 
-        lastTxt = createIOField(info, "Name", lastTxt, infoSectionColor, true, 200, 25, "ROBLOX",comps, palette);
-        lastTxt = createIOField(info, "ID", lastTxt, infoSectionColor, true, 200, 25, "1", comps, palette);
-        lastTxt = createIOField(info, "DispName", lastTxt, infoSectionColor, false, 200, 25, "", comps, palette);
-        lastTxt = createIOField(info, "Friends", lastTxt, infoSectionColor, false, 200, 25, "",comps, palette);
-        lastTxt = createIOField(info, "Followings", lastTxt, infoSectionColor, false, 200, 25, "",comps, palette);
-        lastTxt = createIOField(info, "Followers", lastTxt, infoSectionColor, false, 200, 25, "",comps, palette);
-        lastTxt = createIOField(info, "Created", lastTxt, infoSectionColor, false, 200, 25, "",comps, palette);
-        lastTxt = createIOField(info, "Banned", lastTxt, infoSectionColor, false, 200, 25, "",comps, palette);
-        lastTxt = createIOField(info, "LastOnline", lastTxt, infoSectionColor, false, 200, 25, "", comps, palette);
+        lastTxt = createIOField(info, "Name", lastTxt, infoSectionColor, true, 200, 25, "ROBLOX",comps, paletteCols);
+        lastTxt = createIOField(info, "ID", lastTxt, infoSectionColor, true, 200, 25, "1", comps, paletteCols);
+        lastTxt = createIOField(info, "DispName", lastTxt, infoSectionColor, false, 200, 25, "", comps, paletteCols);
+        lastTxt = createIOField(info, "Friends", lastTxt, infoSectionColor, false, 200, 25, "",comps, paletteCols);
+        lastTxt = createIOField(info, "Followings", lastTxt, infoSectionColor, false, 200, 25, "",comps, paletteCols);
+        lastTxt = createIOField(info, "Followers", lastTxt, infoSectionColor, false, 200, 25, "",comps, paletteCols);
+        lastTxt = createIOField(info, "Created", lastTxt, infoSectionColor, false, 200, 25, "",comps, paletteCols);
+        lastTxt = createIOField(info, "Banned", lastTxt, infoSectionColor, false, 200, 25, "",comps, paletteCols);
+        lastTxt = createIOField(info, "LastOnline", lastTxt, infoSectionColor, false, 200, 25, "", comps, paletteCols);
         comps.put(descriptionText.getName(), descriptionText);
         comps.put(statusText.getName(), statusText);
         comps.put(isOnline.getName(), isOnline);
@@ -467,7 +484,7 @@ public class MainWindow {
                             String name = comps.get("name").getText();
 
                             if (!last.name.equals(name)) {
-                                showingError = false; // order matters here and in the corresponding else block, when the player image updates, the image could error
+                                showingError = false; // order matters here and in the corresponding else block: when the player image updates, the image could error
                                 updateVals(new Player(input), comps, av);
                             }
                         } else {
@@ -531,7 +548,7 @@ public class MainWindow {
             }
         });
 
-        if (stringRep.equals("Dark")) {
+        if (palette.colour == Themes.DARK) {
             LineBorder border = new LineBorder(new Color(0, 0, 0), 1);
 
             search.setBackground(amplifiedColor);
@@ -543,6 +560,11 @@ public class MainWindow {
             randomize.setContentAreaFilled(false);
             randomize.setBorder(border);
             randomize.setForeground(textColor);
+
+            reload.setBackground(amplifiedColor);
+            reload.setContentAreaFilled(false);
+            reload.setBorder(border);
+            reload.setForeground(textColor);
         }
 
         info.add(randomize);
@@ -562,7 +584,7 @@ public class MainWindow {
     public void display() {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                HashMap<String, Color> selected = new HashMap<String, Color>();
+                Palette selected = new Palette(Themes.LIGHT);
 
                 try {
                     DisplaySettings dispSettings = new DisplaySettings();
@@ -570,7 +592,7 @@ public class MainWindow {
                     int themeSelected = Integer.valueOf(dispSettings.get("current_theme"));
                     Themes theme = (themeSelected == 0) ? Themes.LIGHT : Themes.DARK;
 
-                    selected = new Themes.Palette(theme).colourPalette;
+                    selected = new Palette(theme);
                 } catch (IOException e) {
                     ErrorHandler.report(e);
                 }

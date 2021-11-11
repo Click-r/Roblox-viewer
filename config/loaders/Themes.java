@@ -17,8 +17,11 @@ public enum Themes {
 
     public static class Palette {
         public HashMap<String, Color> colourPalette = new HashMap<String, Color>();
+        public Themes colour;
 
         public Palette(Themes selectedEnum) {
+            colour = selectedEnum;
+
             switch (selectedEnum) {
                 case LIGHT:
                     colourPalette.put("background", new Color(238, 238, 238));
