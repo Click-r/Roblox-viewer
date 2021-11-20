@@ -7,6 +7,7 @@ import java.awt.Color;
 
 import java.io.IOException;
 
+import java.util.BitSet;
 import java.util.LinkedHashMap;
 
 import javax.swing.BorderFactory;
@@ -27,8 +28,54 @@ public class SettingsMenu extends JFrame {
     private static JFrame self;
     private static JTextPane saveStatus;
 
-    @SuppressWarnings("static-access")
+    public static class SettingValidity {
+        LinkedHashMap<String, BitSet> states = new LinkedHashMap<String, BitSet>();
 
+        public SettingValidity(LinkedHashMap<String, Setting> settingHashMap) {
+            for (String name : settingHashMap.keySet()) {
+                BitSet defaultBitSet = new BitSet(2);
+                defaultBitSet.set(0, 2, true);
+                /*
+                1st bit: true if saved, false if unsaved
+                2nd bit: true if setting configuration is valid, false if invalid
+                */
+
+                states.put(name, defaultBitSet);
+            }
+        }
+
+        public void setSaveState(String settingName, boolean isSaved) {
+            states.get(settingName).set(0, isSaved);
+        }
+
+        public void setValidityState(String settingName, boolean isValid) {
+            states.get(settingName).set(1, isValid);
+        }
+
+        public void notifyUser() {
+            BitSet finalState = new BitSet(2);
+            finalState.set(0, 2, true);
+
+            states.forEach((name, bitset) -> finalState.and(bitset));
+
+            if (finalState.get(1)) {
+                if (finalState.get(0)) {
+                    self.setTitle(Controller.title + " - Settings");
+                    saveStatus.setText("Good to go!");
+                } else {
+                    self.setTitle(Controller.title + " - Settings*");
+                    saveStatus.setText("Unsaved changes!");
+                }
+            } else {
+                self.setTitle(Controller.title + " - Settings*");
+                saveStatus.setText("Invalid configuration!");
+            }
+        }
+    }
+
+    public static SettingValidity state;
+
+    @SuppressWarnings("static-access")
     public SettingsMenu() {
         LinkedHashMap<String, Setting> setters = new LinkedHashMap<String, Setting>();
 
@@ -65,8 +112,9 @@ public class SettingsMenu extends JFrame {
             ErrorHandler.report(io);
         }
 
-        tabbed.setVisible(true);
+        state = new SettingValidity(setters);
 
+        tabbed.setVisible(true);
         primary.add(tabbed);
 
         JButton resetDefault = new JButton();
@@ -81,12 +129,19 @@ public class SettingsMenu extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 setters.forEach((name, setter) -> {
                     try {
+                        int idx = tabbed.indexOfTab(name);
                         setter.resetToDefaults();
-                        saveNotify(true);
+
+                        state.setSaveState(name, true);
+                        state.setValidityState(name, true);
+
+                        tabbed.setForegroundAt(idx, tabbed.getForeground());
                     } catch (IOException resetErr) {
                         ErrorHandler.report(resetErr);
                     }
                 });
+
+                state.notifyUser();
             }
         });
 
@@ -97,15 +152,24 @@ public class SettingsMenu extends JFrame {
         reset.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 try {
-                    String current = tabbed.getTitleAt(tabbed.getSelectedIndex());
+                    int idx = tabbed.getSelectedIndex();
+
+                    String current = tabbed.getTitleAt(idx);
+
                     Setting toReset = setters.get(current);
                     toReset.resetToDefaults();
-                    saveNotify(true);
+
+                    state.setSaveState(current, true);
+                    state.setValidityState(current, true);
+
+                    tabbed.setForegroundAt(idx, tabbed.getForeground());
+
+                    state.notifyUser();
                 } catch (IOException resErr) {
                     ErrorHandler.report(resErr);
                 }
             }
-        });
+        }); // TODO: show reset take effect live
 
         JButton apply = new JButton();
         apply.setSize(resetDefault.getSize());
@@ -113,12 +177,31 @@ public class SettingsMenu extends JFrame {
         apply.setText("Apply");
         apply.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                boolean allValid = true;
+                boolean allSaved = true;
 
-                for (Setting setter : setters.values()) // TODO: figure out a way to highlight which tab has invalid settings
-                    allValid &= setter.applyChanges();
+                final Color invalidColor = new Color(227, 57, 57);
 
-                saveNotify(allValid);
+                for (Setting setter : setters.values()) {
+                    boolean isConfigValid = setter.applyChanges();
+                    allSaved &= isConfigValid;
+
+                    String tabName = setter.getId().toString();
+                    int idx = tabbed.indexOfTab(tabName);
+
+                    if (!isConfigValid) {
+                        tabbed.setForegroundAt(idx, invalidColor);
+
+                        state.setValidityState(tabName, false);
+                    } else if (tabbed.getForegroundAt(idx).equals(invalidColor)) {
+                        tabbed.setForegroundAt(idx, tabbed.getForeground());
+
+                        state.setValidityState(tabName, true);
+                    }
+
+                    state.setSaveState(tabName, allSaved);
+                }
+
+                state.notifyUser();
             }
         });
 
@@ -136,7 +219,7 @@ public class SettingsMenu extends JFrame {
         JTextPane desc = new JTextPane();
         desc.setEditable(false);
         desc.setText("Good to go!");
-        desc.setBounds(-1, y - 55, 95, 16);
+        desc.setBounds(-1, y - 55, 110, 16);
         desc.setBackground(window.getBackground());
         desc.setFont(new Font(desc.getFont().getName(), Font.PLAIN, 10));
         desc.setHighlighter(null);
@@ -163,15 +246,5 @@ public class SettingsMenu extends JFrame {
         window.setVisible(true);
 
         self = window;
-    }
-
-    public static void saveNotify(boolean saved) {
-        if (saved) {
-            self.setTitle(Controller.title + " - Settings");
-            saveStatus.setText("Good to go!");
-        } else {
-            self.setTitle(Controller.title + " - Settings*");
-            saveStatus.setText("Unsaved changes!");
-        }
     }
 }

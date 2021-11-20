@@ -194,7 +194,8 @@ public class AdvancedSettings extends Setting {
 
             boolean equal = MessageDigest.isEqual(hash, output);
 
-            SettingsMenu.saveNotify(equal);
+            SettingsMenu.state.setSaveState(getId().toString(), equal);
+            SettingsMenu.state.notifyUser();
         } catch (NoSuchAlgorithmException | IOException excs) {
             ErrorHandler.report(excs);
         }

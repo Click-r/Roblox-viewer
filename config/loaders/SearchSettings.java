@@ -225,7 +225,8 @@ public class SearchSettings extends Setting {
 
             boolean equal = MessageDigest.isEqual(hash, output);
 
-            SettingsMenu.saveNotify(equal);
+            SettingsMenu.state.setSaveState(getId().toString(), equal);
+            SettingsMenu.state.notifyUser();
         } catch (IOException | NoSuchAlgorithmException errs) {
             ErrorHandler.report(errs);
         }
