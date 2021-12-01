@@ -138,7 +138,7 @@ public class MainWindow {
                 toGet.setAccessible(true);
                 comp.setText(String.format(toGet.get(player).toString().replace("%", "%%"))); 
                 // format string to print escape characters properly and to escape printf formatting
-            } catch (NoSuchFieldException | IllegalAccessException e) {
+            } catch (NoSuchFieldException | IllegalAccessException | NullPointerException e) {
                 ErrorHandler.report(e, player);
             }
         });

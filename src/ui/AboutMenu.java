@@ -36,12 +36,8 @@ public class AboutMenu extends JFrame {
                     InputStream inp = AboutMenu.class.getResourceAsStream("assets/licenses/" + viewing + "_LICENSE.txt");
                     
                     try (Scanner reader = new Scanner(inp)) {
-                        licenseDisplay.append(reader.nextLine());
-
-                        while (reader.hasNext()) {
-                            licenseDisplay.append("\n");
-                            licenseDisplay.append(reader.nextLine());
-                        }
+                        while (reader.hasNext())
+                            licenseDisplay.append(reader.nextLine() + "\n");
                     }
 
                     licenseDisplay.setCaretPosition(0);
@@ -165,5 +161,4 @@ public class AboutMenu extends JFrame {
 
         window.setVisible(true);
     }
-
 }

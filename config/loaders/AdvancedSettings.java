@@ -184,7 +184,7 @@ public class AdvancedSettings extends Setting {
 
             valList.add(timeoutValue);
             valList.add(threadValue);
-            valList.add(pingValue); // temporary until i implement the ping display option
+            valList.add(pingValue);
 
             valList.sort((str1, str2) -> str1.length() - str2.length());
 

@@ -27,6 +27,8 @@ import loaders.base.*;
 public class SettingsMenu extends JFrame {
     private static JFrame self;
     private static JTextPane saveStatus;
+    
+    public static SettingValidity state;
 
     public static class SettingValidity {
         LinkedHashMap<String, BitSet> states = new LinkedHashMap<String, BitSet>();
@@ -58,22 +60,15 @@ public class SettingsMenu extends JFrame {
 
             states.forEach((name, bitset) -> finalState.and(bitset));
 
-            if (finalState.get(1)) {
-                if (finalState.get(0)) {
-                    self.setTitle(Controller.title + " - Settings");
-                    saveStatus.setText("Good to go!");
-                } else {
-                    self.setTitle(Controller.title + " - Settings*");
-                    saveStatus.setText("Unsaved changes!");
-                }
-            } else {
-                self.setTitle(Controller.title + " - Settings*");
+            String title = String.format("%s - Settings%s", Controller.title, (finalState.cardinality() < 2) ? "*" : ""); // cardinality is how many bits are set
+            self.setTitle(title);
+
+            if (finalState.get(1))
+                saveStatus.setText(finalState.get(0) ? "Good to go!" : "Unsaved changes!");
+            else
                 saveStatus.setText("Invalid configuration!");
-            }
         }
     }
-
-    public static SettingValidity state;
 
     @SuppressWarnings("static-access")
     public SettingsMenu() {
@@ -169,7 +164,7 @@ public class SettingsMenu extends JFrame {
                     ErrorHandler.report(resErr);
                 }
             }
-        }); // TODO: show reset take effect live
+        });
 
         JButton apply = new JButton();
         apply.setSize(resetDefault.getSize());

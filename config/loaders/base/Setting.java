@@ -14,8 +14,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.JToggleButton;
+import javax.swing.text.JTextComponent;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -47,6 +50,28 @@ public abstract class Setting {
         return path;
     }
 
+    private void resetInputsUI() {
+        components.forEach((setting, component) -> {
+            String setValue = get(setting + "_DEFAULT");
+
+            if (component instanceof JTextComponent) {
+                ((JTextComponent) component).setText(setValue);
+            } else if (component instanceof JToggleButton) {
+                ((JToggleButton) component).setSelected(setValue.equals("true"));
+            } else if (component instanceof JComboBox) {
+                JComboBox<?> toSet = (JComboBox<?>) component;
+
+                if (setValue.matches("\\d+"))
+                    toSet.setSelectedIndex(Integer.valueOf(setValue));
+                else
+                    toSet.setSelectedItem(setValue);
+            } else {
+                System.out.printf("You forgot to implement the default reset for type %s in order to reset input box of option %s!\n",
+                                    component.getClass().getSuperclass().getSimpleName(), setting);
+            }
+        }); // not the prettiest code i've written
+    }
+
     public void resetToDefaults() throws IOException {
         Properties properties = getConfig();
 
@@ -70,6 +95,8 @@ public abstract class Setting {
 
         FileOutputStream save = new FileOutputStream(file);
         properties.store(save, "Reset to defaults");
+
+        resetInputsUI();
     }
 
     public void saveToFile() throws IOException {
