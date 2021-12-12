@@ -1,4 +1,4 @@
-package ui;
+package ui.gui.utilities;
 
 import java.awt.Dimension;
 import java.awt.Font;
@@ -20,6 +20,9 @@ import javax.swing.JTextPane;
 import main.Controller;
 
 import misc.ExecuteCreateShortcut;
+
+import ui.gui.err.ErrorHandler;
+import ui.gui.main.MainWindow;
 
 import loaders.*;
 import loaders.base.*;

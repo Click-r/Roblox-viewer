@@ -12,7 +12,7 @@ import java.awt.Image;
 
 import classes.api.getInfo;
 
-import ui.ErrorHandler;
+import ui.gui.err.ErrorHandler;
 
 /** A class for the player which allows for general information to be retrieved. Utilizies ROBLOX API endpoints to retrieve the data. */
 public class Player {

@@ -1,4 +1,4 @@
-package ui;
+package ui.gui.err;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
@@ -140,7 +140,7 @@ public class ErrorHandler extends JFrame {
     }
 
     public static ImageIcon getWarningImg() throws IOException {
-        InputStream stream = ErrorHandler.class.getResourceAsStream("assets/warning.png");
+        InputStream stream = ErrorHandler.class.getResourceAsStream("/ui/assets/warning.png");
         Image warn = ImageIO.read(stream);
         return new ImageIcon(warn);
     }

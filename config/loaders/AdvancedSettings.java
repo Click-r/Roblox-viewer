@@ -24,8 +24,8 @@ import javax.swing.event.DocumentListener;
 
 import loaders.base.*;
 
-import ui.ErrorHandler;
-import ui.SettingsMenu;
+import ui.gui.err.ErrorHandler;
+import ui.gui.utilities.SettingsMenu;
 
 public class AdvancedSettings extends Setting {
 

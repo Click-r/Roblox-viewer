@@ -6,7 +6,8 @@ import java.nio.file.*;
 
 import java.io.IOException;
 
-import ui.*;
+import ui.gui.err.ErrorHandler;
+import ui.gui.main.MainWindow;
 
 public class Controller {
     public final static String version = "0.9c";

@@ -23,7 +23,7 @@ import classes.Player;
 import loaders.AdvancedSettings;
 import loaders.SearchSettings;
 
-import ui.ErrorHandler;
+import ui.gui.err.ErrorHandler;
 
 public class getInfo {
 

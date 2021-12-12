@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import main.Controller;
 
-import ui.ErrorHandler;
+import ui.gui.err.ErrorHandler;
 
 public class ExecuteCreateShortcut {
     public static void RunScript() {

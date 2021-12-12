@@ -1,4 +1,4 @@
-package ui;
+package ui.gui.main;
 
 import javax.swing.*;
 import javax.swing.border.*;
@@ -28,6 +28,8 @@ import loaders.Themes.*;
 
 import main.Controller;
 
+import ui.gui.err.ErrorHandler;
+
 public class MainWindow {
     private String lastModifed;
     private Player last;
@@ -36,7 +38,7 @@ public class MainWindow {
 
     public static ToolBarManager toolbar;
 
-    static class ToolBarManager {
+    public static class ToolBarManager {
         private static HashMap<String, JButton> buttons;
 
         public ToolBarManager(JFrame target) {

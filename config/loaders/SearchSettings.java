@@ -18,8 +18,8 @@ import javax.swing.text.JTextComponent;
 
 import loaders.base.*;
 
-import ui.ErrorHandler;
-import ui.SettingsMenu;
+import ui.gui.err.ErrorHandler;
+import ui.gui.utilities.SettingsMenu;
 
 public class SearchSettings extends Setting {
 

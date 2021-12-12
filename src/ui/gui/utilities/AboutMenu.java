@@ -1,4 +1,4 @@
-package ui;
+package ui.gui.utilities;
 
 import java.util.HashMap;
 import java.util.Scanner;
@@ -18,6 +18,8 @@ import java.io.InputStream;
 
 import main.Controller;
 
+import ui.gui.main.MainWindow;
+
 public class AboutMenu extends JFrame {
 
     private static HashMap<String, JButton> comps = new HashMap<String, JButton>();
@@ -33,7 +35,7 @@ public class AboutMenu extends JFrame {
                     currentlyLoadedLicense = viewing;
                     licenseDisplay.setText("");
                     
-                    InputStream inp = AboutMenu.class.getResourceAsStream("assets/licenses/" + viewing + "_LICENSE.txt");
+                    InputStream inp = AboutMenu.class.getResourceAsStream("/ui/assets/licenses/" + viewing + "_LICENSE.txt");
                     
                     try (Scanner reader = new Scanner(inp)) {
                         while (reader.hasNext())
