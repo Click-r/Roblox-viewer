@@ -64,7 +64,7 @@ public class OutfitViewer extends JFrame {
                 search(userId);
                 displayingInfo = true;
 
-                build();
+                build(); // TODO: make gui
             }
         });
     }
