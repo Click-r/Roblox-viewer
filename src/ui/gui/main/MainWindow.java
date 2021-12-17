@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import classes.*;
-import classes.api.getInfo;
+import classes.api.getAppearance;
 
 import loaders.*;
 import loaders.Themes.*;
@@ -29,6 +29,7 @@ import loaders.Themes.*;
 import main.Controller;
 
 import ui.gui.err.ErrorHandler;
+import ui.gui.outfits.OutfitViewer;
 
 public class MainWindow {
     private String lastModifed;
@@ -216,6 +217,7 @@ public class MainWindow {
         final Color errCol = paletteCols.get("error");
 
         boolean showPing = true;
+
         try {
             AdvancedSettings advSettings = new AdvancedSettings();
             showPing = Boolean.valueOf(advSettings.get("displayPing"));
@@ -388,10 +390,19 @@ public class MainWindow {
                 reload.setEnabled(false);
                 showingError = false;
 
-                av.setIcon(new ImageIcon(getInfo.retrieveImage(last.id)));
+                av.setIcon(new ImageIcon(getAppearance.retrieveImage(last.id)));
                 error.setVisible(showingError);
 
                 reload.setEnabled(true);
+            }
+        });
+
+        JButton openOutfits = new JButton("View Outfits");
+        openOutfits.setBounds(reload.getX(), reload.getY() + reload.getHeight() + 6, reload.getWidth(), reload.getHeight());
+        openOutfits.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                OutfitViewer.display(last.id);
             }
         });
 
@@ -401,6 +412,7 @@ public class MainWindow {
         imageSection.add(subPanel);
         imageSection.add(av);
         imageSection.add(reload);
+        imageSection.add(openOutfits);
 
         toolbar = new ToolBarManager(frame);
 

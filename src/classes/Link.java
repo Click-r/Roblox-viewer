@@ -94,24 +94,33 @@ public class Link {
         return toReturn;
     }
 
-    private Map<String, Object> getData(String link, String method) throws IOException {
-        Map<String, Object> data = new HashMap<String, Object>();
+    public JSONObject getRawJson(boolean hasConnected) throws IOException {
+        if (!hasConnected)
+            this.connection.connect();
 
-        this.connection.connect();
-
-        if (method.equals("POST")) {
-            OutputStream os = this.connection.getOutputStream();
-            os.write(this.payload);
-        }
-        
-        String textResponse = "NaN";
+        String textResponse = null;
 
         try (Scanner scanner = new Scanner(this.connection.getInputStream(), "UTF-8")) {
             String responseBody = scanner.useDelimiter("\\A").next();
             textResponse = responseBody;
         }
 
-        JSONObject json = new JSONObject(textResponse);
+        return new JSONObject(textResponse);
+    }
+
+    private Map<String, Object> getData(String link, String method) throws IOException {
+        Map<String, Object> data = new HashMap<String, Object>();
+
+        boolean isPOST = method.equals("POST");
+
+        if (isPOST) {
+            this.connection.connect();
+
+            OutputStream os = this.connection.getOutputStream();
+            os.write(this.payload);
+        }
+
+        JSONObject json = getRawJson(isPOST);
         Map<String,Object> subData = json.toMap();
 
         subData.forEach((key,val) -> {
