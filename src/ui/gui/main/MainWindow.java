@@ -402,7 +402,7 @@ public class MainWindow {
         openOutfits.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                OutfitViewer.display(last.id);
+                OutfitViewer.display(last);
             }
         });
 

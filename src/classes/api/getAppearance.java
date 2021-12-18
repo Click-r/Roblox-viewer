@@ -14,12 +14,14 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import classes.Avatar;
 import classes.Link;
 
 import loaders.AdvancedSettings;
@@ -221,5 +223,44 @@ public class getAppearance {
             System.out.println("we're good to go");
         
         return imgs;
+    }
+
+    public static List<Avatar> multiGetOutfits(long[] ids) {
+        int chosen = 5;
+
+        try {
+            AdvancedSettings advSettings = new AdvancedSettings();
+            chosen = Integer.valueOf(advSettings.get("threadsToUse"));
+        } catch (IOException iex) {
+            ErrorHandler.report(iex);
+        }
+
+        final int maxThreads = chosen;
+
+        ThreadPoolExecutor retrieve = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
+        List<Avatar> outfits = new ArrayList<Avatar>();
+
+        for (long outfitId : ids) {
+            Future<Avatar> getDetails = retrieve.submit(() -> {
+                return new Avatar(outfitId);
+            });
+
+            retrieve.submit(() -> {
+                try {
+                    Avatar result = getDetails.get(5, TimeUnit.SECONDS);
+                    outfits.add(result);
+                } catch (ExecutionException exc) {
+                    ErrorHandler.report(exc);
+                } catch (InterruptedException|TimeoutException timeout) {}
+            });
+        }
+
+        do {
+            try {
+                Thread.sleep(2);
+            } catch (InterruptedException e) {}
+        } while (outfits.size() != ids.length);
+
+        return outfits;
     }
 }

@@ -1,6 +1,8 @@
 package classes;
 
 import java.awt.Color;
+import java.awt.Image;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,6 +23,7 @@ public class Avatar {
     public long id;
     public List<Asset> assets = new ArrayList<Asset>();
     public Map<String, Color> bodycolours = new HashMap<String, Color>();
+    public Image outfitThumbnail;
 
     {
         Color defaultColor = new Color(0, 0, 0);
@@ -56,5 +59,9 @@ public class Avatar {
         JSONObject bodyColours = details.getJSONObject("bodyColors");
         TODO: Decode body colour ids into rgb 
         */
+    }
+
+    public void setImage(Image target) {
+        outfitThumbnail = target;
     }
 }
