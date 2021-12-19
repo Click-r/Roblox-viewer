@@ -19,7 +19,7 @@ public class Avatar {
         public String name;
     }
 
-    public String name;
+    public String name; // max length is 99 characters
     public long id;
     public List<Asset> assets = new ArrayList<Asset>();
     public Map<String, Color> bodycolours = new HashMap<String, Color>();
@@ -61,7 +61,11 @@ public class Avatar {
         */
     }
 
-    public void setImage(Image target) {
-        outfitThumbnail = target;
+    public void setImage() {
+        outfitThumbnail = getAppearance.getOutfitThumbnail(id);
     }
+
+    public void setImage(Image image) {
+        outfitThumbnail = image;
+    } // in case of batch gets
 }

@@ -509,6 +509,8 @@ public class MainWindow {
                                 updateVals(new Player(Long.valueOf(input)), comps, av);
                             }
                         }
+
+                        openOutfits.setEnabled(!last.banned);
                     } catch (UserNotFoundException | NumberFormatException err) {
                         presentError(errorMsg, ErrorType.PLAYER, input);
                     } finally {
@@ -516,7 +518,6 @@ public class MainWindow {
 
                         search.setEnabled(true);
                     }
-
                 }
             }
         });
@@ -549,6 +550,8 @@ public class MainWindow {
                         newId = randomLong(min, max);
 
                         updateVals(new Player(newId), comps, av);
+                        
+                        openOutfits.setEnabled(!last.banned);
                     } catch (UserNotFoundException err) {
                         presentError(errorMsg, ErrorType.PLAYER, String.valueOf(newId));
                     } catch (IOException ioexc) {

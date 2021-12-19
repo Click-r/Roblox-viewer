@@ -112,8 +112,12 @@ public class getAppearance {
             String url = "https://thumbnails.roblox.com/v1/users/outfits?userOutfitIds=" + outfitId + "&size=150x150&format=Png&isCircular=false";
 
             try {
-                Link imageLink = new Link(url, false);
+                Link dataLink = new Link(url, false);
 
+                JSONObject returned = dataLink.getRawJson(false);
+                String imgUrl = returned.getJSONArray("data").getJSONObject(0).getString("imageUrl");
+
+                Link imageLink = new Link(imgUrl, false);
                 return imageLink.getImage();
             } catch (IOException e) {}
 
@@ -145,11 +149,21 @@ public class getAppearance {
                 JSONObject outfitData = data.getRawJson(false);
 
                 JSONArray outfits = outfitData.getJSONArray("data");
-                outfits.forEach((jsobj) -> {
-                    JSONObject info = (JSONObject) jsobj;
 
-                    imageUrls[info.getInt("targetId") - 1] = info.getString("imageUrl");
-                });
+                for (int i = 0; i < outfits.length(); i++) {
+                    JSONObject currentobj = outfits.getJSONObject(i);
+
+                    String setTo = "";
+
+                    if (currentobj.getString("state").equals("Blocked") || currentobj.getString("state").equals("Error") )
+                        setTo = "https://t4.rbxcdn.com/b561617d22628c1d01dd10f02e80c384";
+                    else if (currentobj.getString("state").equals("InReview") || currentobj.getString("state").equals("Pending"))
+                        setTo = "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018";
+                    else
+                        setTo = currentobj.getString("imageUrl");
+                    
+                    imageUrls[i] = setTo;
+                }
             } catch (IOException e) {}
 
             return imageUrls;
@@ -159,7 +173,9 @@ public class getAppearance {
 
         try {
             urls = imageLinks.get(5, TimeUnit.SECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {}
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            e.printStackTrace();
+        }
 
         Image[] imgs = new Image[outfitIds.length];
 
@@ -187,9 +203,10 @@ public class getAppearance {
                 try {
                     Link con = new Link(imgUrl, false);
 
+                    Image toReturn = con.getImage();
                     buffer.push(1);
 
-                    return con.getImage();
+                    return toReturn;
                 } catch (IOException e) {
                     int remainingBuffer = 5 - buffer.size();
 
@@ -219,8 +236,8 @@ public class getAppearance {
             } catch (InterruptedException inter) {}
         }
 
-        if (imgs.length == outfitIds.length)
-            System.out.println("we're good to go");
+        if (imgs.length != outfitIds.length)
+            System.out.println("uh oh");
         
         return imgs;
     }
@@ -251,7 +268,7 @@ public class getAppearance {
                     outfits.add(result);
                 } catch (ExecutionException exc) {
                     ErrorHandler.report(exc);
-                } catch (InterruptedException|TimeoutException timeout) {}
+                } catch (InterruptedException | TimeoutException timeout) {}
             });
         }
 

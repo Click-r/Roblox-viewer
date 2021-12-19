@@ -6,9 +6,14 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
@@ -17,6 +22,8 @@ import classes.Avatar;
 import classes.Player;
 
 import classes.api.getAppearance;
+
+import java.awt.Image;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -31,8 +38,86 @@ public class OutfitViewer extends JFrame {
     private static boolean displayingInfo = false;
     private static Player current;
     private static List<Avatar> outfits = new ArrayList<Avatar>();
+    private static List<JPanel> cards = new ArrayList<JPanel>();
     private static Map<String, JComponent> outfitComponents = new HashMap<String, JComponent>();
 
+    private static JPanel generateOutfitCard(Avatar outfit, boolean setimage) {
+        if (setimage)
+            outfit.setImage();
+
+        StringBuilder name = new StringBuilder(outfit.name);
+        name.setLength(40);
+
+        if (outfit.name.length() > 40)
+            name.append("...");
+
+        JPanel card = new JPanel();
+        card.setSize(160, 230);
+        card.setBackground(new Color(218, 218, 218));
+        card.setLayout(null);
+        card.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0), 1));
+
+        JTextArea outfitName = new JTextArea();
+        outfitName.setBounds(0, 0, card.getWidth(), 32);
+        outfitName.setLineWrap(true);
+        outfitName.setWrapStyleWord(true);
+        outfitName.setEditable(false);
+        outfitName.setText(name.toString());
+        outfitName.setBackground(new Color(225, 225, 225));
+        outfitName.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 1, new Color(0, 0, 0)));
+
+        Image scaled = outfit.outfitThumbnail.getScaledInstance(card.getWidth() - 2, card.getWidth() - 2, Image.SCALE_AREA_AVERAGING);
+        JLabel outfitImage = new JLabel(new ImageIcon(scaled));
+        outfitImage.setBounds(outfitName.getX() + 1, outfitName.getY() + outfitName.getHeight(), card.getWidth() - 2, card.getWidth() - 2);
+
+        JButton viewDetails = new JButton("Further details");
+        viewDetails.setBounds(outfitName.getX(), outfitName.getY() + outfitName.getHeight() + 159, card.getWidth(), 39);
+
+        card.add(outfitName);
+        card.add(viewDetails);
+        card.add(outfitImage);
+
+        return card;
+    }
+
+    private static List<JPanel> generateCards() {
+        long[] ids = new long[outfits.size()];
+        for (int i = 0; i < outfits.size(); i++)
+            ids[i] = outfits.get(i).id;
+
+        Image[] outfitImages = getAppearance.batchGetOutfitThumbnails(ids);
+        for (int j = 0; j < outfits.size(); j++)
+            outfits.get(j).setImage(outfitImages[j]);
+
+        for (Avatar outfit : outfits)
+            cards.add(generateOutfitCard(outfit, false));
+        
+        return cards;
+    }
+
+    private static void updateCards() {
+        JPanel appendTo = (JPanel) outfitComponents.get("outfitPanel");
+        appendTo.removeAll();
+        cards.clear();
+        
+        cards = generateCards();
+
+        int xDistBetweenCards = 4;
+        int yDistBetweenCards = 6;
+        int cardsPerRow = 3;
+        
+        for (int i = 0; i < cards.size(); i++) {
+            int yCoordinate = 2 + (i / cardsPerRow) * (yDistBetweenCards + 230);
+            int xCoordinate = 4 + (i % 3) * (xDistBetweenCards + 160);
+
+            JPanel card = cards.get(i);
+            card.setLocation(xCoordinate, yCoordinate);
+
+            appendTo.add(card);
+        }
+
+        appendTo.repaint();
+    }
 
     private static JFrame build() {
         JFrame frame = new JFrame(Controller.title + " - Outfit Viewer");
@@ -43,10 +128,6 @@ public class OutfitViewer extends JFrame {
         int x,y;
         x = 800;
         y = 700;
-
-        /*final int aX,aY;
-        aX = 704;
-        aY = 616;*/
 
         frame.setBounds(200, 200, x, y);
         frame.setResizable(false);
@@ -60,6 +141,7 @@ public class OutfitViewer extends JFrame {
             public void windowClosed(WindowEvent e) {
                 displayingInfo = false;
                 outfits.clear();
+                cards.clear();
                 
                 System.gc();
             }
@@ -74,15 +156,36 @@ public class OutfitViewer extends JFrame {
         JTextPane outfitsTitle = new JTextPane();
         outfitsTitle.setEditable(false);
         outfitsTitle.setBackground(bgcolour);
-        outfitsTitle.setBounds(2, 2, 270, 50);
+        outfitsTitle.setBounds(2, 2, 550, 50);
         outfitsTitle.setText(String.format("%s's outfits (%d)", current.name, outfits.size()));
         outfitsTitle.setFont(new Font(outfitsTitle.getFont().getFontName(), outfitsTitle.getFont().getStyle(), 25));
 
         outfitComponents.put("title", outfitsTitle);
 
-        outfitPanel.add(outfitsTitle);
+        int yDistBetweenCards = 6;
 
-        // TODO: make the card things for the outfits
+        JPanel outfitView = new JPanel();
+        outfitView.setLayout(null);
+        outfitView.setBounds(outfitsTitle.getX(), outfitsTitle.getY() + outfitsTitle.getHeight(), outfitPanel.getWidth(), 17 * (yDistBetweenCards + 230));
+        outfitComponents.put("outfitPanel", outfitView);
+
+        JScrollPane outfitScroll = new JScrollPane(outfitView, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        outfitScroll.setBounds(outfitsTitle.getX(), outfitsTitle.getY() + outfitsTitle.getHeight(), outfitPanel.getWidth(), outfitPanel.getHeight() - 90);
+        outfitScroll.getVerticalScrollBar().setUnitIncrement(16);
+
+        outfitView.setPreferredSize(new Dimension(outfitPanel.getWidth(), 17 * (yDistBetweenCards + 230)));
+
+        updateCards();
+
+        outfitPanel.add(outfitsTitle);
+        outfitPanel.add(outfitScroll);
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                outfitScroll.getVerticalScrollBar().setValue(0); // scroll to the very top
+            }
+        });
 
         frame.add(outfitPanel);
 
@@ -109,6 +212,7 @@ public class OutfitViewer extends JFrame {
 
         if (displayingInfo) {
             search(user.id);
+            updateCards();
 
             ((JTextComponent) outfitComponents.get("title")).setText(String.format("%s's outfits (%d)", user.name, outfits.size()));
 
