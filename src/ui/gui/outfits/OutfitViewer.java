@@ -67,6 +67,7 @@ public class OutfitViewer extends JFrame {
         outfitName.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 1, new Color(0, 0, 0)));
 
         Image scaled = outfit.outfitThumbnail.getScaledInstance(card.getWidth() - 2, card.getWidth() - 2, Image.SCALE_AREA_AVERAGING);
+
         JLabel outfitImage = new JLabel(new ImageIcon(scaled));
         outfitImage.setBounds(outfitName.getX() + 1, outfitName.getY() + outfitName.getHeight(), card.getWidth() - 2, card.getWidth() - 2);
 
@@ -105,10 +106,19 @@ public class OutfitViewer extends JFrame {
         int xDistBetweenCards = 4;
         int yDistBetweenCards = 6;
         int cardsPerRow = 3;
+
+        int rows = (cards.size() / cardsPerRow);
+        if ((cards.size() % cardsPerRow) > 0)
+            rows++;
+
+        appendTo.setPreferredSize(new Dimension(
+            appendTo.getWidth(), // the width is already initialized in the build() method
+            rows * (yDistBetweenCards + 230) // adjust size based on how many outfits there are
+        ));
         
         for (int i = 0; i < cards.size(); i++) {
             int yCoordinate = 2 + (i / cardsPerRow) * (yDistBetweenCards + 230);
-            int xCoordinate = 4 + (i % 3) * (xDistBetweenCards + 160);
+            int xCoordinate = 4 + (i % cardsPerRow) * (xDistBetweenCards + 160);
 
             JPanel card = cards.get(i);
             card.setLocation(xCoordinate, yCoordinate);
@@ -166,14 +176,13 @@ public class OutfitViewer extends JFrame {
 
         JPanel outfitView = new JPanel();
         outfitView.setLayout(null);
-        outfitView.setBounds(outfitsTitle.getX(), outfitsTitle.getY() + outfitsTitle.getHeight(), outfitPanel.getWidth(), 17 * (yDistBetweenCards + 230));
+        outfitView.setBounds(outfitsTitle.getX() - 1, outfitsTitle.getY() + outfitsTitle.getHeight(), outfitPanel.getWidth(), 17 * (yDistBetweenCards + 230));
         outfitComponents.put("outfitPanel", outfitView);
 
         JScrollPane outfitScroll = new JScrollPane(outfitView, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        outfitScroll.setBounds(outfitsTitle.getX(), outfitsTitle.getY() + outfitsTitle.getHeight(), outfitPanel.getWidth(), outfitPanel.getHeight() - 90);
+        outfitScroll.setBounds(outfitView.getX(), outfitView.getY(), outfitView.getWidth(), outfitPanel.getHeight() - 90);
+        outfitScroll.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(0, 0, 0)));
         outfitScroll.getVerticalScrollBar().setUnitIncrement(16);
-
-        outfitView.setPreferredSize(new Dimension(outfitPanel.getWidth(), 17 * (yDistBetweenCards + 230)));
 
         updateCards();
 

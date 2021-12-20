@@ -224,7 +224,7 @@ public class getAppearance {
                     imgs[ind] = result;
                 } catch (ExecutionException exc) {
                     ErrorHandler.report(exc);
-                } catch (InterruptedException|TimeoutException timeout) {}
+                } catch (InterruptedException | TimeoutException timeout) {}
             });
 
             index++;
@@ -235,6 +235,8 @@ public class getAppearance {
                 Thread.sleep(2L);
             } catch (InterruptedException inter) {}
         }
+
+        downloadImages.shutdownNow();
 
         if (imgs.length != outfitIds.length)
             System.out.println("uh oh");
@@ -277,6 +279,8 @@ public class getAppearance {
                 Thread.sleep(2);
             } catch (InterruptedException e) {}
         } while (outfits.size() != ids.length);
+
+        retrieve.shutdownNow();
 
         return outfits;
     }
