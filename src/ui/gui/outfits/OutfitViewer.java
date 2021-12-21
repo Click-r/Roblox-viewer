@@ -19,20 +19,24 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
 import classes.Avatar;
+import classes.Link;
 import classes.Player;
 
 import classes.api.getAppearance;
 
 import java.awt.Image;
 
+import java.io.IOException;
+
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
 import java.awt.Dimension;
 import java.awt.Color;
 import java.awt.Font;
 
 import main.Controller;
+
+import ui.gui.err.ErrorHandler;
 
 public class OutfitViewer extends JFrame {
     private static boolean displayingInfo = false;
@@ -40,6 +44,30 @@ public class OutfitViewer extends JFrame {
     private static List<Avatar> outfits = new ArrayList<Avatar>();
     private static List<JPanel> cards = new ArrayList<JPanel>();
     private static Map<String, JComponent> outfitComponents = new HashMap<String, JComponent>();
+
+    private static Image getEnlargedImage(int width) {
+        String url = (String) current.image.getProperty("direct_url", null);
+
+        if (url.startsWith("https://tr")) {
+            String[] parts = url.split("/");
+            parts[5] = parts[4] = "420"; // resize image in the direct link
+
+            url = String.join("/", parts);
+        } else {
+            return current.image.getScaledInstance(width, width, Image.SCALE_SMOOTH);
+        }
+
+        try {
+            Image toReturn = new Link(url, false).getImage();
+            toReturn = toReturn.getScaledInstance(width, width, Image.SCALE_AREA_AVERAGING);
+
+            return toReturn;
+        } catch (IOException e) {
+            ErrorHandler.report(e, current);
+        }
+
+        return null;
+    }
 
     private static JPanel generateOutfitCard(Avatar outfit, boolean setimage) {
         if (setimage)
@@ -157,6 +185,34 @@ public class OutfitViewer extends JFrame {
             }
         });
 
+        JPanel infoPanel = new JPanel();
+        infoPanel.setBounds(0, 0, 270, y);
+        infoPanel.setBackground(bgcolour);
+        infoPanel.setLayout(null);
+
+        JTextPane infoTitle = new JTextPane();
+        infoTitle.setEditable(false);
+        infoTitle.setBackground(bgcolour);
+        infoTitle.setBounds(2, 2, infoPanel.getWidth(), 51);
+        infoTitle.setText("Details");
+        infoTitle.setFont(new Font(infoTitle.getFont().getFontName(), infoTitle.getFont().getStyle(), 25));
+        infoTitle.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(0, 0, 0)));
+
+        JPanel imageContainer = new JPanel();
+        imageContainer.setBounds(infoTitle.getX() - 2, infoTitle.getY() + infoTitle.getHeight(), infoPanel.getWidth(), infoPanel.getWidth());
+        imageContainer.setBackground(new Color(218, 218, 218));
+        imageContainer.setLayout(null);
+
+        ImageIcon icon = new ImageIcon(getEnlargedImage(infoPanel.getWidth()));
+        JLabel enlargedImage = new JLabel(icon);
+        enlargedImage.setSize(imageContainer.getSize());
+
+        imageContainer.add(enlargedImage);
+
+
+        infoPanel.add(imageContainer);
+        infoPanel.add(infoTitle);
+
         JPanel outfitPanel = new JPanel();
         outfitPanel.setBounds(270, 0, x - 285, y);
         outfitPanel.setBackground(bgcolour);
@@ -196,6 +252,7 @@ public class OutfitViewer extends JFrame {
             }
         });
 
+        frame.add(infoPanel);
         frame.add(outfitPanel);
 
         return frame;

@@ -1,6 +1,7 @@
 package classes;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import java.net.HttpURLConnection;
@@ -76,11 +77,12 @@ public class Link {
         HttpURLConnection.setFollowRedirects(true);
         this.connection.connect();
 
-        URL site = this.connection.getURL();
+        InputStream siteInput = this.connection.getInputStream();
 
         String Etag = connection.getHeaderField("ETag"); // error tag? not sure
 
         Hashtable<String, String> imgProperties = new Hashtable<String, String>();
+        imgProperties.put("direct_url", connection.getURL().toString());
 
         if (Etag != null) { // only exists if the image data is placeholder due to some reason
             Etag = Etag.substring(1, Etag.length() - 1); // get rid of quotation marks
@@ -88,7 +90,7 @@ public class Link {
             imgProperties.put("error", Etag);
         }
         
-        BufferedImage toReturn = (BufferedImage) ImageIO.read(site);
+        BufferedImage toReturn = (BufferedImage) ImageIO.read(siteInput);
         toReturn = new BufferedImage(toReturn.getColorModel(), toReturn.getRaster(), toReturn.isAlphaPremultiplied(), imgProperties);
 
         return toReturn;
