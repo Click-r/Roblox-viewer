@@ -3,6 +3,7 @@ package classes;
 import java.awt.Color;
 import java.awt.Image;
 
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,21 +20,16 @@ public class Avatar {
         public String name;
     }
 
+    private static Map<Integer, SimpleImmutableEntry<String, Color>> colourLookup;
+
     public String name; // max length is 99 characters
-    public long id;
-    public List<Asset> assets = new ArrayList<Asset>();
-    public Map<String, Color> bodycolours = new HashMap<String, Color>();
-    public Image outfitThumbnail;
+    public long id; // if the id is -1, that indicates that the appearance stored in the avatar is a user's current appearence
+    public List<Asset> assets;
+    public Map<String, SimpleImmutableEntry<String, Color>> bodycolours;
+    public Image image;
 
-    {
-        Color defaultColor = new Color(0, 0, 0);
-
-        bodycolours.put("headColorId", defaultColor);
-        bodycolours.put("torsoColorId", defaultColor);
-        bodycolours.put("rightArmColorId", defaultColor);
-        bodycolours.put("leftArmColorId", defaultColor);
-        bodycolours.put("rightLegColorId", defaultColor);
-        bodycolours.put("leftLegColorId", defaultColor);
+    static {
+        colourLookup = getAppearance.getColourIdInfo(); // initialize the lookup table for every instance of avatar
     }
 
     public Avatar(long outfitId) {
@@ -43,29 +39,62 @@ public class Avatar {
         name = details.getString("name");
         // outfit id & name
 
+        setDataFields(details);
+    }
+
+    public Avatar(Long userId) {
+        JSONObject currentlyWearing = getAppearance.getCurrentlyWearing(userId);
+
+        id = -1L;
+        name = "Currently Wearing";
+
+        setDataFields(currentlyWearing);
+    }
+
+    private void setDataFields(JSONObject details) {
         JSONArray assetList = details.getJSONArray("assets");
-        assetList.forEach((assetDescription) -> {
+        assets = getAssets(assetList);
+        // accessories worn in the outfit
+
+        JSONObject bodyColoursData = details.getJSONObject("bodyColors");
+        bodycolours = getColours(bodyColoursData);
+        // colours of the outfit
+    }
+
+    public static Map<String, SimpleImmutableEntry<String, Color>> getColours(JSONObject rawColours) {
+        Map<String, SimpleImmutableEntry<String, Color>> parts = new HashMap<String, SimpleImmutableEntry<String, Color>>();
+
+        for (String partName : rawColours.keySet()) {
+            int colourId = rawColours.getInt(partName);
+            partName = partName.replace("ColorId", "");
+
+            parts.put(partName, colourLookup.get(colourId));
+        }
+
+        return parts;
+    }
+
+    public static List<Asset> getAssets(JSONArray rawAssetList) {
+        List<Asset> assetsParsed = new ArrayList<Asset>();
+
+        rawAssetList.forEach((assetDescription) -> {
             JSONObject desc = (JSONObject) assetDescription;
 
             Asset asset = new Asset();
             asset.id = desc.getLong("id");
             asset.name = desc.getString("name");
 
-            assets.add(asset);
+            assetsParsed.add(asset);
         });
-        // accessories worn in the outfit
 
-        /*
-        JSONObject bodyColours = details.getJSONObject("bodyColors");
-        TODO: Decode body colour ids into rgb 
-        */
+        return assetsParsed;
     }
 
     public void setImage() {
-        outfitThumbnail = getAppearance.getOutfitThumbnail(id);
+        image = getAppearance.getOutfitThumbnail(id);
     }
 
     public void setImage(Image image) {
-        outfitThumbnail = image;
+        this.image = image;
     } // in case of batch gets
 }

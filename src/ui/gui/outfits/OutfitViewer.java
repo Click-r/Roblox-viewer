@@ -44,9 +44,10 @@ public class OutfitViewer extends JFrame {
     private static List<Avatar> outfits = new ArrayList<Avatar>();
     private static List<JPanel> cards = new ArrayList<JPanel>();
     private static Map<String, JComponent> outfitComponents = new HashMap<String, JComponent>();
+    private static Avatar viewing;
 
     private static Image getEnlargedImage(int width) {
-        String url = (String) current.image.getProperty("direct_url", null);
+        String url = (String) viewing.image.getProperty("direct_url", null);
 
         if (url.startsWith("https://tr")) {
             String[] parts = url.split("/");
@@ -94,7 +95,7 @@ public class OutfitViewer extends JFrame {
         outfitName.setBackground(new Color(225, 225, 225));
         outfitName.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 1, new Color(0, 0, 0)));
 
-        Image scaled = outfit.outfitThumbnail.getScaledInstance(card.getWidth() - 2, card.getWidth() - 2, Image.SCALE_AREA_AVERAGING);
+        Image scaled = outfit.image.getScaledInstance(card.getWidth() - 2, card.getWidth() - 2, Image.SCALE_AREA_AVERAGING);
 
         JLabel outfitImage = new JLabel(new ImageIcon(scaled));
         outfitImage.setBounds(outfitName.getX() + 1, outfitName.getY() + outfitName.getHeight(), card.getWidth() - 2, card.getWidth() - 2);
@@ -157,6 +158,12 @@ public class OutfitViewer extends JFrame {
         appendTo.repaint();
     }
 
+    private static void updateColours() {
+        viewing.bodycolours.forEach((bodyPart, colourInfo) -> {
+            outfitComponents.get(bodyPart).setBackground(colourInfo.getValue());
+        });
+    }
+
     private static JFrame build() {
         JFrame frame = new JFrame(Controller.title + " - Outfit Viewer");
         frame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -193,14 +200,15 @@ public class OutfitViewer extends JFrame {
         JTextPane infoTitle = new JTextPane();
         infoTitle.setEditable(false);
         infoTitle.setBackground(bgcolour);
-        infoTitle.setBounds(2, 2, infoPanel.getWidth(), 51);
+        infoTitle.setBounds(2, 2, infoPanel.getWidth() - 2, 51);
         infoTitle.setText("Details");
         infoTitle.setFont(new Font(infoTitle.getFont().getFontName(), infoTitle.getFont().getStyle(), 25));
         infoTitle.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(0, 0, 0)));
 
         JPanel imageContainer = new JPanel();
-        imageContainer.setBounds(infoTitle.getX() - 2, infoTitle.getY() + infoTitle.getHeight(), infoPanel.getWidth(), infoPanel.getWidth());
+        imageContainer.setBounds(infoTitle.getX() - 2, infoTitle.getY() + infoTitle.getHeight() - 1, infoPanel.getWidth(), infoPanel.getWidth());
         imageContainer.setBackground(new Color(218, 218, 218));
+        imageContainer.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, new Color(0, 0, 0)));
         imageContainer.setLayout(null);
 
         ImageIcon icon = new ImageIcon(getEnlargedImage(infoPanel.getWidth()));
@@ -209,9 +217,84 @@ public class OutfitViewer extends JFrame {
 
         imageContainer.add(enlargedImage);
 
+        JPanel colourAssetContainer = new JPanel();
+        colourAssetContainer.setBounds(
+            0,
+            imageContainer.getY() + imageContainer.getHeight(),
+            infoPanel.getWidth(),
+            infoPanel.getHeight() - (imageContainer.getY() + imageContainer.getHeight())
+        );
+        colourAssetContainer.setLayout(null);
 
-        infoPanel.add(imageContainer);
+        JScrollPane infoScrollBar = new JScrollPane(colourAssetContainer, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        infoScrollBar.setBounds(colourAssetContainer.getBounds());
+        infoScrollBar.setBorder(null);
+
+        JTextPane colourSubTitle = new JTextPane();
+        colourSubTitle.setEditable(false);
+        colourSubTitle.setBackground(bgcolour);
+        colourSubTitle.setBounds(2, 0, infoScrollBar.getWidth() - 17, 40);
+        colourSubTitle.setText("Colours");
+        colourSubTitle.setFont(new Font(colourSubTitle.getFont().getFontName(), colourSubTitle.getFont().getStyle(), 22));
+
+        JPanel colourDisplay = new JPanel();
+        colourDisplay.setBounds(
+            0,
+            colourSubTitle.getY() + colourSubTitle.getHeight() + 1,
+            infoScrollBar.getWidth() - 17,
+            infoPanel.getHeight() - (colourSubTitle.getY() + colourSubTitle.getHeight() + 1)
+        );
+        colourDisplay.setLayout(null);
+
+        int halfway = (colourDisplay.getWidth() / 2);
+
+        JPanel head = new JPanel();
+        head.setBounds(halfway - 27, 8, 54, 54);
+        head.setBackground(new Color(0, 0, 0));
+
+        JPanel torso = new JPanel();
+        torso.setBounds(halfway - 49, head.getY() + head.getHeight() + 2, 98, 110);
+        torso.setBackground(new Color(0, 0, 0));
+
+        JPanel leftArm = new JPanel();
+        leftArm.setBounds(torso.getX() - 2 - 47, torso.getY(), 47, torso.getHeight());
+        leftArm.setBackground(new Color(0, 0, 0));
+
+        JPanel rightArm = new JPanel();
+        rightArm.setBounds(torso.getX() + torso.getWidth() + 2, torso.getY(), 47, torso.getHeight());
+        rightArm.setBackground(new Color(0, 0, 0));
+
+        JPanel leftLeg = new JPanel();
+        leftLeg.setBounds(torso.getX(), torso.getY() + torso.getHeight() + 2, 48, torso.getHeight());
+        leftLeg.setBackground(new Color(0, 0, 0));
+
+        JPanel rightLeg = new JPanel();
+        rightLeg.setBounds(leftLeg.getX() + leftLeg.getWidth() + 2, leftLeg.getY(), 48, torso.getHeight());
+        rightLeg.setBackground(new Color(0, 0, 0));
+
+        outfitComponents.put("head", head);
+        outfitComponents.put("torso", torso);
+        outfitComponents.put("leftArm", leftArm);
+        outfitComponents.put("rightArm", rightArm);
+        outfitComponents.put("leftLeg", leftLeg);
+        outfitComponents.put("rightLeg", rightLeg);
+        // TODO: display colour rgb values and name
+
+        colourDisplay.add(head);
+        colourDisplay.add(torso);
+        colourDisplay.add(leftArm);
+        colourDisplay.add(rightArm);
+        colourDisplay.add(leftLeg);
+        colourDisplay.add(rightLeg);
+
+        colourAssetContainer.add(colourSubTitle);
+        colourAssetContainer.add(colourDisplay);
+
         infoPanel.add(infoTitle);
+        infoPanel.add(imageContainer);
+        infoPanel.add(infoScrollBar);
+
+        updateColours();
 
         JPanel outfitPanel = new JPanel();
         outfitPanel.setBounds(270, 0, x - 285, y);
@@ -277,6 +360,8 @@ public class OutfitViewer extends JFrame {
         current = user;
 
         if (displayingInfo) {
+            viewing = user.getAppearance();
+
             search(user.id);
             updateCards();
 
@@ -288,8 +373,10 @@ public class OutfitViewer extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                search(user.id);
                 displayingInfo = true;
+
+                viewing = user.getAppearance();
+                search(user.id);
 
                 build(); // TODO: make gui
             }

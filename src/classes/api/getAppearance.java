@@ -7,6 +7,7 @@ import java.io.IOException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -20,6 +21,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+
+import java.awt.Color;
 
 import classes.Avatar;
 import classes.Link;
@@ -49,6 +52,28 @@ public class getAppearance {
             return img.get(5, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {}
         
+        return null;
+    }
+
+    public static JSONObject getCurrentlyWearing(long userId) {
+        ExecutorService exec = Executors.newSingleThreadExecutor();
+
+        Future<JSONObject> jsonData = exec.submit(() -> {
+            String url = "https://avatar.roblox.com/v1/users/" + userId + "/avatar";
+
+            try {
+                Link info = new Link(url, false);
+
+                return info.getRawJson(false);
+            } catch (IOException e) {}
+
+            return null;
+        });
+
+        try {
+            return jsonData.get(5, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {}
+
         return null;
     }
 
@@ -283,5 +308,46 @@ public class getAppearance {
         retrieve.shutdownNow();
 
         return outfits;
+    }
+
+    public static Map<Integer, SimpleImmutableEntry<String, Color>> getColourIdInfo() {
+        ExecutorService exec = Executors.newSingleThreadExecutor();
+
+        Future<Map<Integer, SimpleImmutableEntry<String, Color>>> lookup = exec.submit(() -> {
+            String url = "https://avatar.roblox.com/v1/avatar-rules";
+            Map<Integer, SimpleImmutableEntry<String, Color>> coloursTable = new HashMap<Integer, SimpleImmutableEntry<String, Color>>();
+
+            try {
+                Link data = new Link(url, false);
+
+                JSONObject jsonData = data.getRawJson(false);
+                JSONArray bodyColoursPalette = jsonData.getJSONArray("bodyColorsPalette");
+
+                bodyColoursPalette.forEach((jsobj) -> {
+                    JSONObject entry = (JSONObject) jsobj;
+
+                    int colourId = entry.getInt("brickColorId");
+
+                    String hexColour = entry.getString("hexColor").substring(1);
+                    int rgbInt = Integer.parseUnsignedInt(hexColour, 16);
+                    Color parsed = new Color(rgbInt);
+
+                    String colourName = entry.getString("name");
+
+                    SimpleImmutableEntry<String, Color> pair = new SimpleImmutableEntry<String, Color>(colourName, parsed);
+                    coloursTable.put(colourId, pair);
+                });
+            } catch (IOException e) {}
+
+            return coloursTable;
+        });
+
+        try {
+            Map<Integer, SimpleImmutableEntry<String, Color>> result = lookup.get(5, TimeUnit.SECONDS);
+
+            return result;
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {}
+
+        return null;
     }
 }

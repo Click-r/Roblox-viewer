@@ -55,6 +55,18 @@ public class Player {
         load(getInfo.searchByUsername(username));
         delay = (System.currentTimeMillis() - now) / getInfo.numData;
     }
+    
+    /**
+     * <p>Returns the appearance of the user as an <code>Avatar</code> object.</p>
+     * @return The user's current appearance
+    */
+    
+    public Avatar getAppearance() {
+        Avatar currentlyWearing = new Avatar(this.id);
+        currentlyWearing.setImage(this.image);
+
+        return currentlyWearing;
+    }
 
     /**
      * <p>This method is only used in cases when an extra piece of data may be found in returned json from end points</p>
