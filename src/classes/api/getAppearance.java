@@ -72,7 +72,10 @@ public class getAppearance {
 
         try {
             return jsonData.get(5, TimeUnit.SECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {}
+        } catch (InterruptedException | TimeoutException e) {}
+        catch (ExecutionException execExc) {
+            ErrorHandler.report(execExc);
+        }
 
         return null;
     }
@@ -103,7 +106,10 @@ public class getAppearance {
 
                 data.put(processed.getString("name"), processed.getLong("id"));
             });
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {}
+        } catch (InterruptedException | TimeoutException e) {}
+        catch (ExecutionException execExc) {
+            ErrorHandler.report(execExc);
+        }
 
         return data;
     }
@@ -125,7 +131,10 @@ public class getAppearance {
 
         try {
             return jsonData.get(5, TimeUnit.SECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {}
+        } catch (InterruptedException | TimeoutException e) {}
+        catch (ExecutionException execExc) {
+            ErrorHandler.report(execExc);
+        }
 
         return null;
     }
@@ -151,7 +160,10 @@ public class getAppearance {
 
         try {
             return outfitImage.get(5, TimeUnit.SECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {}
+        } catch (InterruptedException | TimeoutException e) {}
+        catch (ExecutionException execExc) {
+            ErrorHandler.report(execExc);
+        }
 
         return null;
     }
@@ -346,7 +358,10 @@ public class getAppearance {
             Map<Integer, SimpleImmutableEntry<String, Color>> result = lookup.get(5, TimeUnit.SECONDS);
 
             return result;
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {}
+        } catch (InterruptedException | TimeoutException e) {}
+        catch (ExecutionException execExc) {
+            ErrorHandler.report(execExc);
+        }
 
         return null;
     }

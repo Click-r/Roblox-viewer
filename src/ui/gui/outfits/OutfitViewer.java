@@ -11,12 +11,16 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 import classes.Avatar;
 import classes.Link;
@@ -24,10 +28,16 @@ import classes.Player;
 
 import classes.api.getAppearance;
 
-import java.awt.Image;
-
 import java.io.IOException;
 
+import java.awt.Image;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.MouseEvent;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.Dimension;
@@ -55,7 +65,7 @@ public class OutfitViewer extends JFrame {
 
             url = String.join("/", parts);
         } else {
-            return current.image.getScaledInstance(width, width, Image.SCALE_SMOOTH);
+            return viewing.image.getScaledInstance(width, width, Image.SCALE_SMOOTH); // return the error image upscaled
         }
 
         try {
@@ -102,6 +112,15 @@ public class OutfitViewer extends JFrame {
 
         JButton viewDetails = new JButton("Further details");
         viewDetails.setBounds(outfitName.getX(), outfitName.getY() + outfitName.getHeight() + 159, card.getWidth(), 39);
+        viewDetails.addActionListener(new ActionListener() { // view details of outfit
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                viewing = outfit;
+
+                ((JLabel) outfitComponents.get("largeImg")).setIcon(new ImageIcon(getEnlargedImage(270)));
+                updateColours();
+            }
+        });
 
         card.add(outfitName);
         card.add(viewDetails);
@@ -214,6 +233,7 @@ public class OutfitViewer extends JFrame {
         ImageIcon icon = new ImageIcon(getEnlargedImage(infoPanel.getWidth()));
         JLabel enlargedImage = new JLabel(icon);
         enlargedImage.setSize(imageContainer.getSize());
+        outfitComponents.put("largeImg", enlargedImage);
 
         imageContainer.add(enlargedImage);
 
@@ -237,7 +257,7 @@ public class OutfitViewer extends JFrame {
         colourSubTitle.setText("Colours");
         colourSubTitle.setFont(new Font(colourSubTitle.getFont().getFontName(), colourSubTitle.getFont().getStyle(), 22));
 
-        JPanel colourDisplay = new JPanel();
+        JLayeredPane colourDisplay = new JLayeredPane();
         colourDisplay.setBounds(
             0,
             colourSubTitle.getY() + colourSubTitle.getHeight() + 1,
@@ -248,29 +268,123 @@ public class OutfitViewer extends JFrame {
 
         int halfway = (colourDisplay.getWidth() / 2);
 
+        JPanel colourInfoBox = new JPanel();
+        colourInfoBox.setBounds(0, 0, 100, 45);
+        colourInfoBox.setVisible(false);
+        colourInfoBox.setBackground(new Color(235, 235, 235));
+        colourInfoBox.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0), 1));
+        colourInfoBox.setLayout(null);
+
+        JTextPane colName = new JTextPane();
+        colName.setEditable(false);
+        colName.setBackground(colourInfoBox.getBackground());
+        colName.setBounds(1, 1, colourInfoBox.getWidth() - 2, 19);
+        colName.setFont(new Font(colName.getFont().getFontName(), colName.getFont().getStyle(), 9));
+        colName.setText("test");
+
+        StyledDocument doc = colName.getStyledDocument();
+        SimpleAttributeSet setAttrCenter = new SimpleAttributeSet();
+        StyleConstants.setAlignment(setAttrCenter, StyleConstants.ALIGN_CENTER);
+        doc.setParagraphAttributes(0, doc.getLength(), setAttrCenter, false); // center text
+
+        JTextPane rgbVal = new JTextPane();
+        rgbVal.setEditable(false);
+        rgbVal.setBackground(colourInfoBox.getBackground());
+        rgbVal.setBounds(1, colName.getHeight() + 5, colourInfoBox.getWidth() - 2, 19);
+        rgbVal.setFont(new Font(rgbVal.getFont().getFontName(), rgbVal.getFont().getStyle(), 9));
+        rgbVal.setText("test");
+        
+        doc = rgbVal.getStyledDocument();
+        doc.setParagraphAttributes(0, doc.getLength(), setAttrCenter, false);
+
+        colourInfoBox.add(colName);
+        colourInfoBox.add(rgbVal);
+
+        MouseMotionListener displayInfoBox = new MouseMotionListener() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                Point newPos = e.getPoint();
+
+                Point srcLocation = e.getComponent().getLocation();
+                newPos.translate((int) srcLocation.getX(), (int) srcLocation.getY());
+
+                Rectangle placeAt = new Rectangle(newPos, colourInfoBox.getSize());
+                Rectangle displayBounds = colourDisplay.getBounds();
+
+                if (!displayBounds.contains(placeAt)) {
+                    newPos.translate((int) -placeAt.getWidth(), 0);
+                }
+
+                colourInfoBox.setLocation(newPos);
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                this.mouseDragged(e);
+            }
+        };
+
+        MouseAdapter signalEnter = new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                String bodypartName = e.getComponent().getName();
+                String colourName = viewing.bodycolours.get(bodypartName).getKey();
+                Color partColour = e.getComponent().getBackground();
+                String rgbRep = String.format("RGB(%d, %d, %d)", partColour.getRed(), partColour.getGreen(), partColour.getBlue());
+
+                colName.setText(colourName);
+                rgbVal.setText(rgbRep);
+
+                colourInfoBox.setVisible(true);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                colourInfoBox.setVisible(false);
+            }
+        };
+
         JPanel head = new JPanel();
         head.setBounds(halfway - 27, 8, 54, 54);
         head.setBackground(new Color(0, 0, 0));
+        head.addMouseMotionListener(displayInfoBox);
+        head.addMouseListener(signalEnter);
+        head.setName("head");
 
         JPanel torso = new JPanel();
         torso.setBounds(halfway - 49, head.getY() + head.getHeight() + 2, 98, 110);
         torso.setBackground(new Color(0, 0, 0));
+        torso.addMouseMotionListener(displayInfoBox);
+        torso.addMouseListener(signalEnter);
+        torso.setName("torso");
 
         JPanel leftArm = new JPanel();
         leftArm.setBounds(torso.getX() - 2 - 47, torso.getY(), 47, torso.getHeight());
         leftArm.setBackground(new Color(0, 0, 0));
+        leftArm.addMouseMotionListener(displayInfoBox);
+        leftArm.addMouseListener(signalEnter);
+        leftArm.setName("leftArm");
 
         JPanel rightArm = new JPanel();
         rightArm.setBounds(torso.getX() + torso.getWidth() + 2, torso.getY(), 47, torso.getHeight());
         rightArm.setBackground(new Color(0, 0, 0));
+        rightArm.addMouseMotionListener(displayInfoBox);
+        rightArm.addMouseListener(signalEnter);
+        rightArm.setName("rightArm");
 
         JPanel leftLeg = new JPanel();
         leftLeg.setBounds(torso.getX(), torso.getY() + torso.getHeight() + 2, 48, torso.getHeight());
         leftLeg.setBackground(new Color(0, 0, 0));
+        leftLeg.addMouseMotionListener(displayInfoBox);
+        leftLeg.addMouseListener(signalEnter);
+        leftLeg.setName("leftLeg");
 
         JPanel rightLeg = new JPanel();
         rightLeg.setBounds(leftLeg.getX() + leftLeg.getWidth() + 2, leftLeg.getY(), 48, torso.getHeight());
         rightLeg.setBackground(new Color(0, 0, 0));
+        rightLeg.addMouseMotionListener(displayInfoBox);
+        rightLeg.addMouseListener(signalEnter);
+        rightLeg.setName("rightLeg");
 
         outfitComponents.put("head", head);
         outfitComponents.put("torso", torso);
@@ -280,12 +394,13 @@ public class OutfitViewer extends JFrame {
         outfitComponents.put("rightLeg", rightLeg);
         // TODO: display colour rgb values and name
 
-        colourDisplay.add(head);
-        colourDisplay.add(torso);
-        colourDisplay.add(leftArm);
-        colourDisplay.add(rightArm);
-        colourDisplay.add(leftLeg);
-        colourDisplay.add(rightLeg);
+        colourDisplay.add(head, 1);
+        colourDisplay.add(torso, 1);
+        colourDisplay.add(leftArm, 1);
+        colourDisplay.add(rightArm, 1);
+        colourDisplay.add(leftLeg, 1);
+        colourDisplay.add(rightLeg, 1);
+        colourDisplay.add(colourInfoBox, 0);
 
         colourAssetContainer.add(colourSubTitle);
         colourAssetContainer.add(colourDisplay);
@@ -362,7 +477,11 @@ public class OutfitViewer extends JFrame {
         if (displayingInfo) {
             viewing = user.getAppearance();
 
+            ((JLabel) outfitComponents.get("largeImg")).setIcon(new ImageIcon(getEnlargedImage(270)));
+
             search(user.id);
+
+            updateColours();
             updateCards();
 
             ((JTextComponent) outfitComponents.get("title")).setText(String.format("%s's outfits (%d)", user.name, outfits.size()));

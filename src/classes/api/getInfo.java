@@ -239,7 +239,7 @@ public class getInfo {
                     data.putAll(result);
                 } catch (ExecutionException exc) {
                     ErrorHandler.report(exc);
-                } catch (InterruptedException|TimeoutException timeout) {}
+                } catch (InterruptedException | TimeoutException timeout) {}
             });
 
             index++;
