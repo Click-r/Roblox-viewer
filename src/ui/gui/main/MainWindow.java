@@ -390,7 +390,11 @@ public class MainWindow {
                 reload.setEnabled(false);
                 showingError = false;
 
-                av.setIcon(new ImageIcon(getAppearance.retrieveImage(last.id)));
+                Image reloadedImg = getAppearance.retrieveImage(last.id);
+
+                av.setIcon(new ImageIcon(reloadedImg));
+                last.image = reloadedImg; // update player image
+
                 error.setVisible(showingError);
 
                 reload.setEnabled(true);

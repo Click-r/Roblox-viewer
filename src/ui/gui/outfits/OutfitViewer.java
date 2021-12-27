@@ -25,7 +25,7 @@ import javax.swing.text.StyledDocument;
 import classes.Avatar;
 import classes.Link;
 import classes.Player;
-
+import classes.Avatar.Asset;
 import classes.api.getAppearance;
 
 import java.io.IOException;
@@ -51,7 +51,8 @@ public class OutfitViewer extends JFrame {
     private static boolean displayingInfo = false;
     private static Player current;
     private static List<Avatar> outfits = new ArrayList<Avatar>();
-    private static List<JPanel> cards = new ArrayList<JPanel>();
+    private static List<JPanel> outfitCards = new ArrayList<JPanel>();
+    private static List<JPanel> assetCards = new ArrayList<JPanel>();
     private static Map<String, JComponent> outfitComponents = new HashMap<String, JComponent>();
     private static Avatar viewing;
 
@@ -164,7 +165,92 @@ public class OutfitViewer extends JFrame {
         return card;
     }
 
-    private static List<JPanel> generateCards() {
+    private static JPanel generateAssetCard(Asset asset) {
+        StringBuilder name = new StringBuilder(asset.name);
+        name.setLength(32);
+
+        if (asset.name.length() > 32)
+            name.append("...");
+
+        JPanel card = new JPanel();
+        card.setSize(115, 150);
+        card.setLayout(null);
+        card.setBackground(new Color(218, 218, 218));
+        card.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0), 1));
+
+        JTextArea assetName = new JTextArea();
+        assetName.setBounds(0, 0, card.getWidth(), 35);
+        assetName.setLineWrap(true);
+        assetName.setWrapStyleWord(true);
+        assetName.setEditable(false);
+        assetName.setText(name.toString());
+        assetName.setBackground(new Color(225, 225, 225));
+        assetName.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 1, new Color(0, 0, 0)));
+
+        JButton clickableImage = new JButton(new ImageIcon(asset.image.getScaledInstance(115, 115, Image.SCALE_AREA_AVERAGING)));
+        clickableImage.setBounds(0, assetName.getY() + assetName.getHeight(), 115, 115);
+        //clickableImage.setBorder(null);
+        clickableImage.setContentAreaFilled(false);
+
+        card.add(assetName);
+        card.add(clickableImage);
+
+        return card;
+    }
+
+    private static List<JPanel> generateAssetCards() {
+        long[] ids = new long[viewing.assets.size()];
+        for (int i = 0; i < viewing.assets.size(); i++)
+            ids[i] = viewing.assets.get(i).id;
+        
+        Image[] assetImages = getAppearance.batchGetAssetThumbnails(ids);
+        for (int j = 0; j < viewing.assets.size(); j++)
+            viewing.assets.get(j).image = assetImages[j];
+        
+        for (Asset accessory : viewing.assets)
+            assetCards.add(generateAssetCard(accessory));
+        
+        return assetCards;
+    }
+
+    private static void updateAssetCards() {
+        JPanel appendTo = (JPanel) outfitComponents.get("assetBoxes");
+        appendTo.removeAll();
+        assetCards.clear();
+
+        assetCards = generateAssetCards();
+
+        int xDistBetweenCards = 11;
+        int yDistBetweenCards = 2;
+        int cardsPerRow = 2;
+
+        int rows = assetCards.size() / cardsPerRow;
+        if ((assetCards.size() % cardsPerRow) > 0)
+            rows++;
+
+        int increaseBy = rows * (yDistBetweenCards + 150) + 43;
+        appendTo.setSize(new Dimension(appendTo.getWidth(), increaseBy));
+
+        JPanel container = (JPanel) outfitComponents.get("colourAssetContainer");
+        container.setPreferredSize(new Dimension(container.getWidth(), 468 + 2 + increaseBy));
+
+        JPanel assetContainer = (JPanel) outfitComponents.get("assetSection");
+        assetContainer.setSize(new Dimension(assetContainer.getWidth(), 44 + increaseBy));
+
+        for (int i = 0; i < assetCards.size(); i++) {
+            int yCoordinate = 2 + (i / cardsPerRow) * (yDistBetweenCards + 150);
+            int xCoordinate = 6 + (i % cardsPerRow) * (xDistBetweenCards + 115);
+
+            JPanel card = assetCards.get(i);
+            card.setLocation(xCoordinate, yCoordinate);
+
+            appendTo.add(card);
+        }
+
+        appendTo.repaint();
+    }
+
+    private static List<JPanel> generateOutfitCards() {
         long[] ids = new long[outfits.size()];
         for (int i = 0; i < outfits.size(); i++)
             ids[i] = outfits.get(i).id;
@@ -174,24 +260,24 @@ public class OutfitViewer extends JFrame {
             outfits.get(j).setImage(outfitImages[j]);
 
         for (Avatar outfit : outfits)
-            cards.add(generateOutfitCard(outfit, false));
+            outfitCards.add(generateOutfitCard(outfit, false));
         
-        return cards;
+        return outfitCards;
     }
 
-    private static void updateCards() {
+    private static void updateOutfitCards() {
         JPanel appendTo = (JPanel) outfitComponents.get("outfitPanel");
         appendTo.removeAll();
-        cards.clear();
+        outfitCards.clear();
         
-        cards = generateCards();
+        outfitCards = generateOutfitCards();
 
         int xDistBetweenCards = 4;
         int yDistBetweenCards = 6;
         int cardsPerRow = 3;
 
-        int rows = (cards.size() / cardsPerRow);
-        if ((cards.size() % cardsPerRow) > 0)
+        int rows = outfitCards.size() / cardsPerRow;
+        if ((outfitCards.size() % cardsPerRow) > 0)
             rows++;
 
         appendTo.setPreferredSize(new Dimension(
@@ -199,11 +285,11 @@ public class OutfitViewer extends JFrame {
             rows * (yDistBetweenCards + 230) // adjust size based on how many outfits there are
         ));
         
-        for (int i = 0; i < cards.size(); i++) {
+        for (int i = 0; i < outfitCards.size(); i++) {
             int yCoordinate = 2 + (i / cardsPerRow) * (yDistBetweenCards + 230);
             int xCoordinate = 4 + (i % cardsPerRow) * (xDistBetweenCards + 160);
 
-            JPanel card = cards.get(i);
+            JPanel card = outfitCards.get(i);
             card.setLocation(xCoordinate, yCoordinate);
 
             appendTo.add(card);
@@ -240,7 +326,8 @@ public class OutfitViewer extends JFrame {
             public void windowClosed(WindowEvent e) {
                 displayingInfo = false;
                 outfits.clear();
-                cards.clear();
+                outfitCards.clear();
+                assetCards.clear();
                 
                 System.gc();
             }
@@ -280,6 +367,7 @@ public class OutfitViewer extends JFrame {
             infoPanel.getHeight() - (imageContainer.getY() + imageContainer.getHeight())
         );
         colourAssetContainer.setLayout(null);
+        outfitComponents.put("colourAssetContainer", colourAssetContainer);
 
         JScrollPane infoScrollBar = new JScrollPane(colourAssetContainer, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         infoScrollBar.setLocation(colourAssetContainer.getLocation());
@@ -459,17 +547,38 @@ public class OutfitViewer extends JFrame {
         nameIdSection.add(outfitFullName);
         nameIdSection.add(outfitID);
 
+        JPanel assetSection = new JPanel();
+        assetSection.setLayout(null);
+        assetSection.setBounds(0, nameIdSection.getY() + nameIdSection.getHeight(), colourDisplay.getWidth(), 409);
+        assetSection.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(0, 0, 0)));
+        outfitComponents.put("assetSection", assetSection);
+        
+        JTextPane assetSubTitle = new JTextPane();
+        assetSubTitle.setEditable(false);
+        assetSubTitle.setBackground(bgcolour);
+        assetSubTitle.setBounds(2, 2, colourSubTitle.getWidth() - 2, 40);
+        assetSubTitle.setText("Assets");
+        assetSubTitle.setFont(new Font(assetSubTitle.getFont().getFontName(), assetSubTitle.getFont().getStyle(), 22));
+
+        JPanel assetBoxes = new JPanel();
+        assetBoxes.setLayout(null);
+        assetBoxes.setBounds(0, assetSubTitle.getY() + assetSubTitle.getHeight(), assetSection.getWidth(), assetSection.getHeight() - assetSubTitle.getHeight());
+        outfitComponents.put("assetBoxes", assetBoxes);
+
+        assetSection.add(assetSubTitle);
+        assetSection.add(assetBoxes);
+
         colourAssetContainer.add(colourSubTitle);
         colourAssetContainer.add(colourDisplay);
         colourAssetContainer.add(nameIdSection);
+        colourAssetContainer.add(assetSection);
 
         infoPanel.add(infoTitle);
         infoPanel.add(imageContainer);
         infoPanel.add(infoScrollBar);
 
         updateColours();
-
-        colourAssetContainer.setPreferredSize(new Dimension(colourAssetContainer.getWidth(), colourAssetContainer.getHeight() + 150));
+        updateAssetCards();
 
         JPanel outfitPanel = new JPanel();
         outfitPanel.setBounds(270, 0, x - 285, y);
@@ -499,7 +608,7 @@ public class OutfitViewer extends JFrame {
         outfitScroll.getVerticalScrollBar().setUnitIncrement(16);
         outfitComponents.put("outfitScrollbar", outfitScroll);
 
-        updateCards();
+        updateOutfitCards();
 
         outfitPanel.add(outfitsTitle);
         outfitPanel.add(outfitScroll);
@@ -539,7 +648,7 @@ public class OutfitViewer extends JFrame {
 
             updateNameId();
             updateColours();
-            updateCards();
+            updateOutfitCards();
 
             ((JTextComponent) outfitComponents.get("title")).setText(String.format("%s's outfits (%d)", user.name, outfits.size()));
 

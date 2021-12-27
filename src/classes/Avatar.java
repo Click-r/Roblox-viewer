@@ -18,6 +18,7 @@ public class Avatar {
     public static class Asset {
         public long id;
         public String name;
+        public Image image;
     }
 
     private static Map<Integer, SimpleImmutableEntry<String, Color>> colourLookup;

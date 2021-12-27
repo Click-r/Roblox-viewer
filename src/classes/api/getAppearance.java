@@ -365,4 +365,116 @@ public class getAppearance {
 
         return null;
     }
+
+    public static Image[] batchGetAssetThumbnails(long[] assetIds) {
+        ExecutorService exec = Executors.newSingleThreadExecutor();
+
+        Future<String[]> imageLinks = exec.submit(() -> {
+            String stringList = Arrays.toString(assetIds);
+            stringList = stringList
+              .substring(1, stringList.length() - 1)
+              .replace(" ", "");
+    
+            String[] imageUrls = new String[assetIds.length];
+            String url = "https://thumbnails.roblox.com/v1/assets?assetIds=" + stringList + "&size=110x110&format=Png&isCircular=false";
+
+            try {
+                Link data = new Link(url, false);
+
+                JSONObject assetsData = data.getRawJson(false);
+                JSONArray dataArray = assetsData.getJSONArray("data");
+
+                for (int i = 0; i < dataArray.length(); i++) {
+                    JSONObject currentobj = dataArray.getJSONObject(i);
+
+                    String setTo = "";
+
+                    if (currentobj.getString("state").equals("Blocked") || currentobj.getString("state").equals("Error") )
+                        setTo = "https://t4.rbxcdn.com/b561617d22628c1d01dd10f02e80c384";
+                    else if (currentobj.getString("state").equals("InReview") || currentobj.getString("state").equals("Pending"))
+                        setTo = "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018";
+                    else
+                        setTo = currentobj.getString("imageUrl");
+                    
+                    imageUrls[i] = setTo;
+                }
+            } catch (IOException e) {}
+
+            return imageUrls;
+        });
+
+        String[] urls = new String[assetIds.length];
+
+        try {
+            urls = imageLinks.get(5, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            e.printStackTrace();
+        }
+
+        Image[] imgs = new Image[assetIds.length];
+
+        int chosen = 5;
+
+        try {
+            AdvancedSettings advSettings = new AdvancedSettings();
+            chosen = Integer.valueOf(advSettings.get("threadsToUse"));
+        } catch (IOException iex) {
+            ErrorHandler.report(iex);
+        }
+
+        Stack<Integer> buffer = new Stack<Integer>();
+
+        final int maxThreads = chosen;
+
+        ThreadPoolExecutor downloadImages = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
+
+        int index = 0;
+
+        for (final String imgUrl : urls) {
+            int ind = index;
+
+            Future<Image> fetchImg = downloadImages.submit(() -> {
+                try {
+                    Link con = new Link(imgUrl, false);
+
+                    Image toReturn = con.getImage();
+                    buffer.push(1);
+
+                    return toReturn;
+                } catch (IOException e) {
+                    int remainingBuffer = 5 - buffer.size();
+
+                    for (int i = 0; i < remainingBuffer; i++)
+                        buffer.push(1);
+                    
+                    return null;
+                }
+            });
+
+            downloadImages.submit(() -> {
+                try {
+                    Image result = fetchImg.get(5, TimeUnit.SECONDS);
+
+                    imgs[ind] = result;
+                } catch (ExecutionException exc) {
+                    ErrorHandler.report(exc);
+                } catch (InterruptedException | TimeoutException timeout) {}
+            });
+
+            index++;
+        }
+
+        while (buffer.size() < assetIds.length) {
+            try {
+                Thread.sleep(2L);
+            } catch (InterruptedException inter) {}
+        }
+
+        downloadImages.shutdownNow();
+
+        if (imgs.length != assetIds.length)
+            System.out.println("uh oh (x2)");
+        
+        return imgs;
+    }
 }
