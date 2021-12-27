@@ -32,7 +32,6 @@ import java.io.IOException;
 
 import java.awt.Image;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -56,6 +55,24 @@ public class OutfitViewer extends JFrame {
     private static Map<String, JComponent> outfitComponents = new HashMap<String, JComponent>();
     private static Avatar viewing;
 
+    private static void resetScrollbar(String scrollbarName) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                ((JScrollPane) outfitComponents.get(scrollbarName)).getVerticalScrollBar().setValue(0);
+            }
+        });
+    }
+
+    private static void updateNameId() {
+        String id = "N/A";
+        if (viewing.id != -1)
+            id = String.valueOf(viewing.id);
+
+        ((JTextArea) outfitComponents.get("outfitFullName")).setText(String.format("Outfit name: %s", viewing.name));
+        ((JTextArea) outfitComponents.get("outfitID")).setText(String.format("Outfit ID: %s", id));
+    }
+
     private static Image getEnlargedImage(int width) {
         String url = (String) viewing.image.getProperty("direct_url", null);
 
@@ -74,7 +91,21 @@ public class OutfitViewer extends JFrame {
 
             return toReturn;
         } catch (IOException e) {
-            ErrorHandler.report(e, current);
+            int retries = 0;
+
+            do {
+                System.out.println(url);
+                System.out.printf("Image fetch attempt %d...\n", retries);
+
+                try {
+                    Image toReturn = new Link(url, false).getImage();
+                    toReturn = toReturn.getScaledInstance(width, width, Image.SCALE_AREA_AVERAGING);
+
+                    return toReturn;
+                } catch (IOException io) {}
+
+                retries++;
+            } while (retries < 2);
         }
 
         return null;
@@ -118,7 +149,11 @@ public class OutfitViewer extends JFrame {
                 viewing = outfit;
 
                 ((JLabel) outfitComponents.get("largeImg")).setIcon(new ImageIcon(getEnlargedImage(270)));
+                
+                updateNameId();
                 updateColours();
+
+                resetScrollbar("infoScrollbar");
             }
         });
 
@@ -247,8 +282,11 @@ public class OutfitViewer extends JFrame {
         colourAssetContainer.setLayout(null);
 
         JScrollPane infoScrollBar = new JScrollPane(colourAssetContainer, JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        infoScrollBar.setBounds(colourAssetContainer.getBounds());
+        infoScrollBar.setLocation(colourAssetContainer.getLocation());
+        infoScrollBar.setSize(new Dimension(colourAssetContainer.getWidth(), colourAssetContainer.getHeight() - 38));
+        infoScrollBar.getVerticalScrollBar().setUnitIncrement(16);
         infoScrollBar.setBorder(null);
+        outfitComponents.put("infoScrollbar", infoScrollBar);
 
         JTextPane colourSubTitle = new JTextPane();
         colourSubTitle.setEditable(false);
@@ -262,7 +300,7 @@ public class OutfitViewer extends JFrame {
             0,
             colourSubTitle.getY() + colourSubTitle.getHeight() + 1,
             infoScrollBar.getWidth() - 17,
-            infoPanel.getHeight() - (colourSubTitle.getY() + colourSubTitle.getHeight() + 1)
+            colourAssetContainer.getHeight() - (colourSubTitle.getY() + colourSubTitle.getHeight() + 1)
         );
         colourDisplay.setLayout(null);
 
@@ -303,17 +341,14 @@ public class OutfitViewer extends JFrame {
         MouseMotionListener displayInfoBox = new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                Point newPos = e.getPoint();
-
                 Point srcLocation = e.getComponent().getLocation();
-                newPos.translate((int) srcLocation.getX(), (int) srcLocation.getY());
+                Point newPos = new Point(
+                    e.getX() + (int) srcLocation.getX(),
+                    e.getY() + (int) srcLocation.getY()
+                );
 
-                Rectangle placeAt = new Rectangle(newPos, colourInfoBox.getSize());
-                Rectangle displayBounds = colourDisplay.getBounds();
-
-                if (!displayBounds.contains(placeAt)) {
-                    newPos.translate((int) -placeAt.getWidth(), 0);
-                }
+                if (newPos.x + colourInfoBox.getWidth() - colourDisplay.getWidth() >= 0)
+                    newPos.translate((int) -colourInfoBox.getWidth(), 0);
 
                 colourInfoBox.setLocation(newPos);
             }
@@ -392,7 +427,6 @@ public class OutfitViewer extends JFrame {
         outfitComponents.put("rightArm", rightArm);
         outfitComponents.put("leftLeg", leftLeg);
         outfitComponents.put("rightLeg", rightLeg);
-        // TODO: display colour rgb values and name
 
         colourDisplay.add(head, 1);
         colourDisplay.add(torso, 1);
@@ -402,14 +436,40 @@ public class OutfitViewer extends JFrame {
         colourDisplay.add(rightLeg, 1);
         colourDisplay.add(colourInfoBox, 0);
 
+        JPanel nameIdSection = new JPanel();
+        nameIdSection.setLayout(null);
+        nameIdSection.setBounds(colourDisplay.getX(), colourDisplay.getY() + colourDisplay.getHeight(), colourDisplay.getWidth(), 90);
+
+        JTextArea outfitFullName = new JTextArea();
+        outfitFullName.setEditable(false);
+        outfitFullName.setBackground(bgcolour);
+        outfitFullName.setWrapStyleWord(true);
+        outfitFullName.setLineWrap(true);
+        outfitFullName.setText("Outfit name: Currently Wearing");
+        outfitFullName.setBounds(2, 2, colourAssetContainer.getWidth() - 2, 45);
+        outfitComponents.put("outfitFullName", outfitFullName);
+
+        JTextArea outfitID = new JTextArea();
+        outfitID.setEditable(false);
+        outfitID.setBackground(bgcolour);
+        outfitID.setText("Outfit ID: N/A");
+        outfitID.setBounds(outfitFullName.getX(), outfitFullName.getY() + outfitFullName.getHeight() + 10, outfitFullName.getWidth(), 20);
+        outfitComponents.put("outfitID", outfitID);
+
+        nameIdSection.add(outfitFullName);
+        nameIdSection.add(outfitID);
+
         colourAssetContainer.add(colourSubTitle);
         colourAssetContainer.add(colourDisplay);
+        colourAssetContainer.add(nameIdSection);
 
         infoPanel.add(infoTitle);
         infoPanel.add(imageContainer);
         infoPanel.add(infoScrollBar);
 
         updateColours();
+
+        colourAssetContainer.setPreferredSize(new Dimension(colourAssetContainer.getWidth(), colourAssetContainer.getHeight() + 150));
 
         JPanel outfitPanel = new JPanel();
         outfitPanel.setBounds(270, 0, x - 285, y);
@@ -437,18 +497,14 @@ public class OutfitViewer extends JFrame {
         outfitScroll.setBounds(outfitView.getX(), outfitView.getY(), outfitView.getWidth(), outfitPanel.getHeight() - 90);
         outfitScroll.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(0, 0, 0)));
         outfitScroll.getVerticalScrollBar().setUnitIncrement(16);
+        outfitComponents.put("outfitScrollbar", outfitScroll);
 
         updateCards();
 
         outfitPanel.add(outfitsTitle);
         outfitPanel.add(outfitScroll);
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                outfitScroll.getVerticalScrollBar().setValue(0); // scroll to the very top
-            }
-        });
+        resetScrollbar("outfitScrollbar");
 
         frame.add(infoPanel);
         frame.add(outfitPanel);
@@ -481,10 +537,14 @@ public class OutfitViewer extends JFrame {
 
             search(user.id);
 
+            updateNameId();
             updateColours();
             updateCards();
 
             ((JTextComponent) outfitComponents.get("title")).setText(String.format("%s's outfits (%d)", user.name, outfits.size()));
+
+            resetScrollbar("infoScrollbar");
+            resetScrollbar("outfitScrollbar");
 
             return;
         }
@@ -498,6 +558,8 @@ public class OutfitViewer extends JFrame {
                 search(user.id);
 
                 build(); // TODO: make gui
+
+                resetScrollbar("infoScrollbar");
             }
         });
     }
