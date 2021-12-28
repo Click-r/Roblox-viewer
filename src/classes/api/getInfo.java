@@ -14,8 +14,6 @@ import java.net.*;
 
 import java.time.*;
 
-import java.awt.Image;
-
 import classes.UserNotFoundException;
 import classes.Link;
 import classes.Player;
@@ -23,7 +21,7 @@ import classes.Player;
 import loaders.AdvancedSettings;
 import loaders.SearchSettings;
 
-import ui.ErrorHandler;
+import ui.gui.err.ErrorHandler;
 
 public class getInfo {
 
@@ -124,28 +122,6 @@ public class getInfo {
         }
 
         return false;
-    }
-
-    public static Image retrieveImage(long userId) {
-        ExecutorService ret = Executors.newSingleThreadExecutor();
-
-        Future<Image> img = ret.submit(() -> {
-            String url = "https://web.roblox.com/Thumbs/Avatar.ashx?x=150&y=150&Format=Png&userid=" + userId;
-
-            try {
-                Link imageLink = new Link(url, false);
-                
-                return imageLink.getImage();
-            } catch (IOException e) {}
-
-            return null;
-        });
-
-        try {
-            return img.get(5, TimeUnit.SECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {}
-        
-        return null;
     }
 
     public static Map<String, Object> searchByUsername(String username) throws UserNotFoundException {
@@ -263,13 +239,13 @@ public class getInfo {
                     data.putAll(result);
                 } catch (ExecutionException exc) {
                     ErrorHandler.report(exc);
-                } catch (InterruptedException|TimeoutException timeout) {}
+                } catch (InterruptedException | TimeoutException timeout) {}
             });
 
             index++;
         }
 
-        data.put("image", retrieveImage(userId));
+        data.put("image", getAppearance.retrieveImage(userId));
 
         while (buffer.size() < apiDomains.length) {
             try {

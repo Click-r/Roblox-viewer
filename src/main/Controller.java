@@ -6,10 +6,11 @@ import java.nio.file.*;
 
 import java.io.IOException;
 
-import ui.*;
+import ui.gui.err.ErrorHandler;
+import ui.gui.main.MainWindow;
 
 public class Controller {
-    public final static String version = "0.9c";
+    public final static String version = "1.0";
     public final static String title = "RBLXInfoViewer";
     public final static String author = "Cli_ck";
 

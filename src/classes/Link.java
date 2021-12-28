@@ -1,6 +1,7 @@
 package classes;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 import java.net.HttpURLConnection;
@@ -10,6 +11,7 @@ import javax.imageio.*;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+
 import java.nio.charset.StandardCharsets;
 
 import java.util.Map;
@@ -75,11 +77,12 @@ public class Link {
         HttpURLConnection.setFollowRedirects(true);
         this.connection.connect();
 
-        URL site = this.connection.getURL();
+        InputStream siteInput = this.connection.getInputStream();
 
         String Etag = connection.getHeaderField("ETag"); // error tag? not sure
 
         Hashtable<String, String> imgProperties = new Hashtable<String, String>();
+        imgProperties.put("direct_url", connection.getURL().toString());
 
         if (Etag != null) { // only exists if the image data is placeholder due to some reason
             Etag = Etag.substring(1, Etag.length() - 1); // get rid of quotation marks
@@ -87,30 +90,39 @@ public class Link {
             imgProperties.put("error", Etag);
         }
         
-        BufferedImage toReturn = (BufferedImage) ImageIO.read(site);
+        BufferedImage toReturn = (BufferedImage) ImageIO.read(siteInput);
         toReturn = new BufferedImage(toReturn.getColorModel(), toReturn.getRaster(), toReturn.isAlphaPremultiplied(), imgProperties);
 
         return toReturn;
     }
 
-    private Map<String, Object> getData(String link, String method) throws IOException {
-        Map<String, Object> data = new HashMap<String, Object>();
+    public JSONObject getRawJson(boolean hasConnected) throws IOException {
+        if (!hasConnected)
+            this.connection.connect();
 
-        this.connection.connect();
-
-        if (method.equals("POST")) {
-            OutputStream os = this.connection.getOutputStream();
-            os.write(this.payload);
-        }
-        
-        String textResponse = "NaN";
+        String textResponse = null;
 
         try (Scanner scanner = new Scanner(this.connection.getInputStream(), "UTF-8")) {
             String responseBody = scanner.useDelimiter("\\A").next();
             textResponse = responseBody;
         }
 
-        JSONObject json = new JSONObject(textResponse);
+        return new JSONObject(textResponse);
+    }
+
+    private Map<String, Object> getData(String link, String method) throws IOException {
+        Map<String, Object> data = new HashMap<String, Object>();
+
+        boolean isPOST = method.equals("POST");
+
+        if (isPOST) {
+            this.connection.connect();
+
+            OutputStream os = this.connection.getOutputStream();
+            os.write(this.payload);
+        }
+
+        JSONObject json = getRawJson(isPOST);
         Map<String,Object> subData = json.toMap();
 
         subData.forEach((key,val) -> {

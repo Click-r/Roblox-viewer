@@ -12,7 +12,7 @@ import java.awt.Image;
 
 import classes.api.getInfo;
 
-import ui.ErrorHandler;
+import ui.gui.err.ErrorHandler;
 
 /** A class for the player which allows for general information to be retrieved. Utilizies ROBLOX API endpoints to retrieve the data. */
 public class Player {
@@ -54,6 +54,18 @@ public class Player {
         long now = System.currentTimeMillis();
         load(getInfo.searchByUsername(username));
         delay = (System.currentTimeMillis() - now) / getInfo.numData;
+    }
+    
+    /**
+     * <p>Returns the appearance of the user as an <code>Avatar</code> object.</p>
+     * @return The user's current appearance
+    */
+    
+    public Avatar getAppearance() {
+        Avatar currentlyWearing = new Avatar(this.id);
+        currentlyWearing.setImage(this.image);
+
+        return currentlyWearing;
     }
 
     /**
