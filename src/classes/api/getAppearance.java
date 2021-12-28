@@ -259,12 +259,12 @@ public class getAppearance {
 
                     return toReturn.getScaledInstance(150, 150, Image.SCALE_AREA_AVERAGING);
                 } catch (IOException e) {
-                    int remainingBuffer = 5 - buffer.size();
+                    System.out.println("Failed to fetch " + imgUrl + "\nPutting in placeholder image.");
 
-                    for (int i = 0; i < remainingBuffer; i++)
-                        buffer.push(1);
-                    
-                    return null;
+                    Image replacement = new Link("https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018", false).getImage();
+                    buffer.push(1);
+
+                    return replacement;
                 }
             });
 
@@ -456,12 +456,12 @@ public class getAppearance {
 
                     return toReturn;
                 } catch (IOException e) {
-                    int remainingBuffer = 5 - buffer.size();
-
-                    for (int i = 0; i < remainingBuffer; i++)
-                        buffer.push(1);
+                    System.out.println("Failed to fetch " + imgUrl + "\nPutting in placeholder image.");
                     
-                    return null;
+                    Image replacement = new Link("https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018", false).getImage();
+                    buffer.push(1);
+
+                    return replacement;
                 }
             });
 
