@@ -30,6 +30,10 @@ import classes.api.getAppearance;
 
 import java.io.IOException;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import java.awt.Desktop;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
@@ -41,11 +45,10 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.Dimension;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Font;
 
 import main.Controller;
-
-import ui.gui.err.ErrorHandler;
 
 public class OutfitViewer extends JFrame {
     private static boolean displayingInfo = false;
@@ -151,8 +154,9 @@ public class OutfitViewer extends JFrame {
 
                 ((JLabel) outfitComponents.get("largeImg")).setIcon(new ImageIcon(getEnlargedImage(270)));
                 
-                updateNameId();
+                updateAssetCards();
                 updateColours();
+                updateNameId();
 
                 resetScrollbar("infoScrollbar");
             }
@@ -166,10 +170,12 @@ public class OutfitViewer extends JFrame {
     }
 
     private static JPanel generateAssetCard(Asset asset) {
+        boolean aboveCharLimit = (asset.name.length() > 32);
+
         StringBuilder name = new StringBuilder(asset.name);
         name.setLength(32);
 
-        if (asset.name.length() > 32)
+        if (aboveCharLimit)
             name.append("...");
 
         JPanel card = new JPanel();
@@ -179,18 +185,36 @@ public class OutfitViewer extends JFrame {
         card.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0), 1));
 
         JTextArea assetName = new JTextArea();
-        assetName.setBounds(0, 0, card.getWidth(), 35);
+        assetName.setBounds(0, 0, card.getWidth(), 36);
         assetName.setLineWrap(true);
         assetName.setWrapStyleWord(true);
         assetName.setEditable(false);
         assetName.setText(name.toString());
         assetName.setBackground(new Color(225, 225, 225));
         assetName.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 1, new Color(0, 0, 0)));
+        if (aboveCharLimit)
+            assetName.setToolTipText(asset.name);
 
-        JButton clickableImage = new JButton(new ImageIcon(asset.image.getScaledInstance(115, 115, Image.SCALE_AREA_AVERAGING)));
-        clickableImage.setBounds(0, assetName.getY() + assetName.getHeight(), 115, 115);
-        //clickableImage.setBorder(null);
+        JButton clickableImage = new JButton(new ImageIcon(asset.image.getScaledInstance(113, 113, Image.SCALE_AREA_AVERAGING)));
+        clickableImage.setBounds(1, assetName.getY() + assetName.getHeight(), 113, 113);
+        clickableImage.setBorder(null);
+        clickableImage.setCursor(new Cursor(Cursor.HAND_CURSOR));
         clickableImage.setContentAreaFilled(false);
+        clickableImage.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    URI link = new URI("https://www.roblox.com/catalog/" + asset.id + "/");
+
+                    Desktop dsk = Desktop.getDesktop();
+            
+                    if (Desktop.isDesktopSupported() && dsk.isSupported(Desktop.Action.BROWSE))
+                        dsk.browse(link);
+                } catch (IOException | URISyntaxException exc) {
+                    System.out.printf("Couldn't open catalog page for asset ID: %d\n", asset.id);
+                }
+            }
+        });
 
         card.add(assetName);
         card.add(clickableImage);
@@ -646,9 +670,10 @@ public class OutfitViewer extends JFrame {
 
             search(user.id);
 
-            updateNameId();
-            updateColours();
             updateOutfitCards();
+            updateAssetCards();
+            updateColours();
+            updateNameId();
 
             ((JTextComponent) outfitComponents.get("title")).setText(String.format("%s's outfits (%d)", user.name, outfits.size()));
 

@@ -1,7 +1,9 @@
 package classes.api;
 
 import java.awt.Image;
+import java.awt.Color;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.json.JSONArray;
@@ -21,8 +23,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-
-import java.awt.Color;
 
 import classes.Avatar;
 import classes.Link;
@@ -244,6 +244,20 @@ public class getAppearance {
                     buffer.push(1);
 
                     return toReturn;
+                } catch (FileNotFoundException notfound) { // for some reason the file could be missing in 150x150 resolution
+                    System.out.println("150x150 image file not found, trying 420x420");
+
+                    String newUrl = "";
+
+                    String[] parts = imgUrl.split("/");
+                    parts[5] = parts[4] = "420";
+
+                    newUrl = String.join("/", parts);
+
+                    Image toReturn = new Link(newUrl, false).getImage();
+                    buffer.push(1);
+
+                    return toReturn.getScaledInstance(150, 150, Image.SCALE_AREA_AVERAGING);
                 } catch (IOException e) {
                     int remainingBuffer = 5 - buffer.size();
 
