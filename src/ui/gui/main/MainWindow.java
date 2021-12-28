@@ -586,6 +586,11 @@ public class MainWindow {
             reload.setContentAreaFilled(false);
             reload.setBorder(border);
             reload.setForeground(textColor);
+
+            openOutfits.setBackground(amplifiedColor);
+            openOutfits.setContentAreaFilled(false);
+            openOutfits.setBorder(border);
+            openOutfits.setForeground(textColor);
         }
 
         info.add(randomize);
