@@ -31,6 +31,7 @@ public class Avatar {
 
     static {
         colourLookup = getAppearance.getColourIdInfo(); // initialize the lookup table for every instance of avatar
+        colourLookup.put(0, new SimpleImmutableEntry<String, Color>("Unknown", new Color(0, 0, 0))); // placeholder colour
     }
 
     public Avatar(long outfitId) {

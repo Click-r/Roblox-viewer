@@ -124,9 +124,28 @@ public class getAppearance {
                 Link info = new Link(url, false);
 
                 return info.getRawJson(false);
-            } catch (IOException e) {}
+            } catch (IOException e) {
+                e.printStackTrace();
 
-            return null;
+                Map<String, Object> data = new HashMap<String, Object>();
+                data.put("id", outfitId);
+                data.put("name", "");
+                data.put("assets", new JSONArray());
+
+                Map<String, Integer> colourMap = new HashMap<String, Integer>();
+                colourMap.put("headColorId", 0);
+                colourMap.put("torsoColorId", 0);
+                colourMap.put("rightArmColorId", 0);
+                colourMap.put("leftArmColorId", 0);
+                colourMap.put("rightLegColorId", 0);
+                colourMap.put("leftLegColorId", 0);
+
+                data.put("bodyColors", new JSONObject(colourMap));
+
+                JSONObject placeholderData = new JSONObject(data);
+                
+                return placeholderData;
+            }
         });
 
         try {

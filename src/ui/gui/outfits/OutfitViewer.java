@@ -118,6 +118,17 @@ public class OutfitViewer extends JFrame {
     private static JPanel generateOutfitCard(Avatar outfit, boolean setimage) {
         if (setimage)
             outfit.setImage();
+        
+        if (outfit.name.length() == 0) { // if internal server error occured
+            long outfitId = outfit.id;
+
+            Map<String, Long> outfitList = getAppearance.getOutfits(current.id);
+
+            outfitList.forEach((name, id) -> {
+                if (id == outfitId)
+                    outfit.name = name;
+            });
+        }
 
         StringBuilder name = new StringBuilder(outfit.name);
         name.setLength(40);
