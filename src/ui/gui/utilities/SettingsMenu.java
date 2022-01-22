@@ -1,6 +1,7 @@
 package ui.gui.utilities;
 
 import java.awt.Dimension;
+import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.event.*;
 import java.awt.Color;
@@ -87,6 +88,8 @@ public class SettingsMenu extends JFrame {
         window.setResizable(false);
         window.setPreferredSize(new Dimension(x, y));
 
+        final Cursor handCursor = new Cursor(Cursor.HAND_CURSOR);
+
         JPanel primary = new JPanel();
         primary.setBounds(0, 0, x, y - 140);
         primary.setLayout(null);
@@ -116,12 +119,8 @@ public class SettingsMenu extends JFrame {
         primary.add(tabbed);
 
         JButton resetDefault = new JButton();
-        resetDefault.setBounds(
-            x/6 - 25,
-            y - 137,
-            90, 
-            40
-        );
+        resetDefault.setBounds(x/6 - 25, y - 137, 90, 40);
+        resetDefault.setCursor(handCursor);
         resetDefault.setText("Reset all");
         resetDefault.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -145,6 +144,7 @@ public class SettingsMenu extends JFrame {
 
         JButton reset = new JButton();
         reset.setSize(resetDefault.getSize());
+        reset.setCursor(handCursor);
         reset.setLocation(resetDefault.getX() + resetDefault.getWidth() + 30, resetDefault.getY());
         reset.setText("Reset");
         reset.addActionListener(new ActionListener() {
@@ -171,6 +171,7 @@ public class SettingsMenu extends JFrame {
 
         JButton apply = new JButton();
         apply.setSize(resetDefault.getSize());
+        apply.setCursor(handCursor);
         apply.setLocation(reset.getX() + reset.getWidth() + 30, reset.getY());
         apply.setText("Apply");
         apply.addActionListener(new ActionListener() {
@@ -205,6 +206,7 @@ public class SettingsMenu extends JFrame {
 
         JButton shortcutCreate = new JButton();
         shortcutCreate.setSize(resetDefault.getSize());
+        shortcutCreate.setCursor(handCursor);
         shortcutCreate.setLocation(resetDefault.getX(), resetDefault.getY() + resetDefault.getHeight() + 4);
         shortcutCreate.setText("Shortcut");
         shortcutCreate.setToolTipText("Creates a desktop shortcut to the jar file.");

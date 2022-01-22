@@ -119,14 +119,16 @@ public class OutfitViewer extends JFrame {
         if (setimage)
             outfit.setImage();
         
-        if (outfit.name.length() == 0) { // if internal server error occured
+        if (outfit.name.isEmpty()) { // if internal server error occured
             long outfitId = outfit.id;
 
             Map<String, Long> outfitList = getAppearance.getOutfits(current.id);
 
             outfitList.forEach((name, id) -> {
-                if (id == outfitId)
+                if (id == outfitId) {
                     outfit.name = name;
+                    return;
+                }
             });
         }
 
@@ -158,6 +160,7 @@ public class OutfitViewer extends JFrame {
 
         JButton viewDetails = new JButton("Further details");
         viewDetails.setBounds(outfitName.getX(), outfitName.getY() + outfitName.getHeight() + 159, card.getWidth(), 39);
+        viewDetails.setCursor(new Cursor(Cursor.HAND_CURSOR));
         viewDetails.addActionListener(new ActionListener() { // view details of outfit
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -702,7 +705,7 @@ public class OutfitViewer extends JFrame {
                 viewing = user.getAppearance();
                 search(user.id);
 
-                build(); // TODO: make gui
+                build();
 
                 resetScrollbar("infoScrollbar");
             }

@@ -11,9 +11,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 
 import java.awt.Desktop;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.*;
@@ -67,6 +69,8 @@ public class AboutMenu extends JFrame {
 
     @SuppressWarnings("static-access")
     public AboutMenu() {
+        final Cursor handCursor = new Cursor(Cursor.HAND_CURSOR);
+
         JFrame window = new JFrame(Controller.title + " - About");
         window.setResizable(false);
         window.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
@@ -83,7 +87,7 @@ public class AboutMenu extends JFrame {
         licenseView.setLayout(null);
 
         JTextArea description = new JTextArea(3, 50);
-        description.setBounds(-1, -1, window.getWidth() - 15, 50);
+        description.setBounds(-1, -1, window.getWidth() - 16, 50);
         description.setBackground(window.getBackground());
         description.setEditable(false);
         description.setLineWrap(true);
@@ -103,6 +107,7 @@ public class AboutMenu extends JFrame {
 
         JButton backButton = new JButton("Back");
         backButton.setBounds(308, 595, 64, 30);
+        backButton.setCursor(handCursor);
         backButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -178,21 +183,21 @@ public class AboutMenu extends JFrame {
 
         JPanel faqPanel = new JPanel();
         faqPanel.setLayout(null);
-        faqPanel.setBounds(5, faqTitle.getY() + faqTitle.getHeight() + 4, paraWidth + 17, 270);
+        faqPanel.setBounds(-1, faqTitle.getY() + faqTitle.getHeight() + 4, paraWidth + 23 + 11, 270);
 
         JScrollPane faqScroll = new JScrollPane(faqPanel ,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         faqScroll.getVerticalScrollBar().setUnitIncrement(16);
         faqScroll.setBounds(faqPanel.getBounds());
 
         JTextPane speedQuestion = new JTextPane();
-        speedQuestion.setBounds(0, 0, paraWidth, 25);
+        speedQuestion.setBounds(6, 0, paraWidth, 25);
         speedQuestion.setBackground(window.getBackground());
         speedQuestion.setEditable(false);
         speedQuestion.setText("What can I do to speed up the search?");
         speedQuestion.setFont(new Font(speedQuestion.getFont().getFontName(), speedQuestion.getFont().getStyle(), 17));
 
         JTextPane speedAnswer = new JTextPane();
-        speedAnswer.setBounds(0, speedQuestion.getY() + speedQuestion.getHeight() + 3, paraWidth, 220);
+        speedAnswer.setBounds(6, speedQuestion.getY() + speedQuestion.getHeight() + 3, paraWidth, 220);
         speedAnswer.setBackground(window.getBackground());
         speedAnswer.setEditable(false);
         speedAnswer.setText(
@@ -210,14 +215,14 @@ public class AboutMenu extends JFrame {
         );
 
         JTextPane autoUpdateQ = new JTextPane();
-        autoUpdateQ.setBounds(0, speedAnswer.getY() + speedAnswer.getHeight() + 4, paraWidth, 25);
+        autoUpdateQ.setBounds(6, speedAnswer.getY() + speedAnswer.getHeight() + 4, paraWidth, 25);
         autoUpdateQ.setBackground(window.getBackground());
         autoUpdateQ.setEditable(false);
         autoUpdateQ.setText("Does this auto-update?");
         autoUpdateQ.setFont(new Font(autoUpdateQ.getFont().getFontName(), autoUpdateQ.getFont().getStyle(), 17));
 
         JTextPane autoUpdateA = new JTextPane();
-        autoUpdateA.setBounds(0, autoUpdateQ.getY() + autoUpdateQ.getHeight() + 3, paraWidth, 70);
+        autoUpdateA.setBounds(6, autoUpdateQ.getY() + autoUpdateQ.getHeight() + 3, paraWidth, 70);
         autoUpdateA.setBackground(window.getBackground());
         autoUpdateA.setEditable(false);
         autoUpdateA.setText(
@@ -229,14 +234,15 @@ public class AboutMenu extends JFrame {
         );
 
         JTextPane sourceQuestion = new JTextPane();
-        sourceQuestion.setBounds(0, autoUpdateA.getY() + autoUpdateA.getHeight() + 4, paraWidth, 25);
+        sourceQuestion.setBounds(6, autoUpdateA.getY() + autoUpdateA.getHeight() + 4, paraWidth, 25);
         sourceQuestion.setBackground(window.getBackground());
         sourceQuestion.setEditable(false);
         sourceQuestion.setText("Where can I find the source code?");
         sourceQuestion.setFont(new Font(sourceQuestion.getFont().getFontName(), sourceQuestion.getFont().getStyle(), 17));
 
         JButton sourceAnswer = new JButton("Here.");
-        sourceAnswer.setBounds(3, sourceQuestion.getY() + sourceQuestion.getHeight() + 3, 65, 35);
+        sourceAnswer.setCursor(handCursor);
+        sourceAnswer.setBounds(9, sourceQuestion.getY() + sourceQuestion.getHeight() + 3, 65, 35);
         sourceAnswer.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -252,14 +258,14 @@ public class AboutMenu extends JFrame {
         });
 
         JTextPane plansQuestion = new JTextPane();
-        plansQuestion.setBounds(0, sourceAnswer.getY() + sourceAnswer.getHeight(), paraWidth, 25);
+        plansQuestion.setBounds(6, sourceAnswer.getY() + sourceAnswer.getHeight(), paraWidth, 25);
         plansQuestion.setBackground(window.getBackground());
         plansQuestion.setEditable(false);
         plansQuestion.setText("What features should I expect in the future?");
         plansQuestion.setFont(new Font(plansQuestion.getFont().getFontName(), plansQuestion.getFont().getStyle(), 17));
 
         JTextPane plansAnswer = new JTextPane();
-        plansAnswer.setBounds(0, plansQuestion.getY() + plansQuestion.getHeight() + 3, paraWidth, 120);
+        plansAnswer.setBounds(6, plansQuestion.getY() + plansQuestion.getHeight() + 3, paraWidth, 120);
         plansAnswer.setBackground(window.getBackground());
         plansAnswer.setEditable(false);
         plansAnswer.setText(
@@ -272,14 +278,14 @@ public class AboutMenu extends JFrame {
         );
 
         JTextPane limitsQuestion = new JTextPane();
-        limitsQuestion.setBounds(0, plansAnswer.getY() + plansAnswer.getHeight() + 4, paraWidth, 25);
+        limitsQuestion.setBounds(6, plansAnswer.getY() + plansAnswer.getHeight() + 4, paraWidth, 25);
         limitsQuestion.setBackground(window.getBackground());
         limitsQuestion.setEditable(false);
         limitsQuestion.setText("Does this have any limitations?");
         limitsQuestion.setFont(new Font(limitsQuestion.getFont().getFontName(), limitsQuestion.getFont().getStyle(), 17));
 
         JTextPane limitsAnswer = new JTextPane();
-        limitsAnswer.setBounds(0, limitsQuestion.getY() + limitsQuestion.getHeight() + 3, paraWidth, 90);
+        limitsAnswer.setBounds(6, limitsQuestion.getY() + limitsQuestion.getHeight() + 3, paraWidth, 90);
         limitsAnswer.setBackground(window.getBackground());
         limitsAnswer.setEditable(false);
         limitsAnswer.setText(
@@ -291,27 +297,27 @@ public class AboutMenu extends JFrame {
         );
 
         JTextPane simplisticQ = new JTextPane();
-        simplisticQ.setBounds(0, limitsAnswer.getY() + limitsAnswer.getHeight() + 4, paraWidth, 25);
+        simplisticQ.setBounds(6, limitsAnswer.getY() + limitsAnswer.getHeight() + 4, paraWidth, 25);
         simplisticQ.setBackground(window.getBackground());
         simplisticQ.setEditable(false);
         simplisticQ.setText("Why is all the GUI so plain?");
         simplisticQ.setFont(new Font(simplisticQ.getFont().getFontName(), simplisticQ.getFont().getStyle(), 17));
 
         JTextPane simplisticA = new JTextPane();
-        simplisticA.setBounds(0, simplisticQ.getY() + simplisticQ.getHeight() + 3, paraWidth, 30);
+        simplisticA.setBounds(6, simplisticQ.getY() + simplisticQ.getHeight() + 3, paraWidth, 30);
         simplisticA.setBackground(window.getBackground());
         simplisticA.setEditable(false);
         simplisticA.setText("I don't like writing GUIs.");
 
         JTextPane discordQuestion = new JTextPane();
-        discordQuestion.setBounds(0, simplisticA.getY() + simplisticA.getHeight() + 4, paraWidth, 25);
+        discordQuestion.setBounds(6, simplisticA.getY() + simplisticA.getHeight() + 4, paraWidth, 25);
         discordQuestion.setBackground(window.getBackground());
         discordQuestion.setEditable(false);
         discordQuestion.setText("Do you have a Discord server where I can track RBLXInfoViewer's progress?");
         discordQuestion.setFont(new Font(discordQuestion.getFont().getFontName(), discordQuestion.getFont().getStyle(), 17));
 
         JTextPane discordAnswer = new JTextPane();
-        discordAnswer.setBounds(0, discordQuestion.getY() + discordQuestion.getHeight() + 3, paraWidth, 60);
+        discordAnswer.setBounds(6, discordQuestion.getY() + discordQuestion.getHeight() + 3, paraWidth, 60);
         discordAnswer.setBackground(window.getBackground());
         discordAnswer.setEditable(false);
         discordAnswer.setText(
@@ -346,9 +352,11 @@ public class AboutMenu extends JFrame {
         licenseInfo.setLayout(null);
 
         JButton rblxinfoviewerLicense = new JButton("RBLXInfoViewer");
+        rblxinfoviewerLicense.setCursor(handCursor);
         rblxinfoviewerLicense.setBounds(30, 20, 150, 50);
 
         JButton jsonjavaLicense = new JButton("JSON-Java");
+        jsonjavaLicense.setCursor(handCursor);
         jsonjavaLicense.setBounds(window.getWidth() - 200, 20, 150, 50);
 
         comps.put("RBLXInfoViewer", rblxinfoviewerLicense);
@@ -364,6 +372,13 @@ public class AboutMenu extends JFrame {
         options.addTab("Licenses", licenseInfo);
 
         mainPanel.add(options);
+
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                faqScroll.getVerticalScrollBar().setValue(0);
+            }
+        });
 
         window.addWindowListener(new WindowAdapter() {
             @Override

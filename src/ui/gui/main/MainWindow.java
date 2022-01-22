@@ -8,6 +8,7 @@ import javax.swing.text.*;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.Cursor;
 import java.awt.Image;
 
 import java.beans.PropertyChangeEvent;
@@ -215,6 +216,7 @@ public class MainWindow {
         final Color backgroundColor = paletteCols.get("background");
         final Color amplifiedColor = paletteCols.get("amplified");
         final Color errCol = paletteCols.get("error");
+        final Cursor handCursor = new Cursor(Cursor.HAND_CURSOR);
 
         boolean showPing = true;
 
@@ -384,6 +386,7 @@ public class MainWindow {
         
         JButton reload = new JButton("Reload Image");
         reload.setBounds(subPanel.getX(), subPanel.getY() + subPanel.getHeight() + 8, subPanel.getWidth(), 25);
+        reload.setCursor(handCursor);
         reload.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -403,6 +406,7 @@ public class MainWindow {
 
         JButton openOutfits = new JButton("View Outfits");
         openOutfits.setBounds(reload.getX(), reload.getY() + reload.getHeight() + 6, reload.getWidth(), reload.getHeight());
+        openOutfits.setCursor(handCursor);
         openOutfits.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -489,6 +493,7 @@ public class MainWindow {
         JButton search = new JButton();
         search.setText("Search");
         search.setBounds(aX/2, aY-5, 80, 45);
+        search.setCursor(handCursor);
         search.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -533,6 +538,7 @@ public class MainWindow {
         JButton randomize = new JButton();
         randomize.setText("Random ID");
         randomize.setBounds(id.getBounds().x + id.getBounds().width + 4, id.getBounds().y, 95, id.getBounds().height);
+        randomize.setCursor(handCursor);
         randomize.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
