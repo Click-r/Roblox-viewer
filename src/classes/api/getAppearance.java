@@ -278,7 +278,7 @@ public class getAppearance {
 
                     return toReturn.getScaledInstance(150, 150, Image.SCALE_AREA_AVERAGING);
                 } catch (IOException e) {
-                    System.out.println("Failed to fetch " + imgUrl + "\nPutting in placeholder image.");
+                    System.out.println("Failed to fetch outfit image " + imgUrl + "\nPutting in placeholder image.");
 
                     Image replacement = new Link("https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018", false).getImage();
                     buffer.push(1);
@@ -403,35 +403,55 @@ public class getAppearance {
         ExecutorService exec = Executors.newSingleThreadExecutor();
 
         Future<String[]> imageLinks = exec.submit(() -> {
-            String stringList = Arrays.toString(assetIds);
-            stringList = stringList
-              .substring(1, stringList.length() - 1)
-              .replace(" ", "");
-    
             String[] imageUrls = new String[assetIds.length];
-            String url = "https://thumbnails.roblox.com/v1/assets?assetIds=" + stringList + "&size=110x110&format=Png&isCircular=false";
 
-            try {
-                Link data = new Link(url, false);
+            long[][] fragments = new long[][]{assetIds};
+            
+            if (assetIds.length > 20) {
+                fragments = new long[][]{
+                    Arrays.copyOfRange(assetIds, 0, 20),
+                    Arrays.copyOfRange(assetIds, 20, assetIds.length)
+                };
+            } // split up the assetIds, since you can't batch-get more than 20 image urls with one request
 
-                JSONObject assetsData = data.getRawJson(false);
-                JSONArray dataArray = assetsData.getJSONArray("data");
+            int i = 0; // keeps track of the index for imageUrls
 
-                for (int i = 0; i < dataArray.length(); i++) {
-                    JSONObject currentobj = dataArray.getJSONObject(i);
+            for (long[] idsList : fragments) {
+                String stringList = Arrays.toString(idsList);
+                stringList = stringList
+                  .substring(1, stringList.length() - 1)
+                  .replace(" ", "");
+        
+                String url = "https://thumbnails.roblox.com/v1/assets?assetIds=" + stringList + "&size=110x110&format=Png&isCircular=false";
 
-                    String setTo = "";
+                try {
+                    Link data = new Link(url, false);
 
-                    if (currentobj.getString("state").equals("Blocked") || currentobj.getString("state").equals("Error") )
-                        setTo = "https://t4.rbxcdn.com/b561617d22628c1d01dd10f02e80c384";
-                    else if (currentobj.getString("state").equals("InReview") || currentobj.getString("state").equals("Pending"))
-                        setTo = "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018";
-                    else
-                        setTo = currentobj.getString("imageUrl");
-                    
-                    imageUrls[i] = setTo;
+                    JSONObject assetsData = data.getRawJson(false);
+                    JSONArray dataArray = assetsData.getJSONArray("data");
+
+                    for (int k = 0; k < dataArray.length(); k++) {
+                        JSONObject currentobj = dataArray.getJSONObject(k);
+
+                        final String state = currentobj.getString("state");
+
+                        String setTo = "";
+
+                        if (state.equals("Blocked") || state.equals("Error") )
+                            setTo = "https://t4.rbxcdn.com/b561617d22628c1d01dd10f02e80c384";
+                        else if (state.equals("InReview") || state.equals("Pending"))
+                            setTo = "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018";
+                        else
+                            setTo = currentobj.getString("imageUrl");
+                        
+                        imageUrls[i] = setTo;
+
+                        i++;
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {}
+            }
 
             return imageUrls;
         });
@@ -475,7 +495,7 @@ public class getAppearance {
 
                     return toReturn;
                 } catch (IOException e) {
-                    System.out.println("Failed to fetch " + imgUrl + "\nPutting in placeholder image.");
+                    System.out.println("Failed to fetch asset image " + imgUrl + "\nPutting in placeholder image.");
                     
                     Image replacement = new Link("https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018", false).getImage();
                     buffer.push(1);
