@@ -14,6 +14,7 @@ import org.json.JSONObject;
 
 import classes.api.getAppearance;
 
+/**A class which describes the contents of a given outfit or a {@link Player}'s currently worn apparel*/
 public class Avatar {
     public static class Asset {
         public long id;
@@ -34,6 +35,11 @@ public class Avatar {
         colourLookup.put(0, new SimpleImmutableEntry<String, Color>("Unknown", new Color(0, 0, 0))); // placeholder colour
     }
 
+    /**
+     * <p>Initializes an <code>Avatar</code> instance that contains the contents of the outfit described by the outfit ID parameter.</p> 
+     * @param outfitId
+    */
+
     public Avatar(long outfitId) {
         JSONObject details = getAppearance.getOutfitDetails(outfitId);
 
@@ -43,6 +49,11 @@ public class Avatar {
 
         setDataFields(details);
     }
+
+    /**
+     * <p>Initializes an <code>Avatar</code> instance that contains what the player described by the user ID parameter is wearing.</p> 
+     * @param userId
+    */
 
     public Avatar(Long userId) {
         JSONObject currentlyWearing = getAppearance.getCurrentlyWearing(userId);
@@ -63,6 +74,12 @@ public class Avatar {
         // colours of the outfit
     }
 
+    /**
+     * <p>Converts the colours described by the ColorId of each bodypart to RGB and the colour's name.</p>
+     * @param rawColours
+     * @return Bodyparts mapped to RGB colours.
+    */
+
     public static Map<String, SimpleImmutableEntry<String, Color>> getColours(JSONObject rawColours) {
         Map<String, SimpleImmutableEntry<String, Color>> parts = new HashMap<String, SimpleImmutableEntry<String, Color>>();
 
@@ -75,6 +92,12 @@ public class Avatar {
 
         return parts;
     }
+
+    /**
+     * <p>Returns a list of assets (see {@link Asset}) used in the <code>Avatar</code> described by the given instance</p>
+     * @param rawAssetList
+     * @return List of assets
+    */
 
     public static List<Asset> getAssets(JSONArray rawAssetList) {
         List<Asset> assetsParsed = new ArrayList<Asset>();
@@ -92,11 +115,20 @@ public class Avatar {
         return assetsParsed;
     }
 
+    /**
+     * <p>Updates the given <code>Avatar</code> instance's image.</p>
+    */
+
     public void setImage() {
         image = getAppearance.getOutfitThumbnail(id);
     }
 
+    /**
+     * <p>Sets the image field of a given <code>Avatar</code> instance to that of the passed in image</p>
+     * @param image
+    */
+
     public void setImage(Image image) {
         this.image = image;
-    } // in case of batch gets
+    }
 }

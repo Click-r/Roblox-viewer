@@ -51,6 +51,7 @@ import java.awt.Font;
 import main.Controller;
 
 public class OutfitViewer extends JFrame {
+    private static JFrame window;
     private static boolean displayingInfo = false;
     private static Player current;
     private static List<Avatar> outfits = new ArrayList<Avatar>();
@@ -346,6 +347,8 @@ public class OutfitViewer extends JFrame {
         JFrame frame = new JFrame(Controller.title + " - Outfit Viewer");
         frame.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
+        window = frame;
+
         final Color bgcolour = new Color(238, 238, 238);
         
         int x,y;
@@ -366,7 +369,8 @@ public class OutfitViewer extends JFrame {
                 outfits.clear();
                 outfitCards.clear();
                 assetCards.clear();
-                
+
+                window = null;
                 System.gc();
             }
         });
@@ -694,6 +698,7 @@ public class OutfitViewer extends JFrame {
             resetScrollbar("infoScrollbar");
             resetScrollbar("outfitScrollbar");
 
+            window.requestFocus();
             return;
         }
 

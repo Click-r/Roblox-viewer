@@ -72,6 +72,12 @@ public class Link {
         initialize(link, shouldInit);
     }
 
+    /**
+     * <p>Reads and returns the image contained on the url described by a given <code>Link</code> instance.</p>
+     * @return image
+     * @throws IOException
+    */
+
     public Image getImage() throws IOException {
         this.connection.setInstanceFollowRedirects(true);
         HttpURLConnection.setFollowRedirects(true);
@@ -95,6 +101,13 @@ public class Link {
 
         return toReturn;
     }
+
+    /**
+     * <p>Returns the raw JSON content of the site described by a given <code>Link</code> instance.</p>
+     * @param hasConnected - whether the client has already connected to the site.
+     * @return JSON content
+     * @throws IOException
+    */
 
     public JSONObject getRawJson(boolean hasConnected) throws IOException {
         if (!hasConnected)

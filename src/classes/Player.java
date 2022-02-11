@@ -72,6 +72,7 @@ public class Player {
      * <p>This method is only used in cases when an extra piece of data may be found in returned json from end points</p>
      * @return A set containing all the valid key names the player class stores.
     */
+
     public static Set<String> getValidKeys() {
         Set<String> keyNames = new HashSet<String>();
 
@@ -82,6 +83,11 @@ public class Player {
 
         return keyNames;
     }
+
+    /**
+     * <p>Returns the average delay that a given <code>Player</code> instance took to initialize.</p>
+     * @return delay - measured in milliseconds.
+    */
 
     public long getDelay() {
         return delay;

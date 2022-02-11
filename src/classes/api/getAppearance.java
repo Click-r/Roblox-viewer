@@ -209,11 +209,13 @@ public class getAppearance {
                 for (int i = 0; i < outfits.length(); i++) {
                     JSONObject currentobj = outfits.getJSONObject(i);
 
+                    final String state = currentobj.getString("state");
+
                     String setTo = "";
 
-                    if (currentobj.getString("state").equals("Blocked") || currentobj.getString("state").equals("Error") )
+                    if (state.equals("Blocked") || state.equals("Error") )
                         setTo = "https://t4.rbxcdn.com/b561617d22628c1d01dd10f02e80c384";
-                    else if (currentobj.getString("state").equals("InReview") || currentobj.getString("state").equals("Pending"))
+                    else if (state.equals("InReview") || state.equals("Pending"))
                         setTo = "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018";
                     else
                         setTo = currentobj.getString("imageUrl");
