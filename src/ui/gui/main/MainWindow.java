@@ -148,13 +148,23 @@ public class MainWindow {
         });
 
         if (avatar.length != 0) {
+            JLabel av = avatar[0];
+
             try {
-                JLabel av = avatar[0];
                 ImageIcon img = new ImageIcon(player.image);
                 
                 av.setIcon(img);
             } catch (NullPointerException noImageFound) {
                 System.out.println("Avatar image not found");
+
+                try {
+                    Image replacement = new Link("https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018", false).getImage();
+
+                    av.setIcon(new ImageIcon(replacement));
+                    player.image = replacement;
+                } catch (IOException failed) {
+                    failed.printStackTrace();
+                }
             }
         }
 
@@ -231,11 +241,11 @@ public class MainWindow {
 
         int x,y;
         x = 800;
-        y = 700;
+        y = 650;
 
         final int aX,aY;
-        aX = 704;
-        aY = 616; // these differ because components are moved from the top-left corner
+        aX = x - 96;
+        aY = y - 84; // these differ because components are moved from the top-left corner
 
         frame.setBounds(200,200, x, y);
         frame.setResizable(false);
@@ -255,7 +265,7 @@ public class MainWindow {
 
         // description
         JPanel description = new JPanel();
-        description.setBounds(15, 447, 600, 160);
+        description.setBounds(15, 375, 710, 160);
         description.setBackground(infoSectionColor);
 
         TitledBorder descBorder = new TitledBorder(new EtchedBorder(), "Description");
@@ -263,7 +273,7 @@ public class MainWindow {
 
         description.setBorder(descBorder);
 
-        JTextArea descriptionText = new JTextArea(8, 51);
+        JTextArea descriptionText = new JTextArea(8, 62);
         descriptionText.setLineWrap(true);
         descriptionText.setWrapStyleWord(true);
         descriptionText.setEditable(false);
@@ -277,31 +287,6 @@ public class MainWindow {
 
         description.add(descScroll);
         descriptionText.setVisible(true);
-
-        // status
-        JPanel status = new JPanel();
-        status.setBounds(15, description.getY() - 86, 600, 80);
-        status.setBackground(infoSectionColor);
-
-        TitledBorder statusBorder = new TitledBorder(new EtchedBorder(), "Status");
-        statusBorder.setTitleColor(textColor);
-
-        status.setBorder(statusBorder);
-
-        JTextArea statusText = new JTextArea(3,51);
-        statusText.setLineWrap(true);
-        statusText.setWrapStyleWord(true);
-        statusText.setEditable(false);
-        statusText.setBackground(amplifiedColor);
-        statusText.setForeground(textColor);
-        statusText.setName("status");
-        
-        JScrollPane statScroll = new JScrollPane(statusText);
-        statScroll.setBorder(null);
-        statScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-
-        status.add(statScroll);
-        statusText.setVisible(true);
 
         JPanel error = new JPanel();
         error.setBounds(aX/2 - 336, aY-5, 260, 45);
@@ -436,7 +421,6 @@ public class MainWindow {
         lastTxt = createIOField(info, "Banned", lastTxt, infoSectionColor, false, 200, 25, "",comps, paletteCols);
         lastTxt = createIOField(info, "LastOnline", lastTxt, infoSectionColor, false, 200, 25, "", comps, paletteCols);
         comps.put(descriptionText.getName(), descriptionText);
-        comps.put(statusText.getName(), statusText);
         comps.put(isOnline.getName(), isOnline);
 
         JTextPane pingText = new JTextPane();
@@ -486,7 +470,9 @@ public class MainWindow {
             Player start = new Player(startUser);
 
             updateVals(start, comps, av);
-        } catch (UserNotFoundException uException) {} // TODO: add error message and make data display that of ROBLOX
+        } catch (UserNotFoundException uException) {
+            uException.printStackTrace();
+        } // TODO: add error message and make data display that of ROBLOX
 
         error.add(errorMsg);
 
@@ -604,7 +590,6 @@ public class MainWindow {
         frame.add(info);
         frame.add(search);
         frame.add(description);
-        frame.add(status);
         frame.add(error);
         frame.add(imageSection);
 
@@ -636,3 +621,12 @@ public class MainWindow {
         });
     }
 }
+
+/*
+Here once lay a small, overlooked text.
+Ere its removal, it showed one's status.
+It was fun and unassuming, not momentous
+Until its removal, upon ROBLOX's behest.
+
+RIP user statuses
+*/

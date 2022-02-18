@@ -20,7 +20,7 @@ public class Player {
     private long delay = -1L; // ping
 
     public Long id;
-    public String name, created, description, status, lastonline, dispname;
+    public String name, created, description, lastonline, dispname;
     public Integer friends, followings, followers;
     public Boolean banned, online;
     public Image image;

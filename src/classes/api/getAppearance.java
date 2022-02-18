@@ -43,9 +43,26 @@ public class getAppearance {
                 Link imageLink = new Link(url, false);
                 
                 return imageLink.getImage();
-            } catch (IOException e) {}
+            } catch (IOException e) {
+                int retries = 0;
 
-            return null;
+                do {
+                    System.out.println(url);
+                    System.out.printf("Image fetch attempt %d...\n", retries);
+
+                    try {
+                        Image toReturn = new Link(url, false).getImage();
+
+                        return toReturn;
+                    } catch (IOException io) {}
+
+                    retries++;
+                } while (retries < 2);
+
+                Link imageLink = new Link("https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018", false);
+
+                return imageLink.getImage();
+            }
         });
 
         try {
@@ -402,6 +419,9 @@ public class getAppearance {
     }
 
     public static Image[] batchGetAssetThumbnails(long[] assetIds) {
+        if (assetIds.length == 0)
+            return new Image[]{};
+
         ExecutorService exec = Executors.newSingleThreadExecutor();
 
         Future<String[]> imageLinks = exec.submit(() -> {

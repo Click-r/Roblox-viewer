@@ -170,7 +170,6 @@ public class getInfo {
 
         final String[] apiDomains = {
             "https://users.roblox.com/v1/users/" + userId,
-            "https://users.roblox.com/v1/users/" + userId + "/status/ ",
             base + "/friends/count",
             base + "/followers/count",
             base + "/followings/count",
@@ -179,7 +178,6 @@ public class getInfo {
 
         final String[][] toFilter = {
             new String[]{"externalAppDisplayName"},
-            null,
             null,
             null,
             null,

@@ -209,7 +209,7 @@ public class AboutMenu extends JFrame {
             "(CPU) likely runs many tasks concurrently on its different cores, divided into threads. Multithreaded " +
             "applications delegate tasks to different threads to make sure those tasks compute simultaneously, " +
             "allowing other threads to continue execution. As you can imagine, this helps make a lot of web " +
-            "requests concurrently.\n\nSo, it uses multithreading, which is dependant on how many threads the " +
+            "requests at the same time.\n\nSo, it uses multithreading, which is dependant on how many threads the " +
             "machine has. RBLXInfoViewer, by default, limits itself to 5 threads, which carry out the requests. " +
             "However, you can change that in the settings tab, advanced section."
         );
