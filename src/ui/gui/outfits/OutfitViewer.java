@@ -473,12 +473,12 @@ public class OutfitViewer extends JFrame {
             public void mouseDragged(MouseEvent e) {
                 Point srcLocation = e.getComponent().getLocation();
                 Point newPos = new Point(
-                    e.getX() + (int) srcLocation.getX(),
-                    e.getY() + (int) srcLocation.getY()
+                    e.getX() + (int) srcLocation.getX() + 1,
+                    e.getY() + (int) srcLocation.getY() + 1
                 );
 
                 if (newPos.x + colourInfoBox.getWidth() - colourDisplay.getWidth() >= 0)
-                    newPos.translate((int) -colourInfoBox.getWidth(), 0);
+                    newPos.translate((int) -colourInfoBox.getWidth() - 1, -1);
 
                 colourInfoBox.setLocation(newPos);
             }
@@ -508,6 +508,10 @@ public class OutfitViewer extends JFrame {
                 colourInfoBox.setVisible(false);
             }
         };
+
+        JPanel bodyPanel = new JPanel();
+        bodyPanel.setBounds(0, 0, colourDisplay.getWidth(), colourDisplay.getHeight());
+        bodyPanel.setLayout(null);
 
         JPanel head = new JPanel();
         head.setBounds(halfway - 27, 8, 54, 54);
@@ -551,6 +555,35 @@ public class OutfitViewer extends JFrame {
         rightLeg.addMouseListener(signalEnter);
         rightLeg.setName("rightLeg");
 
+        bodyPanel.add(head);
+        bodyPanel.add(torso);
+        bodyPanel.add(leftArm);
+        bodyPanel.add(rightArm);
+        bodyPanel.add(leftLeg);
+        bodyPanel.add(rightLeg);
+
+        colourInfoBox.addMouseMotionListener(new MouseMotionListener() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                this.mouseMoved(e);
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                colourInfoBox.setVisible(true);
+
+                Point entry = e.getComponent().getLocation();
+                entry.translate(e.getX(), e.getY());
+
+                JComponent comp = (JComponent) bodyPanel.getComponentAt(entry);
+
+                if (comp.getName() != null)
+                    comp.getMouseMotionListeners()[0].mouseMoved(e); // body part panels are guaranteed to have 1 mouse motion listener
+                else
+                    colourInfoBox.setVisible(false);
+            }
+        });
+
         outfitComponents.put("head", head);
         outfitComponents.put("torso", torso);
         outfitComponents.put("leftArm", leftArm);
@@ -558,12 +591,7 @@ public class OutfitViewer extends JFrame {
         outfitComponents.put("leftLeg", leftLeg);
         outfitComponents.put("rightLeg", rightLeg);
 
-        colourDisplay.add(head, 1);
-        colourDisplay.add(torso, 1);
-        colourDisplay.add(leftArm, 1);
-        colourDisplay.add(rightArm, 1);
-        colourDisplay.add(leftLeg, 1);
-        colourDisplay.add(rightLeg, 1);
+        colourDisplay.add(bodyPanel, 1);
         colourDisplay.add(colourInfoBox, 0);
 
         JPanel nameIdSection = new JPanel();
