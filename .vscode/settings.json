@@ -1,7 +1,6 @@
 {
     "java.project.referencedLibraries": [
-        "lib/**/*.jar",
-        "src/lib/json-20210307.jar"
+        "src/lib/json-20220320.jar"
     ],
     "java.project.sourcePaths": [
         "src",

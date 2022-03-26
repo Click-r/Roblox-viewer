@@ -562,7 +562,7 @@ public class OutfitViewer extends JFrame {
         bodyPanel.add(leftLeg);
         bodyPanel.add(rightLeg);
 
-        colourInfoBox.addMouseMotionListener(new MouseMotionListener() {
+        MouseMotionListener colourInfoListener = new MouseMotionListener() {
             @Override
             public void mouseDragged(MouseEvent e) {
                 this.mouseMoved(e);
@@ -582,7 +582,11 @@ public class OutfitViewer extends JFrame {
                 else
                     colourInfoBox.setVisible(false);
             }
-        });
+        };
+
+        colourInfoBox.addMouseMotionListener(colourInfoListener);
+        colName.addMouseMotionListener(colourInfoListener);
+        rgbVal.addMouseMotionListener(colourInfoListener);
 
         outfitComponents.put("head", head);
         outfitComponents.put("torso", torso);
