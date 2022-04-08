@@ -10,7 +10,7 @@ import ui.gui.err.ErrorHandler;
 import ui.gui.main.MainWindow;
 
 public class Controller {
-    public final static String version = "1.1b";
+    public final static String version = "1.1c";
     public final static String title = "RBLXInfoViewer";
     public final static String author = "Cli_ck";
 

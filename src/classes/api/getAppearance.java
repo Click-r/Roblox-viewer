@@ -185,9 +185,20 @@ public class getAppearance {
                 Link dataLink = new Link(url, false);
 
                 JSONObject returned = dataLink.getRawJson(false);
-                String imgUrl = returned.getJSONArray("data").getJSONObject(0).getString("imageUrl");
+                JSONObject imageData = returned.getJSONArray("data").getJSONObject(0);
+
+                String imgUrl = "";
+
+                String state = imageData.getString("state");
+                if (state.equals("Blocked") || state.equals("Error") )
+                    imgUrl = "https://t4.rbxcdn.com/b561617d22628c1d01dd10f02e80c384";
+                else if (state.equals("InReview") || state.equals("Pending"))
+                    imgUrl = "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018";
+                else
+                    imgUrl = imageData.getString("imageUrl");
 
                 Link imageLink = new Link(imgUrl, false);
+
                 return imageLink.getImage();
             } catch (IOException e) {}
 

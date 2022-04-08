@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -29,7 +30,7 @@ import classes.Avatar.Asset;
 import classes.api.getAppearance;
 
 import java.io.IOException;
-
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -50,6 +51,8 @@ import java.awt.Font;
 
 import main.Controller;
 
+import ui.gui.err.ErrorHandler;
+
 public class OutfitViewer extends JFrame {
     private static JFrame window;
     private static boolean displayingInfo = false;
@@ -59,6 +62,17 @@ public class OutfitViewer extends JFrame {
     private static List<JPanel> assetCards = new ArrayList<JPanel>();
     private static Map<String, JComponent> outfitComponents = new HashMap<String, JComponent>();
     private static Avatar viewing;
+    private static Image reloadImg;
+
+    static {
+        try {
+            InputStream reloadStream = OutfitViewer.class.getResourceAsStream("/ui/assets/reload.png");
+            reloadImg = ImageIO.read(reloadStream);
+            reloadImg = reloadImg.getScaledInstance(20, 20, Image.SCALE_AREA_AVERAGING);
+        } catch (IOException failedLoad) {
+            ErrorHandler.report(failedLoad);
+        }
+    }
 
     private static void resetScrollbar(String scrollbarName) {
         SwingUtilities.invokeLater(new Runnable() {
@@ -156,8 +170,65 @@ public class OutfitViewer extends JFrame {
 
         Image scaled = outfit.image.getScaledInstance(card.getWidth() - 2, card.getWidth() - 2, Image.SCALE_AREA_AVERAGING);
 
+        JLayeredPane imageSection = new JLayeredPane();
+        imageSection.setBounds(outfitName.getX() + 1, outfitName.getY() + outfitName.getHeight(), card.getWidth() - 2, card.getWidth() - 2);
+        imageSection.setLayout(null);
+
         JLabel outfitImage = new JLabel(new ImageIcon(scaled));
-        outfitImage.setBounds(outfitName.getX() + 1, outfitName.getY() + outfitName.getHeight(), card.getWidth() - 2, card.getWidth() - 2);
+        outfitImage.setBounds(0, 0, imageSection.getWidth(), imageSection.getHeight());
+
+        JButton reloadOutfit = new JButton(new ImageIcon(reloadImg));
+        reloadOutfit.setSize(30, 30);
+        reloadOutfit.setBackground(new Color(235, 235, 235));
+        reloadOutfit.setLocation(outfitImage.getWidth() - reloadOutfit.getWidth() - 5, 5);
+        reloadOutfit.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        reloadOutfit.setToolTipText("Reloads the outfit.");
+        reloadOutfit.setVisible(false);
+        reloadOutfit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int outfitIdx = outfits.indexOf(outfit);
+
+                Avatar reloaded = new Avatar(outfit.id);
+                reloaded.setImage(); // 1st reload
+
+                outfits.set(outfitIdx, reloaded);
+
+                JPanel outfitPanel = (JPanel) outfitComponents.get("outfitPanel");
+                
+                int cardIdx = outfitCards.indexOf(card);
+                JPanel newCard = generateOutfitCard(reloaded, true); // 2nd reload - reloading the image a second time if it fails to load on the first
+
+                Point oldPos = card.getLocation();
+                newCard.setLocation(oldPos);
+
+                outfitPanel.remove(card);
+                outfitCards.set(cardIdx, newCard);
+                outfitPanel.add(newCard);
+                outfitPanel.repaint();
+
+                if (viewing.equals(outfit))
+                    updateViewing(reloaded);
+            }
+        });
+
+        imageSection.add(reloadOutfit, 0);
+        imageSection.add(outfitImage, 1);
+
+        MouseAdapter reloadEnabler = new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                reloadOutfit.setVisible(true);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                reloadOutfit.setVisible(false);
+            }
+        };
+
+        outfitImage.addMouseListener(reloadEnabler);
+        reloadOutfit.addMouseListener(reloadEnabler);
 
         JButton viewDetails = new JButton("Further details");
         viewDetails.setBounds(outfitName.getX(), outfitName.getY() + outfitName.getHeight() + 159, card.getWidth(), 39);
@@ -165,21 +236,13 @@ public class OutfitViewer extends JFrame {
         viewDetails.addActionListener(new ActionListener() { // view details of outfit
             @Override
             public void actionPerformed(ActionEvent e) {
-                viewing = outfit;
-
-                ((JLabel) outfitComponents.get("largeImg")).setIcon(new ImageIcon(getEnlargedImage(270)));
-                
-                updateAssetCards();
-                updateColours();
-                updateNameId();
-
-                resetScrollbar("infoScrollbar");
+                updateViewing(outfit);
             }
         });
 
         card.add(outfitName);
         card.add(viewDetails);
-        card.add(outfitImage);
+        card.add(imageSection);
 
         return card;
     }
@@ -341,6 +404,18 @@ public class OutfitViewer extends JFrame {
         viewing.bodycolours.forEach((bodyPart, colourInfo) -> {
             outfitComponents.get(bodyPart).setBackground(colourInfo.getValue());
         });
+    }
+
+    private static void updateViewing(Avatar outfit) {
+        viewing = outfit;
+
+        ((JLabel) outfitComponents.get("largeImg")).setIcon(new ImageIcon(getEnlargedImage(270)));
+        
+        updateAssetCards();
+        updateColours();
+        updateNameId();
+
+        resetScrollbar("infoScrollbar");
     }
 
     private static JFrame build() {
