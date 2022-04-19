@@ -69,6 +69,8 @@ public class Controller {
     }
 
     public static void main(String[] args) throws URISyntaxException {
+        System.setProperty("file.encoding", "UTF-8");
+
         initFiles();
 
         MainWindow mw = new MainWindow();

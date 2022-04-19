@@ -35,7 +35,7 @@ public class SettingsMenu extends JFrame {
     public static SettingValidity state;
 
     public static class SettingValidity {
-        LinkedHashMap<String, BitSet> states = new LinkedHashMap<String, BitSet>();
+        LinkedHashMap<String, BitSet> states = new LinkedHashMap<>();
 
         public SettingValidity(LinkedHashMap<String, Setting> settingHashMap) {
             for (String name : settingHashMap.keySet()) {
@@ -76,7 +76,7 @@ public class SettingsMenu extends JFrame {
 
     @SuppressWarnings("static-access")
     public SettingsMenu() {
-        LinkedHashMap<String, Setting> setters = new LinkedHashMap<String, Setting>();
+        LinkedHashMap<String, Setting> setters = new LinkedHashMap<>();
 
         JFrame window = new JFrame(Controller.title + " - Settings");
         window.setDefaultCloseOperation(DISPOSE_ON_CLOSE);

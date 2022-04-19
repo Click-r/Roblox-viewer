@@ -16,7 +16,7 @@ public enum Themes {
     };
 
     public static class Palette {
-        public HashMap<String, Color> colourPalette = new HashMap<String, Color>();
+        public HashMap<String, Color> colourPalette = new HashMap<>();
         public Themes colour;
 
         public Palette(Themes selectedEnum) {

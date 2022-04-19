@@ -57,10 +57,10 @@ public class OutfitViewer extends JFrame {
     private static JFrame window;
     private static boolean displayingInfo = false;
     private static Player current;
-    private static List<Avatar> outfits = new ArrayList<Avatar>();
-    private static List<JPanel> outfitCards = new ArrayList<JPanel>();
-    private static List<JPanel> assetCards = new ArrayList<JPanel>();
-    private static Map<String, JComponent> outfitComponents = new HashMap<String, JComponent>();
+    private static List<Avatar> outfits = new ArrayList<>();
+    private static List<JPanel> outfitCards = new ArrayList<>();
+    private static List<JPanel> assetCards = new ArrayList<>();
+    private static Map<String, JComponent> outfitComponents = new HashMap<>();
     private static Avatar viewing;
     private static Image reloadImg;
 

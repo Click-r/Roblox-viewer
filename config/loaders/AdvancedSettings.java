@@ -180,7 +180,7 @@ public class AdvancedSettings extends Setting {
             String threadValue = ((JTextField) components.get("threadsToUse")).getText();
             String pingValue = ((JCheckBox) components.get("displayPing")).isSelected() ? "true" : "false";
 
-            List<String> valList = new ArrayList<String>();
+            List<String> valList = new ArrayList<>();
 
             valList.add(timeoutValue);
             valList.add(threadValue);

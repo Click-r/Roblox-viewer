@@ -121,7 +121,7 @@ public abstract class Setting {
 
         MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
 
-        List<String> strList = new ArrayList<String>();
+        List<String> strList = new ArrayList<>();
 
         config.forEach((name, value) -> {
             if (!((String)name).endsWith("_DEFAULT"))

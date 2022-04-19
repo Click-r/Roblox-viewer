@@ -34,15 +34,28 @@ import ui.gui.err.ErrorHandler;
 public class getAppearance {
 
     public static Image retrieveImage(long userId) {
+        HashMap<String, String> errorStates = new HashMap<>();
+        errorStates.put("Error", "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018");
+        errorStates.put("InReview", "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018");
+        errorStates.put("Pending", "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018");
+        errorStates.put("Blocked", "https://t3.rbxcdn.com/894dca84231352d56ec346174a3c0cf9");
+        errorStates.put("TemporarilyUnavailable", "https://t4.rbxcdn.com/b561617d22628c1d01dd10f02e80c384");
+
         ExecutorService exec = Executors.newSingleThreadExecutor();
 
         Future<Image> img = exec.submit(() -> {
-            String url = "https://web.roblox.com/Thumbs/Avatar.ashx?x=150&y=150&Format=Png&userid=" + userId;
+            String url = "https://thumbnails.roblox.com/v1/users/avatar?userIds=" + userId + "&size=150x150&format=Png&isCircular=false";
 
             try {
                 Link imageLink = new Link(url, false);
-                
-                return imageLink.getImage();
+                JSONObject returned = imageLink.getRawJson(false).getJSONArray("data").getJSONObject(0);
+                String state = returned.getString("state");
+                System.out.println(state);
+
+                if (state.equals("Completed"))
+                    return new Link(returned.getString("imageUrl"), false).getImage();
+                else
+                    return new Link(errorStates.get(state), false).getImage();
             } catch (IOException e) {
                 int retries = 0;
 
@@ -51,9 +64,12 @@ public class getAppearance {
                     System.out.printf("Image fetch attempt %d...\n", retries);
 
                     try {
-                        Image toReturn = new Link(url, false).getImage();
+                        Link retryLink = new Link(url, false);
+                        JSONObject returned = retryLink.getRawJson(false).getJSONArray("data").getJSONObject(0);
+                        String state = returned.getString("state");
 
-                        return toReturn;
+                        if (state.equals("Completed"))
+                            return new Link(returned.getString("imageUrl"), false).getImage();
                     } catch (IOException io) {}
 
                     retries++;
@@ -100,7 +116,7 @@ public class getAppearance {
     public static Map<String, Long> getOutfits(long userId) {
         ExecutorService exec = Executors.newSingleThreadExecutor();
 
-        Map<String, Long> data = new HashMap<String, Long>();
+        Map<String, Long> data = new HashMap<>();
 
         Future<JSONObject> jsonData = exec.submit(() -> {
             String url = "https://avatar.roblox.com/v1/users/" + userId + "/outfits?page=1&itemsPerPage=64";
@@ -144,12 +160,12 @@ public class getAppearance {
             } catch (IOException e) {
                 e.printStackTrace();
 
-                Map<String, Object> data = new HashMap<String, Object>();
+                Map<String, Object> data = new HashMap<>();
                 data.put("id", outfitId);
                 data.put("name", "");
                 data.put("assets", new JSONArray());
 
-                Map<String, Integer> colourMap = new HashMap<String, Integer>();
+                Map<String, Integer> colourMap = new HashMap<>();
                 colourMap.put("headColorId", 0);
                 colourMap.put("torsoColorId", 0);
                 colourMap.put("rightArmColorId", 0);
@@ -274,7 +290,7 @@ public class getAppearance {
             ErrorHandler.report(iex);
         }
 
-        Stack<Integer> buffer = new Stack<Integer>();
+        Stack<Integer> buffer = new Stack<>();
 
         final int maxThreads = chosen;
 
@@ -357,7 +373,7 @@ public class getAppearance {
         final int maxThreads = chosen;
 
         ThreadPoolExecutor retrieve = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
-        List<Avatar> outfits = new ArrayList<Avatar>();
+        List<Avatar> outfits = new ArrayList<>();
 
         for (long outfitId : ids) {
             Future<Avatar> getDetails = retrieve.submit(() -> {
@@ -390,7 +406,7 @@ public class getAppearance {
 
         Future<Map<Integer, SimpleImmutableEntry<String, Color>>> lookup = exec.submit(() -> {
             String url = "https://avatar.roblox.com/v1/avatar-rules";
-            Map<Integer, SimpleImmutableEntry<String, Color>> coloursTable = new HashMap<Integer, SimpleImmutableEntry<String, Color>>();
+            Map<Integer, SimpleImmutableEntry<String, Color>> coloursTable = new HashMap<>();
 
             try {
                 Link data = new Link(url, false);
@@ -409,7 +425,7 @@ public class getAppearance {
 
                     String colourName = entry.getString("name");
 
-                    SimpleImmutableEntry<String, Color> pair = new SimpleImmutableEntry<String, Color>(colourName, parsed);
+                    SimpleImmutableEntry<String, Color> pair = new SimpleImmutableEntry<>(colourName, parsed);
                     coloursTable.put(colourId, pair);
                 });
             } catch (IOException e) {}
@@ -508,7 +524,7 @@ public class getAppearance {
             ErrorHandler.report(iex);
         }
 
-        Stack<Integer> buffer = new Stack<Integer>();
+        Stack<Integer> buffer = new Stack<>();
 
         final int maxThreads = chosen;
 

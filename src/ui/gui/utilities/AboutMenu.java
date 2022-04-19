@@ -32,7 +32,7 @@ import ui.gui.main.MainWindow;
 
 public class AboutMenu extends JFrame {
 
-    private static HashMap<String, JButton> comps = new HashMap<String, JButton>();
+    private static HashMap<String, JButton> comps = new HashMap<>();
     private static String currentlyLoadedLicense = null;
 
     private static ActionListener constructListener(String viewing, JPanel licensePanel, JTextArea licenseDisplay, JTextArea licenseDescription) {

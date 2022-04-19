@@ -102,7 +102,7 @@ public class getInfo {
             dataSource.put("dispname", dispname);
 
             if (dataSource.size() > numData) {
-                Map<String, Object> dataSrcCopy = new HashMap<String, Object>();
+                Map<String, Object> dataSrcCopy = new HashMap<>();
                 dataSource.forEach((key, val) -> dataSrcCopy.put(key.toLowerCase(), val));
     
                 Set<String> validKeys = Player.getValidKeys();
@@ -150,7 +150,7 @@ public class getInfo {
             return 1L;
         });
 
-        Map<String, Object> requested = new HashMap<String, Object>();
+        Map<String, Object> requested = new HashMap<>();
 
         long Id = 1L;
 
@@ -164,7 +164,7 @@ public class getInfo {
     }
 
     public static Map<String, Object> getInformation(long userId) throws SocketTimeoutException, UserNotFoundException {
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> data = new HashMap<>();
 
         final String base = "https://friends.roblox.com/v1/users/" + userId;
 
@@ -194,7 +194,7 @@ public class getInfo {
         }
 
         // Start of multi-threaded data retrieval
-        Stack<Integer> buffer = new Stack<Integer>();
+        Stack<Integer> buffer = new Stack<>();
 
         final int maxThreads = chosen;
 
@@ -206,7 +206,7 @@ public class getInfo {
             int ind = index;
 
             Future<Map<String, Object>> fetched = retrieve.submit(() -> {
-                Map<String, Object> toReturn = new HashMap<String, Object>();
+                Map<String, Object> toReturn = new HashMap<>();
 
                 try {
                     Link con = new Link(domain);

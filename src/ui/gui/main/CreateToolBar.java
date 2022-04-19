@@ -13,7 +13,7 @@ import ui.gui.utilities.SettingsMenu;
 import java.util.HashMap;
 
 public class CreateToolBar {
-    public HashMap<String, JButton> compDict = new HashMap<String, JButton>();
+    public HashMap<String, JButton> compDict = new HashMap<>();
     public JToolBar bar;
 
     public CreateToolBar(JFrame target) {

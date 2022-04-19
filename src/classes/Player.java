@@ -74,7 +74,7 @@ public class Player {
     */
 
     public static Set<String> getValidKeys() {
-        Set<String> keyNames = new HashSet<String>();
+        Set<String> keyNames = new HashSet<>();
 
         Field[] validFields = Player.class.getFields();
 

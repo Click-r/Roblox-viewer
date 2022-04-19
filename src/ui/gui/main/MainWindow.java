@@ -130,7 +130,7 @@ public class MainWindow {
         return ioDISP;
     }
 
-    private void updateVals(Player player, HashMap<String,JTextComponent> compMap, JLabel... avatar) {
+    private void updateVals(Player player, HashMap<String, JTextComponent> compMap, JLabel... avatar) {
         System.gc(); // free up unneeded, occupied memory
         last = player;
 
@@ -197,7 +197,7 @@ public class MainWindow {
                 final String missingImageContentCdn = "894dca84231352d56ec346174a3c0cf9"; // the content provider link for the usual missing content image
                 final String failedImageLoadCdn = "5228e2fd54377f39e87d3c25a58dd018"; // usually when the content delivery network could not provide the image
 
-                HashMap<String, String> errorLookup = new HashMap<String, String>();
+                HashMap<String, String> errorLookup = new HashMap<>();
                 errorLookup.put(deletedImageContentCdn, "Image data was moderated.");
                 errorLookup.put(missingImageContentCdn, "Image data not found.");
                 errorLookup.put(failedImageLoadCdn, "Image failed to load, please try again.");
@@ -409,7 +409,7 @@ public class MainWindow {
 
         toolbar = new ToolBarManager(frame);
 
-        HashMap<String, JTextComponent> comps = new HashMap<String, JTextComponent>();
+        HashMap<String, JTextComponent> comps = new HashMap<>();
 
         lastTxt = createIOField(info, "Name", lastTxt, infoSectionColor, true, 200, 25, "ROBLOX",comps, paletteCols);
         lastTxt = createIOField(info, "ID", lastTxt, infoSectionColor, true, 200, 25, "1", comps, paletteCols);

@@ -81,7 +81,7 @@ public class Avatar {
     */
 
     public static Map<String, SimpleImmutableEntry<String, Color>> getColours(JSONObject rawColours) {
-        Map<String, SimpleImmutableEntry<String, Color>> parts = new HashMap<String, SimpleImmutableEntry<String, Color>>();
+        Map<String, SimpleImmutableEntry<String, Color>> parts = new HashMap<>();
 
         for (String partName : rawColours.keySet()) {
             int colourId = rawColours.getInt(partName);
@@ -100,7 +100,7 @@ public class Avatar {
     */
 
     public static List<Asset> getAssets(JSONArray rawAssetList) {
-        List<Asset> assetsParsed = new ArrayList<Asset>();
+        List<Asset> assetsParsed = new ArrayList<>();
 
         rawAssetList.forEach((assetDescription) -> {
             JSONObject desc = (JSONObject) assetDescription;

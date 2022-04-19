@@ -87,7 +87,7 @@ public class Link {
 
         String Etag = connection.getHeaderField("ETag"); // error tag? not sure
 
-        Hashtable<String, String> imgProperties = new Hashtable<String, String>();
+        Hashtable<String, String> imgProperties = new Hashtable<>();
         imgProperties.put("direct_url", connection.getURL().toString());
 
         if (Etag != null) { // only exists if the image data is placeholder due to some reason
@@ -124,7 +124,7 @@ public class Link {
     }
 
     private Map<String, Object> getData(String link, String method) throws IOException {
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> data = new HashMap<>();
 
         boolean isPOST = method.equals("POST");
 

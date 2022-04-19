@@ -158,7 +158,7 @@ public class DisplaySettings extends Setting {
             MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
             byte[] hash = getHash();
 
-            List<String> strList = new ArrayList<String>();
+            List<String> strList = new ArrayList<>();
 
             strList.add(String.valueOf(((JComboBox<?>) components.get("current_theme")).getSelectedIndex()));
             strList.add(((JTextField) components.get("start_user")).getText());

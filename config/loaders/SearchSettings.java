@@ -91,7 +91,7 @@ public class SearchSettings extends Setting {
         timezoneSetting.setBackground(highlighted);
         timezoneSetting.setBorder(new TitledBorder(new EtchedBorder(), "Time Zone"));
 
-        Set<String> valid = new HashSet<String>(Arrays.asList(TimeZone.getAvailableIDs()));
+        Set<String> valid = new HashSet<>(Arrays.asList(TimeZone.getAvailableIDs()));
         valid.removeIf(zone -> zone.toUpperCase() != zone);
 
         String[] validZones = new String[valid.size()];
@@ -106,7 +106,7 @@ public class SearchSettings extends Setting {
 
         boolean local = Boolean.valueOf(get("local"));
 
-        JComboBox<String> pickZone = new JComboBox<String>(validZones);
+        JComboBox<String> pickZone = new JComboBox<>(validZones);
         pickZone.setBounds(8, 20, 250, 30);
         pickZone.setEditable(false);
         pickZone.setMaximumRowCount(7);
@@ -209,7 +209,7 @@ public class SearchSettings extends Setting {
             MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
             byte[] hash = getHash();
             
-            List<String> strList = new ArrayList<String>();
+            List<String> strList = new ArrayList<>();
 
             strList.add(String.valueOf(((JCheckBox) components.get("local")).isSelected()));
             strList.add(((JTextComponent) components.get("min_id")).getText());
