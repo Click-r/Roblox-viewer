@@ -24,6 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import classes.Images;
+import classes.Images.*;
+
 import classes.Avatar;
 import classes.Link;
 
@@ -34,12 +37,12 @@ import ui.gui.err.ErrorHandler;
 public class getAppearance {
 
     public static Image retrieveImage(long userId) {
-        HashMap<String, String> errorStates = new HashMap<>();
-        errorStates.put("Error", "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018");
-        errorStates.put("InReview", "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018");
-        errorStates.put("Pending", "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018");
-        errorStates.put("Blocked", "https://t3.rbxcdn.com/894dca84231352d56ec346174a3c0cf9");
-        errorStates.put("TemporarilyUnavailable", "https://t4.rbxcdn.com/b561617d22628c1d01dd10f02e80c384");
+        HashMap<String, Placeholder> errorStates = new HashMap<>();
+        errorStates.put("Error", Placeholder.FAILED_LOAD);
+        errorStates.put("InReview", Placeholder.FAILED_LOAD);
+        errorStates.put("Pending", Placeholder.FAILED_LOAD);
+        errorStates.put("Blocked", Placeholder.MISSING);
+        errorStates.put("TemporarilyUnavailable", Placeholder.MODERATED);
 
         ExecutorService exec = Executors.newSingleThreadExecutor();
 
@@ -50,34 +53,13 @@ public class getAppearance {
                 Link imageLink = new Link(url, false);
                 JSONObject returned = imageLink.getRawJson(false).getJSONArray("data").getJSONObject(0);
                 String state = returned.getString("state");
-                System.out.println(state);
 
                 if (state.equals("Completed"))
-                    return new Link(returned.getString("imageUrl"), false).getImage();
+                    return Images.fetchImage(returned.getString("imageUrl"));
                 else
-                    return new Link(errorStates.get(state), false).getImage();
+                    return Images.getPlaceholder(errorStates.get(state));
             } catch (IOException e) {
-                int retries = 0;
-
-                do {
-                    System.out.println(url);
-                    System.out.printf("Image fetch attempt %d...\n", retries);
-
-                    try {
-                        Link retryLink = new Link(url, false);
-                        JSONObject returned = retryLink.getRawJson(false).getJSONArray("data").getJSONObject(0);
-                        String state = returned.getString("state");
-
-                        if (state.equals("Completed"))
-                            return new Link(returned.getString("imageUrl"), false).getImage();
-                    } catch (IOException io) {}
-
-                    retries++;
-                } while (retries < 2);
-
-                Link imageLink = new Link("https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018", false);
-
-                return imageLink.getImage();
+                return Images.getPlaceholder(Placeholder.FAILED_LOAD);
             }
         });
 
@@ -213,9 +195,7 @@ public class getAppearance {
                 else
                     imgUrl = imageData.getString("imageUrl");
 
-                Link imageLink = new Link(imgUrl, false);
-
-                return imageLink.getImage();
+                return Images.fetchImage(imgUrl);
             } catch (IOException e) {}
 
             return null;
@@ -303,9 +283,7 @@ public class getAppearance {
 
             Future<Image> fetchImg = downloadImages.submit(() -> {
                 try {
-                    Link con = new Link(imgUrl, false);
-
-                    Image toReturn = con.getImage();
+                    Image toReturn = Images.fetchImage(imgUrl);
                     buffer.push(1);
 
                     return toReturn;
@@ -319,14 +297,14 @@ public class getAppearance {
 
                     newUrl = String.join("/", parts);
 
-                    Image toReturn = new Link(newUrl, false).getImage();
+                    Image toReturn = Images.fetchImage(newUrl);
                     buffer.push(1);
 
                     return toReturn.getScaledInstance(150, 150, Image.SCALE_AREA_AVERAGING);
                 } catch (IOException e) {
                     System.out.println("Failed to fetch outfit image " + imgUrl + "\nPutting in placeholder image.");
 
-                    Image replacement = new Link("https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018", false).getImage();
+                    Image replacement = Images.getPlaceholder(Placeholder.FAILED_LOAD);
                     buffer.push(1);
 
                     return replacement;
@@ -537,16 +515,14 @@ public class getAppearance {
 
             Future<Image> fetchImg = downloadImages.submit(() -> {
                 try {
-                    Link con = new Link(imgUrl, false);
-
-                    Image toReturn = con.getImage();
+                    Image toReturn = Images.fetchImage(imgUrl);
                     buffer.push(1);
 
                     return toReturn;
                 } catch (IOException e) {
                     System.out.println("Failed to fetch asset image " + imgUrl + "\nPutting in placeholder image.");
                     
-                    Image replacement = new Link("https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018", false).getImage();
+                    Image replacement = Images.getPlaceholder(Placeholder.FAILED_LOAD);
                     buffer.push(1);
 
                     return replacement;

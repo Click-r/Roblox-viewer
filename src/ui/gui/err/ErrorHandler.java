@@ -7,15 +7,12 @@ import java.awt.event.ActionEvent;
 import java.awt.Desktop;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Clipboard;
-import java.awt.Image;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 
 import java.io.IOException;
-import java.io.InputStream;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 
 import classes.Player;
@@ -137,11 +134,5 @@ public class ErrorHandler extends JFrame {
         }
 
         display(errMessage);
-    }
-
-    public static ImageIcon getWarningImg() throws IOException {
-        InputStream stream = ErrorHandler.class.getResourceAsStream("/ui/assets/warning.png");
-        Image warn = ImageIO.read(stream);
-        return new ImageIcon(warn);
     }
 }

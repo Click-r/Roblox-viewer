@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -24,13 +23,14 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
 import classes.Avatar;
-import classes.Link;
 import classes.Player;
 import classes.Avatar.Asset;
 import classes.api.getAppearance;
+import classes.Images;
+import classes.Images.*;
 
 import java.io.IOException;
-import java.io.InputStream;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -66,8 +66,7 @@ public class OutfitViewer extends JFrame {
 
     static {
         try {
-            InputStream reloadStream = OutfitViewer.class.getResourceAsStream("/ui/assets/reload.png");
-            reloadImg = ImageIO.read(reloadStream);
+            reloadImg = Images.getLocal(Local.REFRESH);
             reloadImg = reloadImg.getScaledInstance(20, 20, Image.SCALE_AREA_AVERAGING);
         } catch (IOException failedLoad) {
             ErrorHandler.report(failedLoad);
@@ -105,27 +104,11 @@ public class OutfitViewer extends JFrame {
         }
 
         try {
-            Image toReturn = new Link(url, false).getImage();
+            Image toReturn = Images.fetchImage(url);
             toReturn = toReturn.getScaledInstance(width, width, Image.SCALE_AREA_AVERAGING);
 
             return toReturn;
-        } catch (IOException e) {
-            int retries = 0;
-
-            do {
-                System.out.println(url);
-                System.out.printf("Image fetch attempt %d...\n", retries);
-
-                try {
-                    Image toReturn = new Link(url, false).getImage();
-                    toReturn = toReturn.getScaledInstance(width, width, Image.SCALE_AREA_AVERAGING);
-
-                    return toReturn;
-                } catch (IOException io) {}
-
-                retries++;
-            } while (retries < 2);
-        }
+        } catch (IOException e) {}
 
         return null;
     }

@@ -24,6 +24,9 @@ import java.util.Map;
 import classes.*;
 import classes.api.getAppearance;
 
+import classes.Images;
+import classes.Images.*;
+
 import loaders.*;
 import loaders.Themes.*;
 
@@ -158,7 +161,7 @@ public class MainWindow {
                 System.out.println("Avatar image not found");
 
                 try {
-                    Image replacement = new Link("https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018", false).getImage();
+                    Image replacement = Images.getPlaceholder(Placeholder.FAILED_LOAD);
 
                     av.setIcon(new ImageIcon(replacement));
                     player.image = replacement;
@@ -314,8 +317,7 @@ public class MainWindow {
         imageSection.setLayout(null);
 
         try {
-            final Image scaled = ErrorHandler.getWarningImg().getImage().getScaledInstance(35, 35, Image.SCALE_AREA_AVERAGING);
-            // TODO: make controller distribute the images
+            final Image scaled = Images.getLocal(Local.WARNING).getScaledInstance(35, 35, Image.SCALE_AREA_AVERAGING);
 
             JLabel warn = new JLabel(new ImageIcon(scaled));
             warn.setVisible(true);
