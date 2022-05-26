@@ -49,8 +49,8 @@ public class Images {
         } catch (IOException e) {
             System.out.println(url);
             
-            for (int retries = 0; retries < 2; retries++) {
-                System.out.printf("Image fetch attempt %d...\n", retries);
+            for (int retries = 0; retries < 3; retries++) {
+                System.out.printf("Image fetch attempt %d...\n", retries + 1);
 
                 try {
                     Link retry = new Link(url, false);

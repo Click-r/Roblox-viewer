@@ -110,6 +110,12 @@ public class Link {
     */
 
     public JSONObject getRawJson(boolean hasConnected) throws IOException {
+        String textResponse = getRawResponse(hasConnected);
+        
+        return new JSONObject(textResponse);
+    }
+
+    public String getRawResponse(boolean hasConnected) throws IOException {
         if (!hasConnected)
             this.connection.connect();
 
@@ -120,7 +126,7 @@ public class Link {
             textResponse = responseBody;
         }
 
-        return new JSONObject(textResponse);
+        return textResponse;
     }
 
     private Map<String, Object> getData(String link, String method) throws IOException {
@@ -171,5 +177,9 @@ public class Link {
             this.data.remove(key);
 
         return this.data;
+    }
+
+    public void setRequestProperty(String key, String val) {
+        this.connection.setRequestProperty(key, val);
     }
 }

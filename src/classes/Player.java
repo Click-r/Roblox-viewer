@@ -38,7 +38,7 @@ public class Player {
         try {
             long now = System.currentTimeMillis();
             load(getInfo.getInformation(num));
-            delay = (System.currentTimeMillis() - now) / getInfo.numData;
+            delay = (System.currentTimeMillis() - now) / getInfo.numEndpoints;
         } catch (NumberFormatException | SocketTimeoutException err) {}
     }
 
@@ -53,7 +53,7 @@ public class Player {
 
         long now = System.currentTimeMillis();
         load(getInfo.searchByUsername(username));
-        delay = (System.currentTimeMillis() - now) / getInfo.numData;
+        delay = (System.currentTimeMillis() - now) / getInfo.numEndpoints;
     }
     
     /**

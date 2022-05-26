@@ -26,6 +26,7 @@ import ui.gui.err.ErrorHandler;
 public class getInfo {
 
     final public static int numData = classes.Player.class.getFields().length;
+    final public static int numEndpoints = 5;
 
     @SuppressWarnings("static-access")
 
@@ -129,7 +130,6 @@ public class getInfo {
 
         Future<Long> id = exec.submit(() -> {
             try {
-                //String out = "{\"usernames\":[\"" + username +"\"], \"excludeBannedUsers\":false}";
                 String user = username.replace(' ', '+'); // format properly for http requests
 
                 Link info = new Link("https://api.roblox.com/users/get-by-username?username=" + user);
@@ -137,7 +137,6 @@ public class getInfo {
                 String Id = info.data.get("Id").toString();
 
                 return Long.valueOf(Id);
-
             } catch (IOException e) {
                 String stringified = e.toString();
 

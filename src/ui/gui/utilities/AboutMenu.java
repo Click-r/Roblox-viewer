@@ -13,6 +13,10 @@ import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 
+import org.json.JSONArray;
+
+import classes.Link;
+
 import java.awt.Desktop;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -65,6 +69,19 @@ public class AboutMenu extends JFrame {
                 });
             }
         };
+    }
+
+    private static String getLatestReleaseTag() {
+        String releaseTag = "N/A";
+
+        try {
+            Link site = new Link("https://api.github.com/repos/Click-r/Roblox-viewer/releases?per_page=1", false);
+            site.setRequestProperty("Accept", "application/vnd.github.v3+json");
+
+            releaseTag = new JSONArray(site.getRawResponse(false)).getJSONObject(0).getString("tag_name");
+        } catch (IOException ioex) {}
+
+        return releaseTag;
     }
 
     @SuppressWarnings("static-access")
@@ -159,7 +176,7 @@ public class AboutMenu extends JFrame {
         );
 
         JTextPane contributingAndMisc = new JTextPane();
-        contributingAndMisc.setBounds(5, introduction.getY() + introduction.getHeight() + 6, paraWidth, 180);
+        contributingAndMisc.setBounds(5, introduction.getY() + introduction.getHeight() + 4, paraWidth, 150);
         contributingAndMisc.setBackground(window.getBackground());
         contributingAndMisc.setEditable(false);
         contributingAndMisc.setText(
@@ -170,12 +187,36 @@ public class AboutMenu extends JFrame {
             "like to support the project, then I'd greatly appreciate it if you gave it a star :)\n\nIf you don't want to " +
             "create a GitHub account, and would still like to make your voice heard, then you are welcome to contact me on " +
             "ROBLOX through messages: my username is Cli_ck. To deter spam, I have my privacy settings set in a way that " +
-            "requires you to follow me, to message me.\n\nNow that we've established that: let's move on " +
-            "to the frequently asked questions."
+            "requires you to follow me, to message me."
         );
 
+        JTextPane latest = new JTextPane();
+        latest.setBounds(5, contributingAndMisc.getY() + contributingAndMisc.getHeight() + 11, 120, 22);
+        latest.setBackground(window.getBackground());
+        latest.setEditable(false);
+        latest.setText("Latest release: ");
+
+        String rTag = getLatestReleaseTag();
+
+        JButton releaseLink = new JButton(rTag);
+        releaseLink.setBounds(latest.getX() + latest.getWidth(), latest.getY(), 100, 24);
+        releaseLink.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        releaseLink.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    URI link = new URI("https://www.github.com/Click-r/Roblox-viewer/releases/tag/" + rTag);
+
+                    Desktop dsk = Desktop.getDesktop();
+        
+                    if (Desktop.isDesktopSupported() && dsk.isSupported(Desktop.Action.BROWSE))
+                        dsk.browse(link);
+                } catch (IOException | URISyntaxException exc) {}
+            }
+        });
+
         JTextPane faqTitle = new JTextPane();
-        faqTitle.setBounds(5, contributingAndMisc.getY() + contributingAndMisc.getHeight() + 4, paraWidth, 35);
+        faqTitle.setBounds(5, latest.getY() + latest.getHeight() + 2, paraWidth, 35);
         faqTitle.setBackground(window.getBackground());
         faqTitle.setEditable(false);
         faqTitle.setText("FAQ");
@@ -214,8 +255,27 @@ public class AboutMenu extends JFrame {
             "However, you can change that in the settings tab, advanced section."
         );
 
+        JTextPane pingQuestion = new JTextPane();
+        pingQuestion.setBounds(6, speedAnswer.getY() + speedAnswer.getHeight() + 4, paraWidth, 25);
+        pingQuestion.setBackground(window.getBackground());
+        pingQuestion.setEditable(false);
+        pingQuestion.setText("What is ping and how is it calculated?");
+        pingQuestion.setFont(new Font(pingQuestion.getFont().getFontName(), pingQuestion.getFont().getStyle(), 17));
+
+        JTextPane pingAnswer = new JTextPane();
+        pingAnswer.setBounds(6, pingQuestion.getY() + pingQuestion.getHeight() + 3, paraWidth, 100);
+        pingAnswer.setBackground(window.getBackground());
+        pingAnswer.setEditable(false);
+        pingAnswer.setText(
+            "Ping is the latency between your computer and a server. In this case, the server is the API endpoint " +
+            "handling the request on behalf of the program. Ping is measured in milliseconds, which is a thousandth " +
+            "of a second.\n\nRBLXInfoViewer needs to contact 5 API endpoints individually to gather all the data " +
+            "for a user. These requests, however, are made simultaneously, thanks to multithreading. Thus, it is " +
+            "appropriate to calculate the ping as the arithmetic mean of the latency (ping) between the five endpoints."
+        );
+
         JTextPane autoUpdateQ = new JTextPane();
-        autoUpdateQ.setBounds(6, speedAnswer.getY() + speedAnswer.getHeight() + 4, paraWidth, 25);
+        autoUpdateQ.setBounds(6, pingAnswer.getY() + pingAnswer.getHeight() + 4, paraWidth, 25);
         autoUpdateQ.setBackground(window.getBackground());
         autoUpdateQ.setEditable(false);
         autoUpdateQ.setText("Does this auto-update?");
@@ -327,6 +387,8 @@ public class AboutMenu extends JFrame {
 
         faqPanel.add(speedQuestion);
         faqPanel.add(speedAnswer);
+        faqPanel.add(pingQuestion);
+        faqPanel.add(pingAnswer);
         faqPanel.add(autoUpdateQ);
         faqPanel.add(autoUpdateA);
         faqPanel.add(sourceQuestion);
@@ -343,6 +405,8 @@ public class AboutMenu extends JFrame {
         aboutPanel.add(title);
         aboutPanel.add(introduction);
         aboutPanel.add(contributingAndMisc);
+        aboutPanel.add(latest);
+        aboutPanel.add(releaseLink);
         aboutPanel.add(faqTitle);
         aboutPanel.add(faqScroll);
 
