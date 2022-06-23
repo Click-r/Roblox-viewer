@@ -17,6 +17,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -211,7 +212,8 @@ public class getAppearance {
         return null;
     }
 
-    public static Image[] batchGetOutfitThumbnails(long[] outfitIds) {
+    @SafeVarargs
+    public static Image[] batchGetOutfitThumbnails(long[] outfitIds, Consumer<Integer>... progTracker) {
         ExecutorService exec = Executors.newSingleThreadExecutor();
 
         Future<String[]> imageLinks = exec.submit(() -> {
@@ -314,8 +316,10 @@ public class getAppearance {
             downloadImages.submit(() -> {
                 try {
                     Image result = fetchImg.get(5, TimeUnit.SECONDS);
-
                     imgs[ind] = result;
+
+                    if (progTracker.length != 0)
+                        progTracker[0].accept(1);
                 } catch (ExecutionException exc) {
                     ErrorHandler.report(exc);
                 } catch (InterruptedException | TimeoutException timeout) {}
@@ -326,7 +330,7 @@ public class getAppearance {
 
         while (buffer.size() < outfitIds.length) {
             try {
-                Thread.sleep(2L);
+                Thread.sleep(2);
             } catch (InterruptedException inter) {}
         }
 
@@ -338,7 +342,8 @@ public class getAppearance {
         return imgs;
     }
 
-    public static List<Avatar> multiGetOutfits(long[] ids) {
+    @SafeVarargs
+    public static List<Avatar> multiGetOutfits(long[] ids, Consumer<Integer>... progTracker) {
         int chosen = 5;
 
         try {
@@ -362,6 +367,9 @@ public class getAppearance {
                 try {
                     Avatar result = getDetails.get(5, TimeUnit.SECONDS);
                     outfits.add(result);
+                    
+                    if (progTracker.length != 0)
+                        progTracker[0].accept(1);
                 } catch (ExecutionException exc) {
                     ErrorHandler.report(exc);
                 } catch (InterruptedException | TimeoutException timeout) {}

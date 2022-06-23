@@ -13,10 +13,12 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
@@ -63,6 +65,36 @@ public class OutfitViewer extends JFrame {
     private static Map<String, JComponent> outfitComponents = new HashMap<>();
     private static Avatar viewing;
     private static Image reloadImg;
+    public static ProgressBarManager progBar;
+
+    public static class ProgressBarManager {
+        private volatile JProgressBar bar;
+        private volatile int progress = 0;
+        private int maxVal = 0;
+
+        public ProgressBarManager(JProgressBar progBar) {
+            bar = progBar;
+
+            progress = 0;
+            bar.setValue(progress);
+        }
+
+        public void incProgress(int incBy) {
+            progress += incBy;
+
+            bar.setValue(progress);
+        }
+
+        public void setMax(int max) {
+            maxVal = max;
+            bar.setMaximum(maxVal);
+        }
+
+        public void finish() {
+            bar.setVisible(false);
+            bar.setValue(0);
+        }
+    }
 
     static {
         try {
@@ -114,7 +146,7 @@ public class OutfitViewer extends JFrame {
     }
 
     private static JPanel generateOutfitCard(Avatar outfit, boolean setimage) {
-        if (setimage)
+        if (setimage || outfit.image == null)
             outfit.setImage();
         
         if (outfit.name.isEmpty()) { // if internal server error occured
@@ -335,15 +367,17 @@ public class OutfitViewer extends JFrame {
         appendTo.repaint();
     }
 
-    private static List<JPanel> generateOutfitCards() {
+    private static void setOutfitImages() {
         long[] ids = new long[outfits.size()];
         for (int i = 0; i < outfits.size(); i++)
             ids[i] = outfits.get(i).id;
-
-        Image[] outfitImages = getAppearance.batchGetOutfitThumbnails(ids);
+        
+        Image[] outfitImages = getAppearance.batchGetOutfitThumbnails(ids, progBar::incProgress);
         for (int j = 0; j < outfits.size(); j++)
             outfits.get(j).setImage(outfitImages[j]);
+    }
 
+    private static List<JPanel> generateOutfitCards() {
         for (Avatar outfit : outfits)
             outfitCards.add(generateOutfitCard(outfit, false));
         
@@ -764,46 +798,69 @@ public class OutfitViewer extends JFrame {
             ids[i] = id;
             i++;
         }
+        
+        progBar.setMax(outfitList.size() * 2); // gather the outfits + images for outfits = 2 * #outfits
 
-        outfits = getAppearance.multiGetOutfits(ids);
+        outfits = getAppearance.multiGetOutfits(ids, progBar::incProgress);
+        setOutfitImages();
     }
 
     public static void display(Player user) {
         current = user;
+        System.gc();
 
-        if (displayingInfo) {
-            viewing = user.getAppearance();
-
-            ((JLabel) outfitComponents.get("largeImg")).setIcon(new ImageIcon(getEnlargedImage(270)));
-
-            search(user.id);
-
-            updateOutfitCards();
-            updateAssetCards();
-            updateColours();
-            updateNameId();
-
-            ((JTextComponent) outfitComponents.get("title")).setText(String.format("%s's outfits (%d)", user.name, outfits.size()));
-
-            resetScrollbar("infoScrollbar");
-            resetScrollbar("outfitScrollbar");
-
-            window.requestFocus();
-            return;
-        }
-
-        SwingUtilities.invokeLater(new Runnable() {
+        SwingWorker<Void, Void> swingWorker = new SwingWorker<Void, Void>() { // executes these on a background thread, asynchronously
             @Override
-            public void run() {
+            protected Void doInBackground() throws Exception {
+                if (displayingInfo) {
+                    viewing = user.getAppearance();
+        
+                    search(user.id);
+                    
+                    SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            ((JLabel) outfitComponents.get("largeImg")).setIcon(new ImageIcon(getEnlargedImage(270)));
+
+                            updateOutfitCards();
+                            updateAssetCards();
+                            updateColours();
+                            updateNameId();
+                
+                            ((JTextComponent) outfitComponents.get("title")).setText(String.format("%s's outfits (%d)", user.name, outfits.size()));
+                
+                            resetScrollbar("infoScrollbar");
+                            resetScrollbar("outfitScrollbar");
+                
+                            window.requestFocus();
+                        }
+                    });
+
+                    return null;
+                }
+
                 displayingInfo = true;
 
                 viewing = user.getAppearance();
                 search(user.id);
 
-                build();
-
-                resetScrollbar("infoScrollbar");
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        build();
+                        resetScrollbar("infoScrollbar");
+                    }
+                });
+                
+                return null;
             }
-        });
+
+            @Override
+            public void done() {
+                progBar.finish();
+            }
+        };
+
+        swingWorker.execute();
     }
 }

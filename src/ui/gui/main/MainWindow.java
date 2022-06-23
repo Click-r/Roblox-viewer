@@ -23,7 +23,6 @@ import java.util.Map;
 
 import classes.*;
 import classes.api.getAppearance;
-
 import classes.Images;
 import classes.Images.*;
 
@@ -143,7 +142,7 @@ public class MainWindow {
             try {
                 Field toGet = Player.class.getDeclaredField(name);
                 toGet.setAccessible(true);
-                comp.setText(String.format(toGet.get(player).toString().replace("%", "%%"))); 
+                comp.setText(String.format(toGet.get(player).toString().replace("%", "%%")));
                 // format string to print escape characters properly and to escape printf formatting
             } catch (NoSuchFieldException | IllegalAccessException | NullPointerException e) {
                 ErrorHandler.report(e, player);
@@ -391,13 +390,38 @@ public class MainWindow {
             }
         });
 
+        JProgressBar outfitProgressBar = new JProgressBar();
+        outfitProgressBar.setBounds(reload.getX(), reload.getY() + reload.getHeight() + 6, reload.getWidth(), reload.getHeight());
+        outfitProgressBar.setStringPainted(true);
+        outfitProgressBar.setVisible(false);
+        outfitProgressBar.setEnabled(false);
+        // TODO: figure out something for dark theme
+
         JButton openOutfits = new JButton("View Outfits");
-        openOutfits.setBounds(reload.getX(), reload.getY() + reload.getHeight() + 6, reload.getWidth(), reload.getHeight());
+        openOutfits.setBounds(outfitProgressBar.getBounds());
         openOutfits.setCursor(handCursor);
         openOutfits.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                openOutfits.setEnabled(false);
+                openOutfits.setVisible(false);
+
+                outfitProgressBar.setEnabled(true);
+                outfitProgressBar.setVisible(true);
+
+                OutfitViewer.progBar = new OutfitViewer.ProgressBarManager(outfitProgressBar);
                 OutfitViewer.display(last);
+            }
+        });
+
+        outfitProgressBar.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentHidden(ComponentEvent e) {
+                outfitProgressBar.setVisible(false);
+                outfitProgressBar.setEnabled(false);
+
+                openOutfits.setVisible(true);
+                openOutfits.setEnabled(true); // re-enables openOutfits after the progress bar has reached completion
             }
         });
 
@@ -407,6 +431,7 @@ public class MainWindow {
         imageSection.add(subPanel);
         imageSection.add(av);
         imageSection.add(reload);
+        imageSection.add(outfitProgressBar);
         imageSection.add(openOutfits);
 
         toolbar = new ToolBarManager(frame);
