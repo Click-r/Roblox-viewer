@@ -38,13 +38,6 @@ import ui.gui.err.ErrorHandler;
 public class getAppearance {
 
     public static Image retrieveImage(long userId) {
-        HashMap<String, Placeholder> errorStates = new HashMap<>();
-        errorStates.put("Error", Placeholder.FAILED_LOAD);
-        errorStates.put("InReview", Placeholder.FAILED_LOAD);
-        errorStates.put("Pending", Placeholder.FAILED_LOAD);
-        errorStates.put("Blocked", Placeholder.MISSING);
-        errorStates.put("TemporarilyUnavailable", Placeholder.MODERATED);
-
         ExecutorService exec = Executors.newSingleThreadExecutor();
 
         Future<Image> img = exec.submit(() -> {
@@ -53,12 +46,13 @@ public class getAppearance {
             try {
                 Link imageLink = new Link(url, false);
                 JSONObject returned = imageLink.getRawJson(false).getJSONArray("data").getJSONObject(0);
-                String state = returned.getString("state");
 
-                if (state.equals("Completed"))
-                    return Images.fetchImage(returned.getString("imageUrl"));
-                else
-                    return Images.getPlaceholder(errorStates.get(state));
+                String target = Images.stateToLink(returned.getString("state"));
+
+                if (target == null)
+                    target = returned.getString("imageUrl");
+                
+                return Images.fetchImage(target);
             } catch (IOException e) {
                 return Images.getPlaceholder(Placeholder.FAILED_LOAD);
             }
@@ -188,12 +182,8 @@ public class getAppearance {
 
                 String imgUrl = "";
 
-                String state = imageData.getString("state");
-                if (state.equals("Blocked") || state.equals("Error") )
-                    imgUrl = "https://t4.rbxcdn.com/b561617d22628c1d01dd10f02e80c384";
-                else if (state.equals("InReview") || state.equals("Pending"))
-                    imgUrl = "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018";
-                else
+                String state = Images.stateToLink(imageData.getString("state"));
+                if (state == null)
                     imgUrl = imageData.getString("imageUrl");
 
                 return Images.fetchImage(imgUrl);
@@ -236,14 +226,9 @@ public class getAppearance {
                     JSONObject currentobj = outfits.getJSONObject(i);
 
                     final String state = currentobj.getString("state");
+                    String setTo = Images.stateToLink(state);
 
-                    String setTo = "";
-
-                    if (state.equals("Blocked") || state.equals("Error") )
-                        setTo = "https://t4.rbxcdn.com/b561617d22628c1d01dd10f02e80c384";
-                    else if (state.equals("InReview") || state.equals("Pending"))
-                        setTo = "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018";
-                    else
+                    if (setTo == null)
                         setTo = currentobj.getString("imageUrl");
                     
                     imageUrls[i] = setTo;
@@ -470,13 +455,9 @@ public class getAppearance {
 
                         final String state = currentobj.getString("state");
 
-                        String setTo = "";
+                        String setTo = Images.stateToLink(state);
 
-                        if (state.equals("Blocked") || state.equals("Error") )
-                            setTo = "https://t4.rbxcdn.com/b561617d22628c1d01dd10f02e80c384";
-                        else if (state.equals("InReview") || state.equals("Pending"))
-                            setTo = "https://t5.rbxcdn.com/5228e2fd54377f39e87d3c25a58dd018";
-                        else
+                        if (setTo == null)
                             setTo = currentobj.getString("imageUrl");
                         
                         imageUrls[i] = setTo;

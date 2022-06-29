@@ -41,6 +41,17 @@ public class Images {
         return "https://t" + (state % 8) + ".rbxcdn.com/" + hash;
     }
 
+    public static String stateToLink(String state) {
+        if (state.equals("Blocked") || state.equals("Error"))
+            return linkFromHash(hashMapping.get(Placeholder.MODERATED));
+        else if (state.equals("InReview") || state.equals("Pending"))
+            return linkFromHash(hashMapping.get(Placeholder.FAILED_LOAD));
+        else if (state.equals("TemporarilyUnavailable"))
+            return linkFromHash(hashMapping.get(Placeholder.MISSING));
+        
+        return null;
+    }
+
     public static Image fetchImage(String url) throws IOException {
         try {
             Link imgLink = new Link(url, false);
