@@ -141,7 +141,9 @@ public class getInfo {
                 String stringified = e.toString();
 
                 if (stringified.contains("400")) // http response code 400
-                    throw new UserNotFoundException("Failed to fetch user!");
+                    throw new UserNotFoundException("Failed to fetch user! Code: 400");
+                else if (stringified.contains("429")) // http response code 429
+                    throw new UserNotFoundException("Too many requests! Code: 429");
 
                 ErrorHandler.report(e);
             }
@@ -156,9 +158,16 @@ public class getInfo {
         try {
             Id = id.get(5, TimeUnit.SECONDS);
             requested = getInformation(Id);
-        } catch (InterruptedException | ExecutionException | TimeoutException | SocketTimeoutException e) {
+        } catch (InterruptedException | TimeoutException | SocketTimeoutException e) {
             throw new UserNotFoundException("Failed to fetch user!");
+        } catch (ExecutionException executionException) {
+            Throwable cause = executionException.getCause();
+
+            String toThrow = (cause != null) ? cause.getMessage() : "Failed to fetch user!";
+            
+            throw new UserNotFoundException(toThrow);
         }
+
         return requested;
     }
 

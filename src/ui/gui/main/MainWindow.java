@@ -182,7 +182,7 @@ public class MainWindow {
         return min + (long) (Math.random() * (max - min));
     }
 
-    private void presentError(JTextPane msgBox, ErrorType type, String input) {
+    private void presentError(JTextPane msgBox, ErrorType type, String input, Exception... exception) {
         showingError = true;
         msgBox.getParent().setVisible(true);
 
@@ -190,7 +190,16 @@ public class MainWindow {
         switch (type) {
             case PLAYER:
                 String datatype = lastModifed.toLowerCase().equals("name") ? "name " : "id "; // determines if it's id or name based on lastModified
-                final String message = "Failed fetching user with " + datatype + input;
+                String message = "Failed fetching user with " + datatype + input;
+
+                if (exception.length == 1) {
+                    Exception error = exception[0];
+                    
+                    String errMsg = error.getMessage();
+
+                    if (errMsg.endsWith("Code: 429"))
+                        message = "Too many requests! Slow down!";
+                }
                 
                 msg = message;
                 break;
@@ -534,7 +543,7 @@ public class MainWindow {
 
                         openOutfits.setEnabled(!last.banned);
                     } catch (UserNotFoundException | NumberFormatException err) {
-                        presentError(errorMsg, ErrorType.PLAYER, input);
+                        presentError(errorMsg, ErrorType.PLAYER, input, err);
                     } finally {
                         error.setVisible(showingError);
 
@@ -576,7 +585,7 @@ public class MainWindow {
                         
                         openOutfits.setEnabled(!last.banned);
                     } catch (UserNotFoundException err) {
-                        presentError(errorMsg, ErrorType.PLAYER, String.valueOf(newId));
+                        presentError(errorMsg, ErrorType.PLAYER, String.valueOf(newId), err);
                     } catch (IOException ioexc) {
                         ErrorHandler.report(ioexc);
                     } finally {
