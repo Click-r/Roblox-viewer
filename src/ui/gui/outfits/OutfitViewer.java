@@ -50,6 +50,7 @@ import java.awt.Dimension;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
+import java.awt.FontMetrics;
 
 import main.Controller;
 
@@ -112,6 +113,76 @@ public class OutfitViewer extends JFrame {
                 ((JScrollPane) outfitComponents.get(scrollbarName)).getVerticalScrollBar().setValue(0);
             }
         });
+    }
+
+    private static String getMaxFitString(String unaltered, FontMetrics fontmetrics, int width, int rows) { // accounts for word wrapping with line wrapping
+        String[] tokens = unaltered.split(" ");
+
+        String toReturn = "";
+
+        int row = 1;
+        int spaceUsed = 0;
+
+        final int spaceChr = fontmetrics.charWidth(' ');
+        final int ellipsis = fontmetrics.stringWidth("...");
+
+        int idx = 0;
+        for (String token : tokens) {
+            int size = fontmetrics.stringWidth(token) + spaceChr;
+
+            if (spaceUsed + size < width) {
+                String toAdd = (idx == 0) ? token : " " + token;
+
+                toReturn += toAdd;
+                spaceUsed += size;
+            } else {
+                if (size / width == 0) { // check the token isn't longer than 1 row
+                    if (row < rows) {
+                        toReturn += " " + token;
+
+                        row++;
+                        spaceUsed = size;
+                    } else {
+                        if (spaceUsed + ellipsis > width) {
+                            int prevTokenLen = (" " + tokens[idx - 1]).length();
+                            toReturn = toReturn.substring(0, toReturn.length() - prevTokenLen); // truncate to penultimate token
+                        }
+                        toReturn += "...";
+                        // much more trivial when truncating to last token instead of trimming current token to size and then truncating
+                        break;
+                    }
+                } else {
+                    int rowsNeeded = size / width;
+
+                    String toAdd = (idx == 0) ? token : " " + token;
+
+                    if (row + rowsNeeded <= rows) {
+                        int leftover = size - rowsNeeded * width;
+
+                        toReturn += toAdd;
+                        row += rowsNeeded;
+
+                        spaceUsed = leftover;
+                    } else {
+                        int rowsLeft = (idx == 0) ? rows : rows - row;
+
+                        int usableSpace = rowsLeft * (width - ellipsis);
+
+                        int substrIdx = 0;
+                        while (substrIdx <= toAdd.length() && fontmetrics.stringWidth(toAdd.substring(0, substrIdx)) < usableSpace - 2 * ellipsis)
+                            substrIdx++;
+                        // we give the ellipsis some leeway to make sure it still fits even if unicode characters are encountered
+
+                        toReturn += toAdd.substring(0, substrIdx) + "...";
+                        break;
+                    }
+                }
+            }
+
+            idx++;
+        }
+
+        return toReturn;
     }
 
     private static void updateNameId() {
@@ -282,11 +353,13 @@ public class OutfitViewer extends JFrame {
         assetName.setLineWrap(true);
         assetName.setWrapStyleWord(true);
         assetName.setEditable(false);
-        assetName.setText(name.toString());
         assetName.setBackground(new Color(225, 225, 225));
         assetName.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 1, new Color(0, 0, 0)));
-        if (aboveCharLimit)
+        String toDisplay = getMaxFitString(asset.name, assetName.getFontMetrics(assetName.getFont()), card.getWidth(), 2);
+        if (toDisplay.endsWith("..."))
             assetName.setToolTipText(asset.name);
+        
+        assetName.setText(toDisplay);
 
         JButton clickableImage = new JButton(new ImageIcon(asset.image.getScaledInstance(113, 113, Image.SCALE_AREA_AVERAGING)));
         clickableImage.setBounds(1, assetName.getY() + assetName.getHeight(), 113, 113);
@@ -418,9 +491,7 @@ public class OutfitViewer extends JFrame {
     }
 
     private static void updateColours() {
-        viewing.bodycolours.forEach((bodyPart, colourInfo) -> {
-            outfitComponents.get(bodyPart).setBackground(colourInfo.getValue());
-        });
+        viewing.bodycolours.forEach((bodyPart, colourInfo) -> outfitComponents.get(bodyPart).setBackground(colourInfo.getValue()));
     }
 
     private static void updateViewing(Avatar outfit) {
@@ -467,6 +538,7 @@ public class OutfitViewer extends JFrame {
             }
         });
 
+        //------------------------------------------------------Details section------------------------------------------------------//
         JPanel infoPanel = new JPanel();
         infoPanel.setBounds(0, 0, 270, y);
         infoPanel.setBackground(bgcolour);
@@ -510,6 +582,7 @@ public class OutfitViewer extends JFrame {
         infoScrollBar.setBorder(null);
         outfitComponents.put("infoScrollbar", infoScrollBar);
 
+        //--------------------------------------------------------Body colours--------------------------------------------------------//
         JTextPane colourSubTitle = new JTextPane();
         colourSubTitle.setEditable(false);
         colourSubTitle.setBackground(bgcolour);
@@ -690,6 +763,7 @@ public class OutfitViewer extends JFrame {
         colourDisplay.add(bodyPanel, 1);
         colourDisplay.add(colourInfoBox, 0);
 
+        //---------------------------------------------------------Name & ID---------------------------------------------------------//
         JPanel nameIdSection = new JPanel();
         nameIdSection.setLayout(null);
         nameIdSection.setBounds(colourDisplay.getX(), colourDisplay.getY() + colourDisplay.getHeight(), colourDisplay.getWidth(), 90);
@@ -700,7 +774,7 @@ public class OutfitViewer extends JFrame {
         outfitFullName.setWrapStyleWord(true);
         outfitFullName.setLineWrap(true);
         outfitFullName.setText("Outfit name: Currently Wearing");
-        outfitFullName.setBounds(2, 2, colourAssetContainer.getWidth() - 2, 45);
+        outfitFullName.setBounds(2, 2, colourAssetContainer.getWidth() - 19, 45);
         outfitComponents.put("outfitFullName", outfitFullName);
 
         JTextArea outfitID = new JTextArea();
@@ -713,6 +787,7 @@ public class OutfitViewer extends JFrame {
         nameIdSection.add(outfitFullName);
         nameIdSection.add(outfitID);
 
+        //----------------------------------------------------------Assets----------------------------------------------------------//
         JPanel assetSection = new JPanel();
         assetSection.setLayout(null);
         assetSection.setBounds(0, nameIdSection.getY() + nameIdSection.getHeight(), colourDisplay.getWidth(), 409);
@@ -746,6 +821,7 @@ public class OutfitViewer extends JFrame {
         updateColours();
         updateAssetCards();
 
+        //----------------------------------------------------Outfit cards section----------------------------------------------------//
         JPanel outfitPanel = new JPanel();
         outfitPanel.setBounds(270, 0, x - 285, y);
         outfitPanel.setBackground(bgcolour);

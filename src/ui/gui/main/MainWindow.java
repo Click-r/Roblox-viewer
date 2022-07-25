@@ -297,7 +297,6 @@ public class MainWindow {
         descScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 
         description.add(descScroll);
-        descriptionText.setVisible(true);
 
         JPanel error = new JPanel();
         error.setBounds(aX/2 - 336, aY-5, 260, 45);
@@ -314,6 +313,8 @@ public class MainWindow {
         errorMsg.setEditable(false);
         errorMsg.setHighlighter(null);
         errorMsg.getCaret().deinstall(errorMsg); // fixes weird background formatting bug
+
+        error.add(errorMsg);
 
         Color darkerBg = new Color(infoSectionColor.getRed() - 25,  infoSectionColor.getGreen() - 25, infoSectionColor.getBlue() - 25);
 
@@ -510,8 +511,6 @@ public class MainWindow {
             uException.printStackTrace();
         } // TODO: add error message and make data display that of ROBLOX
 
-        error.add(errorMsg);
-
         JButton search = new JButton();
         search.setText("Search");
         search.setBounds(aX/2, aY-5, 80, 45);
@@ -546,8 +545,11 @@ public class MainWindow {
                         presentError(errorMsg, ErrorType.PLAYER, input, err);
                     } finally {
                         error.setVisible(showingError);
-
                         search.setEnabled(true);
+
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override public void run() { descScroll.getVerticalScrollBar().setValue(0); } // scroll desc to the very top
+                        });
                     }
                 }
             }
@@ -590,8 +592,11 @@ public class MainWindow {
                         ErrorHandler.report(ioexc);
                     } finally {
                         error.setVisible(showingError); // presentError sets showingError (global private variable) to true if there is an error
-
                         randomize.setEnabled(true);
+
+                        SwingUtilities.invokeLater(new Runnable() {
+                            @Override public void run() { descScroll.getVerticalScrollBar().setValue(0); } // scroll desc to the very top, again
+                        });
                     }
                 }
             }

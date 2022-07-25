@@ -31,21 +31,16 @@ public class getInfo {
     @SuppressWarnings("static-access")
 
     private static String dateLocalTime(String time, String... prefered) {
-        String abbrev = Calendar
-          .getInstance()
-          .getTimeZone()
-          .getDisplayName(false, TimeZone.SHORT);
+        TimeZone timezone = Calendar.getInstance().getTimeZone();
 
-        ZoneId zId = Calendar
-          .getInstance()
-          .getTimeZone()
-          .toZoneId();
+        String abbrev = timezone.getDisplayName(false, TimeZone.SHORT);
+        ZoneId zId = timezone.toZoneId();
         
-        Calendar.getInstance().getTimeZone().setDefault(TimeZone.getTimeZone(zId)); // set default time zone to local
+        timezone.setDefault(TimeZone.getTimeZone(zId)); // set default time zone to local
         
         if (prefered.length == 1) {
-            String timezone = prefered[0].toUpperCase();
-            TimeZone chosen = Calendar.getInstance().getTimeZone().getTimeZone(timezone); // resorts to the default set earlier if it can't find it
+            String prefTimezone = prefered[0].toUpperCase();
+            TimeZone chosen = timezone.getTimeZone(prefTimezone); // resorts to the default set earlier if it can't find it
             String timezoneDisp = chosen.getDisplayName(false, TimeZone.SHORT);
 
             zId = chosen.toZoneId();
@@ -104,7 +99,7 @@ public class getInfo {
 
             if (dataSource.size() > numData) {
                 Map<String, Object> dataSrcCopy = new HashMap<>();
-                dataSource.forEach((key, val) -> dataSrcCopy.put(key.toLowerCase(), val));
+                dataSrcCopy.putAll(dataSource);
     
                 Set<String> validKeys = Player.getValidKeys();
                 Set<String> receivedKeys = dataSrcCopy.keySet();
@@ -112,9 +107,7 @@ public class getInfo {
                 receivedKeys.removeAll(validKeys);
     
                 receivedKeys.forEach((key) -> {
-                    String keyStr = key.toString();
-    
-                    System.out.println("Removed unexpected key: " + keyStr);
+                    System.out.println("Removed unexpected key: " + key);
                     dataSource.remove(key);
                 });
             }
@@ -185,7 +178,7 @@ public class getInfo {
         };
 
         final String[][] toFilter = {
-            new String[]{"externalAppDisplayName"},
+            new String[]{"externalAppDisplayName", "hasVerifiedBadge"},
             null,
             null,
             null,
@@ -210,7 +203,7 @@ public class getInfo {
 
         int index = 0;
 
-        for (final String domain : apiDomains){
+        for (final String domain : apiDomains) {
             int ind = index;
 
             Future<Map<String, Object>> fetched = retrieve.submit(() -> {
