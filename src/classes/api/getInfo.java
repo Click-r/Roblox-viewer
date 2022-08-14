@@ -8,6 +8,9 @@ import java.util.TimeZone;
 import java.util.Calendar;
 import java.util.concurrent.*;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.*;
 
 import java.net.*;
@@ -200,6 +203,7 @@ public class getInfo {
         final int maxThreads = chosen;
 
         ThreadPoolExecutor retrieve = (ThreadPoolExecutor) Executors.newFixedThreadPool(maxThreads);
+        Throwable error = new Exception(); // initialize to empty exception, set to usernotfoundexception if error occurs inside the fetch block
 
         int index = 0;
 
@@ -222,6 +226,9 @@ public class getInfo {
                     for (int i = 0; i < remainingBuffer; i++)
                         buffer.push(1);
                     
+                    if (e.getMessage().contains("429"))
+                        throw new UserNotFoundException("Too many requests! Code: 429");
+                    
                     return toReturn;
                 }
 
@@ -237,7 +244,12 @@ public class getInfo {
 
                     data.putAll(result);
                 } catch (ExecutionException exc) {
-                    ErrorHandler.report(exc);
+                    Throwable cause = exc.getCause();
+
+                    if (exc.getCause() instanceof UserNotFoundException)
+                        error.initCause(cause);
+                    else
+                        ErrorHandler.report(exc);
                 } catch (InterruptedException | TimeoutException timeout) {}
             });
 
@@ -254,6 +266,9 @@ public class getInfo {
 
         retrieve.shutdownNow();
         //End of multi-threaded data retrieval
+        if (error.getCause() instanceof UserNotFoundException)
+            throw new UserNotFoundException(error.getCause().getMessage());
+
         boolean valid = validateData(data);
 
         if (!valid)
@@ -262,4 +277,78 @@ public class getInfo {
         return data;
     }
 
+    public static long getNewestUser(long startingId, long increment) throws IOException {
+        long[] idList = new long[10];
+        int i = 0;
+
+        long max = startingId;
+        boolean foundInitialMax = false;
+
+        while (!foundInitialMax) {
+            int lim = i + 10;
+
+            for (; i < lim; i++)
+                idList[i % 10] = startingId + increment * (i + 1);
+            
+            HashMap<String, Object> query = new HashMap<>();
+            query.put("userIds", idList);
+            query.put("excludeBannedUsers", false);
+
+            String jsonQuery = new JSONObject(query).toString();
+
+            Link endpoint = new Link("https://users.roblox.com/v1/users", jsonQuery, false);
+            JSONArray returned = new JSONObject(endpoint.getRawResponse(false)).getJSONArray("data");
+
+            if (returned.length() > 0) {
+                JSONObject lastEntry = (JSONObject) returned.get(returned.length() - 1);
+                long lastId = lastEntry.getLong("id");
+
+                if (lastId - startingId == 10 * increment) {
+                    foundInitialMax = false;
+                } else {
+                    foundInitialMax = true;
+                    max = lastId;
+                }
+            } else {
+                foundInitialMax = true;
+            }
+        }
+
+        long difference = 2 * increment;
+        long upperBound = max + difference; // add 2 * increment in case the ids are very close to surpassing 1 * increment
+
+        while (difference != 1) {
+            int log2 = (int) (Math.log(difference) / Math.log(2)); // log2(num)
+
+            long[] halfwayPoints = new long[log2];
+
+            for (i = 1; i <= log2; i++) 
+                halfwayPoints[i - 1] = max + (long) ((double) difference / Math.pow(2, i));
+            
+            HashMap<String, Object> query = new HashMap<>();
+            query.put("userIds", halfwayPoints);
+            query.put("excludeBannedUsers", false);
+
+            String jsonQuery = new JSONObject(query).toString();
+
+            Link endpoint = new Link("https://users.roblox.com/v1/users", jsonQuery, false);
+            JSONArray returned = new JSONObject(endpoint.getRawResponse(false)).getJSONArray("data");
+
+            if (returned.length() > 0) {
+                JSONObject greatestEntry = (JSONObject) returned.get(0);
+                max = greatestEntry.getLong("id");
+
+                difference -= upperBound - max;
+                /* max = previous max + difference/2^n, upperbound = previous max + difference
+                ergo, upperbound - max = (previous max + difference) - (previous max + difference/2^n) = difference - difference/2^n
+                difference = difference - (difference - difference/2^n) = difference/2^n -> will tend to 1 */
+                
+                upperBound = max + difference; 
+                /* following from our previous logic, if max is previous max + difference/2^n, then we can safely assume
+                it does not surpass previous max + 2 * difference/2^n */
+            }
+        } // essentially just binary search
+
+        return max;
+    } // definitely not the cleanest code i've written
 }

@@ -334,14 +334,6 @@ public class OutfitViewer extends JFrame {
     }
 
     private static JPanel generateAssetCard(Asset asset) {
-        boolean aboveCharLimit = (asset.name.length() > 32);
-
-        StringBuilder name = new StringBuilder(asset.name);
-        name.setLength(32);
-
-        if (aboveCharLimit)
-            name.append("...");
-
         JPanel card = new JPanel();
         card.setSize(115, 150);
         card.setLayout(null);

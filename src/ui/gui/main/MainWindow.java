@@ -93,8 +93,6 @@ public class MainWindow {
         if (editable) {
             ioF.setBackground(palette.get("amplified"));
 
-            final int lookingfor = KeyEvent.VK_ENTER;
-
             ioF.getDocument().addDocumentListener(new DocumentListener() {
                 @Override
                 public void insertUpdate(DocumentEvent e) {
@@ -117,7 +115,7 @@ public class MainWindow {
             ioF.addKeyListener(new KeyAdapter() {
                 @Override
                 public void keyPressed(KeyEvent e) {
-                    if (e.getKeyCode() == lookingfor)
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER)
                         searchKey.doClick();
                         // assuming the search will always be there could be error prone, but i don't think it's of high priority at the moment
                 }
@@ -197,7 +195,7 @@ public class MainWindow {
                     
                     String errMsg = error.getMessage();
 
-                    if (errMsg.endsWith("Code: 429"))
+                    if (errMsg != null && errMsg.endsWith("Code: 429"))
                         message = "Too many requests! Slow down!";
                 }
                 
@@ -448,14 +446,14 @@ public class MainWindow {
 
         HashMap<String, JTextComponent> comps = new HashMap<>();
 
-        lastTxt = createIOField(info, "Name", lastTxt, infoSectionColor, true, 200, 25, "ROBLOX",comps, paletteCols);
+        lastTxt = createIOField(info, "Name", lastTxt, infoSectionColor, true, 200, 25, "ROBLOX", comps, paletteCols);
         lastTxt = createIOField(info, "ID", lastTxt, infoSectionColor, true, 200, 25, "1", comps, paletteCols);
         lastTxt = createIOField(info, "DispName", lastTxt, infoSectionColor, false, 200, 25, "", comps, paletteCols);
-        lastTxt = createIOField(info, "Friends", lastTxt, infoSectionColor, false, 200, 25, "",comps, paletteCols);
-        lastTxt = createIOField(info, "Followings", lastTxt, infoSectionColor, false, 200, 25, "",comps, paletteCols);
-        lastTxt = createIOField(info, "Followers", lastTxt, infoSectionColor, false, 200, 25, "",comps, paletteCols);
-        lastTxt = createIOField(info, "Created", lastTxt, infoSectionColor, false, 200, 25, "",comps, paletteCols);
-        lastTxt = createIOField(info, "Banned", lastTxt, infoSectionColor, false, 200, 25, "",comps, paletteCols);
+        lastTxt = createIOField(info, "Friends", lastTxt, infoSectionColor, false, 200, 25, "", comps, paletteCols);
+        lastTxt = createIOField(info, "Followings", lastTxt, infoSectionColor, false, 200, 25, "", comps, paletteCols);
+        lastTxt = createIOField(info, "Followers", lastTxt, infoSectionColor, false, 200, 25, "", comps, paletteCols);
+        lastTxt = createIOField(info, "Created", lastTxt, infoSectionColor, false, 200, 25, "", comps, paletteCols);
+        lastTxt = createIOField(info, "Banned", lastTxt, infoSectionColor, false, 200, 25, "", comps, paletteCols);
         lastTxt = createIOField(info, "LastOnline", lastTxt, infoSectionColor, false, 200, 25, "", comps, paletteCols);
         comps.put(descriptionText.getName(), descriptionText);
         comps.put(isOnline.getName(), isOnline);
@@ -509,7 +507,20 @@ public class MainWindow {
             updateVals(start, comps, av);
         } catch (UserNotFoundException uException) {
             uException.printStackTrace();
-        } // TODO: add error message and make data display that of ROBLOX
+
+            try {
+                Player newStart = new Player(1L);
+
+                updateVals(newStart, comps, av);
+            } catch (UserNotFoundException | NullPointerException notFound) {
+                notFound.printStackTrace();
+            } finally {
+                lastModifed = "name"; // set it to name for the present error method to use
+                presentError(errorMsg, ErrorType.PLAYER, startUser, uException);
+
+                lastModifed = null; // set it back to its default value
+            }
+        }
 
         JButton search = new JButton();
         search.setText("Search");
@@ -572,7 +583,7 @@ public class MainWindow {
 
                     long min, max, newId;
                     min = 1L;
-                    max = 2_300_000_000L;
+                    max = 3_000_000_000L;
                     newId = min;
 
                     try {

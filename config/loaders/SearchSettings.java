@@ -2,6 +2,7 @@ package loaders;
 
 import java.awt.Rectangle;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.event.*;
 
 import java.io.IOException;
@@ -16,6 +17,7 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.text.JTextComponent;
 
+import classes.api.getInfo;
 import loaders.base.*;
 
 import ui.gui.err.ErrorHandler;
@@ -49,13 +51,13 @@ public class SearchSettings extends Setting {
         panel.setLayout(null);
 
         JPanel idSetting = new JPanel();
-        idSetting.setBounds(4, 5, 350, 60);
+        idSetting.setBounds(4, 5, 350, 90);
         idSetting.setLayout(null);
         idSetting.setBorder(new TitledBorder(new EtchedBorder(), "ID"));
         idSetting.setBackground(highlighted);
 
         JTextPane minText = new JTextPane();
-        minText.setBounds(5, idSetting.getHeight()/2 - 10, 25, 20);
+        minText.setBounds(5, 20, 25, 20);
         minText.setText("Min:");
         minText.setBackground(highlighted);
         minText.setEditable(false);
@@ -80,10 +82,35 @@ public class SearchSettings extends Setting {
         maxInput.setText(get("max_id"));
         maxInput.setName("max_id");
 
+        JButton findNewest = new JButton("<html> <center> <p> Find newest<br> user </p> </center> </html>");
+        findNewest.setBounds(maxInput.getX(), maxInput.getY() + maxInput.getHeight() + 3, maxInput.getWidth(), 34);
+        findNewest.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        findNewest.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    long highest = Math.max(Long.valueOf(get("max_id_DEFAULT")), Long.valueOf(get("max_id"))); // get the greatest ID between the two
+
+                    long id = getInfo.getNewestUser(highest, 100_000_000L);
+                    maxInput.setText(Long.toString(id));
+
+                    // TODO: add setting to control whether to look the newly found id up or not
+                } catch (IOException ioexc) {
+                    String msg = ioexc.getMessage();
+
+                    if (msg.contains("429")) {
+                        System.out.println("Rate-limited!");
+                        // TODO: notify user inside settings menu
+                    }
+                }
+            }
+        });
+
         idSetting.add(minText);
         idSetting.add(minInput);
         idSetting.add(maxText);
         idSetting.add(maxInput);
+        idSetting.add(findNewest);
 
         JPanel timezoneSetting = new JPanel();
         timezoneSetting.setBounds(idSetting.getX(), idSetting.getY() + idSetting.getHeight() + 20, idSetting.getWidth(), idSetting.getHeight() + 130);

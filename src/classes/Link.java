@@ -62,12 +62,17 @@ public class Link {
         this.method = "POST";
         this.payload = payload.getBytes(StandardCharsets.UTF_8);
         URL site = new URL(link);
-
+        
         this.connection = (HttpURLConnection) site.openConnection();
         this.connection.setRequestMethod(this.method);
         this.connection.setDoOutput(true);
         this.connection.setFixedLengthStreamingMode(this.payload.length);
         this.connection.setRequestProperty("Content-type", "application/json; charset=UTF-8");
+        this.connection.setRequestProperty("Accept", "application/json");
+
+        OutputStream os = this.connection.getOutputStream();
+        os.write(this.payload);
+        os.close();
 
         initialize(link, shouldInit);
     }
@@ -139,6 +144,7 @@ public class Link {
 
             OutputStream os = this.connection.getOutputStream();
             os.write(this.payload);
+            os.close();
         }
 
         JSONObject json = getRawJson(isPOST);
@@ -147,10 +153,10 @@ public class Link {
         subData.forEach((key,val) -> {
             String name = key;
 
-            if (subData.size() == 1){
+            if (subData.size() == 1) {
                 String[] urlName = link.split("/");
                 name = urlName[urlName.length - 2];
-            }  
+            }
 
             data.put(name, val);
         });
