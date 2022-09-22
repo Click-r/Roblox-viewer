@@ -21,6 +21,7 @@ import classes.api.getInfo;
 import loaders.base.*;
 
 import ui.gui.err.ErrorHandler;
+import ui.gui.main.MainWindow;
 import ui.gui.utilities.SettingsMenu;
 
 public class SearchSettings extends Setting {
@@ -94,7 +95,7 @@ public class SearchSettings extends Setting {
                     long id = getInfo.getNewestUser(highest, 100_000_000L);
                     maxInput.setText(Long.toString(id));
 
-                    // TODO: add setting to control whether to look the newly found id up or not
+                    MainWindow.externalPlayerSearch(id);
                 } catch (IOException ioexc) {
                     String msg = ioexc.getMessage();
 

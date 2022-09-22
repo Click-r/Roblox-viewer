@@ -297,7 +297,7 @@ public class getInfo {
             String jsonQuery = new JSONObject(query).toString();
 
             Link endpoint = new Link("https://users.roblox.com/v1/users", jsonQuery, false);
-            JSONArray returned = new JSONObject(endpoint.getRawResponse(false)).getJSONArray("data");
+            JSONArray returned = endpoint.getRawJson(false).getJSONArray("data");
 
             if (returned.length() > 0) {
                 JSONObject lastEntry = (JSONObject) returned.get(returned.length() - 1);
@@ -332,7 +332,7 @@ public class getInfo {
             String jsonQuery = new JSONObject(query).toString();
 
             Link endpoint = new Link("https://users.roblox.com/v1/users", jsonQuery, false);
-            JSONArray returned = new JSONObject(endpoint.getRawResponse(false)).getJSONArray("data");
+            JSONArray returned = endpoint.getRawJson(false).getJSONArray("data");
 
             if (returned.length() > 0) {
                 JSONObject greatestEntry = (JSONObject) returned.get(0);

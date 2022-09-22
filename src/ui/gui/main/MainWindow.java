@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import classes.*;
 import classes.api.getAppearance;
@@ -35,10 +36,12 @@ import ui.gui.err.ErrorHandler;
 import ui.gui.outfits.OutfitViewer;
 
 public class MainWindow {
-    private String lastModifed;
-    private Player last;
-    private JButton searchKey;
-    private boolean showingError = false;
+    private static String lastModifed;
+    private static Player last;
+    private static JButton searchKey;
+    private static HashMap<String, JTextComponent> components = new HashMap<>();
+    private static boolean showingError = false;
+    private static JLabel avatarDisplay;
 
     public static ToolBarManager toolbar;
 
@@ -130,37 +133,37 @@ public class MainWindow {
         return ioDISP;
     }
 
-    private void updateVals(Player player, HashMap<String, JTextComponent> compMap, JLabel... avatar) {
+    private static void updateVals(Player player, HashMap<String, JTextComponent> compMap) {
         System.gc(); // free up unneeded, occupied memory
         last = player;
 
         compMap.forEach((name, comp) -> {
-            name = name.toLowerCase();
+            if (comp.getName() != null) { // exclude error message box, which has no name
+                name = name.toLowerCase();
 
-            try {
-                Field toGet = Player.class.getDeclaredField(name);
-                toGet.setAccessible(true);
-                comp.setText(String.format(toGet.get(player).toString().replace("%", "%%")));
-                // format string to print escape characters properly and to escape printf formatting
-            } catch (NoSuchFieldException | IllegalAccessException | NullPointerException e) {
-                ErrorHandler.report(e, player);
+                try {
+                    Field toGet = Player.class.getDeclaredField(name);
+                    toGet.setAccessible(true);
+                    comp.setText(String.format(toGet.get(player).toString().replace("%", "%%")));
+                    // format string to print escape characters properly and to escape printf formatting
+                } catch (NoSuchFieldException | IllegalAccessException | NullPointerException e) {
+                    ErrorHandler.report(e, player);
+                }
             }
         });
 
-        if (avatar.length != 0) {
-            JLabel av = avatar[0];
-
+        if (avatarDisplay != null) {
             try {
                 ImageIcon img = new ImageIcon(player.image);
                 
-                av.setIcon(img);
+                avatarDisplay.setIcon(img);
             } catch (NullPointerException noImageFound) {
                 System.out.println("Avatar image not found");
 
                 try {
                     Image replacement = Images.getPlaceholder(Placeholder.FAILED_LOAD);
 
-                    av.setIcon(new ImageIcon(replacement));
+                    avatarDisplay.setIcon(new ImageIcon(replacement));
                     player.image = replacement;
                 } catch (IOException failed) {
                     failed.printStackTrace();
@@ -180,7 +183,9 @@ public class MainWindow {
         return min + (long) (Math.random() * (max - min));
     }
 
-    private void presentError(JTextPane msgBox, ErrorType type, String input, Exception... exception) {
+    private static void presentError(ErrorType type, String input, Exception... exception) {
+        JTextPane msgBox = (JTextPane) components.get("errMsg");
+
         showingError = true;
         msgBox.getParent().setVisible(true);
 
@@ -222,6 +227,32 @@ public class MainWindow {
             msgBox.setLocation(40, 3);
         else
             msgBox.setLocation(40, 11);
+    }
+
+    public static void externalPlayerSearch(Number id) {
+        lastModifed = "id";
+
+        SwingWorker<Void, Void> searcher = new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                Player searchingFor = new Player(id);
+                updateVals(searchingFor, components);
+
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    get();
+                } catch (InterruptedException | ExecutionException ex) {
+                    ex.printStackTrace();
+                    presentError(ErrorType.PLAYER, id.toString());
+                }
+            }
+        };
+
+        searcher.execute();
     }
 
     private JFrame build(Palette palette) {
@@ -312,6 +343,8 @@ public class MainWindow {
         errorMsg.setHighlighter(null);
         errorMsg.getCaret().deinstall(errorMsg); // fixes weird background formatting bug
 
+        components.put("errMsg", errorMsg);
+
         error.add(errorMsg);
 
         Color darkerBg = new Color(infoSectionColor.getRed() - 25,  infoSectionColor.getGreen() - 25, infoSectionColor.getBlue() - 25);
@@ -353,10 +386,12 @@ public class MainWindow {
                     Object errCode = newImg.getProperty("error", av);
 
                     if (errCode != Image.UndefinedProperty) // undefined property is returned when the property does not exist
-                        presentError(errorMsg, ErrorType.IMAGE, errCode.toString());
+                        presentError(ErrorType.IMAGE, errCode.toString());
                 }
             }
         });
+
+        avatarDisplay = av;
 
         JPanel subPanel = new JPanel();
         subPanel.setBounds(40, 19 + av.getHeight(), 150, 30);
@@ -486,6 +521,8 @@ public class MainWindow {
             comps.put(pingVal.getName(), pingVal);
         }
 
+        components.putAll(comps);
+
         long chosen = randomLong(1L, 48L);
 
         String startUser = "ROBLOX";
@@ -504,19 +541,19 @@ public class MainWindow {
         try {
             Player start = new Player(startUser);
 
-            updateVals(start, comps, av);
+            updateVals(start, comps);
         } catch (UserNotFoundException uException) {
             uException.printStackTrace();
 
             try {
                 Player newStart = new Player(1L);
 
-                updateVals(newStart, comps, av);
+                updateVals(newStart, comps);
             } catch (UserNotFoundException | NullPointerException notFound) {
                 notFound.printStackTrace();
             } finally {
                 lastModifed = "name"; // set it to name for the present error method to use
-                presentError(errorMsg, ErrorType.PLAYER, startUser, uException);
+                presentError(ErrorType.PLAYER, startUser, uException);
 
                 lastModifed = null; // set it back to its default value
             }
@@ -540,20 +577,20 @@ public class MainWindow {
 
                             if (!last.name.equals(name)) {
                                 showingError = false; // order matters here and in the corresponding else block: when the player image updates, the image could error
-                                updateVals(new Player(input), comps, av);
+                                updateVals(new Player(input), comps);
                             }
                         } else {
                             long id = Long.valueOf(comps.get("id").getText()); // NumberFormatException can be thrown here
 
                             if (last.id != id) {
                                 showingError = false;
-                                updateVals(new Player(Long.valueOf(input)), comps, av);
+                                updateVals(new Player(Long.valueOf(input)), comps);
                             }
                         }
 
                         openOutfits.setEnabled(!last.banned);
                     } catch (UserNotFoundException | NumberFormatException err) {
-                        presentError(errorMsg, ErrorType.PLAYER, input, err);
+                        presentError(ErrorType.PLAYER, input, err);
                     } finally {
                         error.setVisible(showingError);
                         search.setEnabled(true);
@@ -594,11 +631,11 @@ public class MainWindow {
 
                         newId = randomLong(min, max);
 
-                        updateVals(new Player(newId), comps, av);
+                        updateVals(new Player(newId), comps);
                         
                         openOutfits.setEnabled(!last.banned);
                     } catch (UserNotFoundException err) {
-                        presentError(errorMsg, ErrorType.PLAYER, String.valueOf(newId), err);
+                        presentError(ErrorType.PLAYER, String.valueOf(newId), err);
                     } catch (IOException ioexc) {
                         ErrorHandler.report(ioexc);
                     } finally {
