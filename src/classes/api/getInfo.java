@@ -7,6 +7,7 @@ import java.util.Stack;
 import java.util.TimeZone;
 import java.util.Calendar;
 import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -277,7 +278,8 @@ public class getInfo {
         return data;
     }
 
-    public static long getNewestUser(long startingId, long increment) throws IOException {
+    @SafeVarargs
+    public static long getNewestUser(long startingId, long increment, Consumer<Long>... progress) throws IOException {
         long[] idList = new long[10];
         int i = 0;
 
@@ -287,8 +289,8 @@ public class getInfo {
         while (!foundInitialMax) {
             int lim = i + 10;
 
-            for (; i < lim; i++)
-                idList[i % 10] = startingId + increment * (i + 1);
+            for (; i < lim; i++) // cursed bounds
+                idList[i % 10] = max + increment * (i + 1);
             
             HashMap<String, Object> query = new HashMap<>();
             query.put("userIds", idList);
@@ -307,8 +309,9 @@ public class getInfo {
                     foundInitialMax = false;
                 } else {
                     foundInitialMax = true;
-                    max = lastId;
                 }
+
+                max = lastId;
             } else {
                 foundInitialMax = true;
             }
@@ -316,6 +319,10 @@ public class getInfo {
 
         long difference = 2 * increment;
         long upperBound = max + difference; // add 2 * increment in case the ids are very close to surpassing 1 * increment
+
+        boolean trackProgress = false;
+        if (progress.length == 1 && progress[0] != null)
+            trackProgress = true;
 
         while (difference != 1) {
             int log2 = (int) (Math.log(difference) / Math.log(2)); // log2(num)
@@ -346,6 +353,9 @@ public class getInfo {
                 upperBound = max + difference; 
                 /* following from our previous logic, if max is previous max + difference/2^n, then we can safely assume
                 it does not surpass previous max + 2 * difference/2^n */
+
+                if (trackProgress)
+                    progress[0].accept(max);
             }
         } // essentially just binary search
 

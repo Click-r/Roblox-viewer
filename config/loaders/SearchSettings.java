@@ -11,6 +11,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.*;
 import javax.swing.border.*;
@@ -89,21 +90,66 @@ public class SearchSettings extends Setting {
         findNewest.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    long highest = Math.max(Long.valueOf(get("max_id_DEFAULT")), Long.valueOf(get("max_id"))); // get the greatest ID between the two
+                long highest = Math.max(Long.valueOf(get("max_id_DEFAULT")), Long.valueOf(get("max_id"))); // get the greatest ID between the two
 
-                    long id = getInfo.getNewestUser(highest, 100_000_000L);
-                    maxInput.setText(Long.toString(id));
+                SwingWorker<Void, Void> rateLimitHandler = new SwingWorker<Void,Void>() {
+                    @Override
+                    protected Void doInBackground() throws Exception {
+                        findNewest.setEnabled(false);
+                        findNewest.setText("<html> <center> <p> Rate-limited<br>Slow down! </p> </center> </html>");
 
-                    MainWindow.externalPlayerSearch(id);
-                } catch (IOException ioexc) {
-                    String msg = ioexc.getMessage();
-
-                    if (msg.contains("429")) {
-                        System.out.println("Rate-limited!");
-                        // TODO: notify user inside settings menu
+                        Thread.sleep(5000L);
+                        return null;
                     }
-                }
+
+                    @Override
+                    protected void done() {
+                        try {
+                            get();
+                        } catch (ExecutionException exec) {
+                            ErrorHandler.report(exec);
+                        } catch (InterruptedException interrupted) {
+                            // do nothing
+                        } finally {
+                            findNewest.setText("<html> <center> <p> Find newest<br> user </p> </center> </html>");
+                            findNewest.setEnabled(true);
+                        }
+                    }
+                };
+
+                SwingWorker<Long, Long> userFinder = new SwingWorker<Long,Long>() {
+                    @Override
+                    protected Long doInBackground() throws IOException {
+                        return getInfo.getNewestUser(highest, 100_000_000L, this::publish);
+                    }
+                        
+                    @Override
+                    protected void process(List<Long> chunks) {
+                        long largest = 0L;
+
+                        for (long val : chunks)
+                            if (val > largest)
+                                largest = val;
+                            
+                        maxInput.setText(Long.toString(largest));
+                    };
+
+                    @Override
+                    protected void done() {
+                        try {
+                            long id = get();
+
+                            MainWindow.externalPlayerSearch(id);
+                        } catch (ExecutionException exc) {
+                            if (exc.getCause() instanceof IOException && exc.getCause().getMessage().contains("429"))
+                                rateLimitHandler.execute();
+                            else
+                                ErrorHandler.report(exc);
+                        } catch (InterruptedException interrupted) {}
+                    }
+                };
+
+                userFinder.execute();
             }
         });
 
@@ -204,7 +250,7 @@ public class SearchSettings extends Setting {
         String max_id = ((JTextComponent) components.get("max_id")).getText();
 
         if (isLongValid(min_id) && isLongValid(max_id)) {
-            Long textA,textB;
+            Long textA, textB;
             textA = Long.valueOf(min_id);
             textB = Long.valueOf(max_id);
 
