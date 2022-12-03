@@ -93,7 +93,7 @@ public class SettingsMenu extends JFrame {
         JPanel primary = new JPanel();
         primary.setBounds(0, 0, x, y - 140);
         primary.setLayout(null);
-        primary.setBorder(BorderFactory.createLineBorder(new Color(0, 0, 0), 1));
+        primary.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(0, 0, 0)));
 
         JTabbedPane tabbed = new JTabbedPane(JTabbedPane.LEFT);
         tabbed.setBounds(0, 0, primary.getWidth(), primary.getHeight());

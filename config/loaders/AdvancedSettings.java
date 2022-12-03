@@ -7,12 +7,9 @@ import java.awt.event.ActionListener;
 
 import java.io.IOException;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.util.AbstractMap.SimpleEntry;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import javax.swing.JComponent;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -21,11 +18,11 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.JTextComponent;
 
 import loaders.base.*;
 
 import ui.gui.err.ErrorHandler;
-import ui.gui.utilities.SettingsMenu;
 
 public class AdvancedSettings extends Setting {
 
@@ -61,6 +58,7 @@ public class AdvancedSettings extends Setting {
         timeoutInput.setToolTipText("<html> <p> Must be in the range 0 - 32767.<br>Time unit is milliseconds (i.e 5000 milliseconds = 5 seconds). </p> </html>"); // thanks, java
         timeoutInput.setText(get("connectionTimeout"));
         timeoutInput.setName("connectionTimeout");
+        timeoutInput.getDocument().putProperty("parentComponent", timeoutInput);
 
         JTextPane threadText = new JTextPane();
         threadText.setBounds(timeoutText.getX(), timeoutText.getY() + timeoutText.getHeight() + 7, 50, 16);
@@ -76,6 +74,7 @@ public class AdvancedSettings extends Setting {
         threadInput.setToolTipText("Must be in the range 0 - 127."); // i don't see any reason as to why anyone would need more than 127 threads for this
         threadInput.setText(get("threadsToUse"));
         threadInput.setName("threadsToUse");
+        threadInput.getDocument().putProperty("parentComponent", threadInput);
 
         boolean showPing = Boolean.valueOf(get("displayPing"));
 
@@ -98,24 +97,51 @@ public class AdvancedSettings extends Setting {
         ioPanel.add(pingInput);
         ioPanel.add(pingRestartReminder);
 
+        JPanel debugPanel = new JPanel();
+        debugPanel.setBounds(4, ioPanel.getY() + ioPanel.getHeight() + 4, 250, 60);
+        debugPanel.setLayout(null);
+        debugPanel.setBorder(new TitledBorder(new EtchedBorder(), "Debug"));
+        debugPanel.setBackground(highlighted);
+
+        boolean isConsoleEnabled = Boolean.valueOf(get("debugConsole"));
+
+        JCheckBox consoleEnable = new JCheckBox("Enable Debug Console", isConsoleEnabled);
+        consoleEnable.setBounds(4, 14, 160, 25);
+        consoleEnable.setBackground(highlighted);
+        consoleEnable.setName("debugConsole");
+
+        debugPanel.add(consoleEnable);
+
         DocumentListener docListen = new DocumentListener(){
             @Override
             public void insertUpdate(DocumentEvent e) {
+                JTextComponent comp = ((JTextComponent) e.getDocument().getProperty("parentComponent"));
+
+                String text = comp.getText();
+                components.get(comp.getName()).setValue(text);
+
                 isModified();
             }
             @Override
             public void removeUpdate(DocumentEvent e) {
-                isModified();
+                insertUpdate(e);
             }
             @Override
             public void changedUpdate(DocumentEvent e) {
-                isModified();
+                insertUpdate(e);
             }
         };
 
         ActionListener actListener = new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
+                JComponent comp = (JComponent) e.getSource();
+
+                if (comp instanceof JCheckBox) {
+                    String val = ((JCheckBox) comp).isSelected() ? "true" : "false";
+                    components.get(comp.getName()).setValue(val);
+                }
+
                 isModified();
             }
         };
@@ -124,12 +150,15 @@ public class AdvancedSettings extends Setting {
         threadInput.getDocument().addDocumentListener(docListen);
 
         pingInput.addActionListener(actListener);
+        consoleEnable.addActionListener(actListener);
 
         panel.add(ioPanel);
+        panel.add(debugPanel);
 
-        components.put("connectionTimeout", timeoutInput);
-        components.put("threadsToUse", threadInput);
-        components.put("displayPing", pingInput);
+        components.put("connectionTimeout", new SimpleEntry<JComponent, String>(timeoutInput, get("connectionTimeout")));
+        components.put("threadsToUse", new SimpleEntry<JComponent, String>(threadInput, get("threadsToUse")));
+        components.put("displayPing", new SimpleEntry<JComponent, String>(pingInput, get("displayPing")));
+        components.put("debugConsole", new SimpleEntry<JComponent, String>(consoleEnable, get("debugConsole")));
         // TODO: also add option to see the log (changing the vm launch flags)
 
         return panel;
@@ -139,9 +168,10 @@ public class AdvancedSettings extends Setting {
     public boolean applyChanges() {
         boolean valid = true;
 
-        String timeoutValue = ((JTextField) components.get("connectionTimeout")).getText();
-        String threadValue = ((JTextField) components.get("threadsToUse")).getText();
-        String pingValue = ((JCheckBox) components.get("displayPing")).isSelected() ? "true" : "false";
+        String timeoutValue = components.get("connectionTimeout").getValue();
+        String threadValue = components.get("threadsToUse").getValue();
+        String pingValue = components.get("displayPing").getValue();
+        String consoleValue = components.get("debugConsole").getValue();
 
         if (timeoutValue.matches("[0-9]+") && threadValue.matches("[0-9]+")) {
             try {
@@ -158,6 +188,7 @@ public class AdvancedSettings extends Setting {
         } else valid = false;
 
         set("displayPing", pingValue);
+        set("debugConsole", consoleValue);
 
         try {
             saveToFile();
@@ -169,36 +200,4 @@ public class AdvancedSettings extends Setting {
 
         return false;
     }
-
-    @Override
-    public void isModified() {
-        try {
-            MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = getHash();
-
-            String timeoutValue = ((JTextField) components.get("connectionTimeout")).getText();
-            String threadValue = ((JTextField) components.get("threadsToUse")).getText();
-            String pingValue = ((JCheckBox) components.get("displayPing")).isSelected() ? "true" : "false";
-
-            List<String> valList = new ArrayList<>();
-
-            valList.add(timeoutValue);
-            valList.add(threadValue);
-            valList.add(pingValue);
-
-            valList.sort((str1, str2) -> str1.length() - str2.length());
-
-            valList.forEach(string -> mDigest.update(string.getBytes()));
-
-            byte[] output = mDigest.digest();
-
-            boolean equal = MessageDigest.isEqual(hash, output);
-
-            SettingsMenu.state.setSaveState(getId().toString(), equal);
-            SettingsMenu.state.notifyUser();
-        } catch (NoSuchAlgorithmException | IOException excs) {
-            ErrorHandler.report(excs);
-        }
-    }
-    
 }

@@ -443,6 +443,8 @@ public class getAppearance {
                   .replace(" ", "");
         
                 String url = "https://thumbnails.roblox.com/v1/assets?assetIds=" + stringList + "&size=110x110&format=Png&isCircular=false";
+                //TODO: BUG: if one or more assets' thumbnails have state TemporarilyUnavailable, all of them will be unavailable
+                //^ that is a bug on roblox's end, the struggle isn't worth it to manually fix it
 
                 try {
                     Link data = new Link(url, false);

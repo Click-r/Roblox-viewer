@@ -7,10 +7,8 @@ import java.awt.event.*;
 
 import java.io.IOException;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
 import java.util.*;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.*;
@@ -23,7 +21,6 @@ import loaders.base.*;
 
 import ui.gui.err.ErrorHandler;
 import ui.gui.main.MainWindow;
-import ui.gui.utilities.SettingsMenu;
 
 public class SearchSettings extends Setting {
 
@@ -70,6 +67,7 @@ public class SearchSettings extends Setting {
         minInput.setEditable(true);
         minInput.setText(get("min_id"));
         minInput.setName("min_id");
+        minInput.getDocument().putProperty("parentComponent", minInput);
 
         JTextPane maxText = new JTextPane();
         maxText.setBounds(minInput.getX() + minInput.getWidth() + 20, minText.getY(), 26, 20);
@@ -83,6 +81,7 @@ public class SearchSettings extends Setting {
         maxInput.setEditable(true);
         maxInput.setText(get("max_id"));
         maxInput.setName("max_id");
+        maxInput.getDocument().putProperty("parentComponent", maxInput);
 
         JButton findNewest = new JButton("<html> <center> <p> Find newest<br> user </p> </center> </html>");
         findNewest.setBounds(maxInput.getX(), maxInput.getY() + maxInput.getHeight() + 3, maxInput.getWidth(), 34);
@@ -205,6 +204,16 @@ public class SearchSettings extends Setting {
         ActionListener actListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                JComponent comp = (JComponent) e.getSource();
+
+                String val = null;
+
+                if (comp instanceof JCheckBox)
+                    val = ((JCheckBox) comp).isSelected() ? "true" : "false";
+                else if (comp instanceof JComboBox)
+                    val = ((JComboBox<?>) comp).getSelectedItem().toString();
+
+                components.get(comp.getName()).setValue(val);
                 isModified();
             }
         };
@@ -212,17 +221,22 @@ public class SearchSettings extends Setting {
         DocumentListener docListener = new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
+                JTextComponent comp = ((JTextComponent) e.getDocument().getProperty("parentComponent"));
+
+                String text = comp.getText();
+                components.get(comp.getName()).setValue(text);
+
                 isModified();
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                isModified();
+                insertUpdate(e);
             }
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                isModified();
+                insertUpdate(e);
             }
         };
 
@@ -234,10 +248,10 @@ public class SearchSettings extends Setting {
         panel.add(idSetting);
         panel.add(timezoneSetting);
 
-        components.put(minInput.getName(), minInput);
-        components.put(maxInput.getName(), maxInput);
-        components.put(pickZone.getName(), pickZone);
-        components.put(useLocal.getName(), useLocal);
+        components.put(minInput.getName(), new SimpleEntry<JComponent, String>(minInput, get("min_id")));
+        components.put(maxInput.getName(), new SimpleEntry<JComponent, String>(maxInput, get("max_id")));
+        components.put(pickZone.getName(), new SimpleEntry<JComponent, String>(pickZone, get("timezone")));
+        components.put(useLocal.getName(), new SimpleEntry<JComponent, String>(useLocal, get("local")));
 
         return panel;
     }
@@ -246,8 +260,8 @@ public class SearchSettings extends Setting {
     public boolean applyChanges() {
         boolean valid = true;
 
-        String min_id = ((JTextComponent) components.get("min_id")).getText();
-        String max_id = ((JTextComponent) components.get("max_id")).getText();
+        String min_id = components.get("min_id").getValue();
+        String max_id = components.get("max_id").getValue();
 
         if (isLongValid(min_id) && isLongValid(max_id)) {
             Long textA, textB;
@@ -260,8 +274,8 @@ public class SearchSettings extends Setting {
             } else valid = false;
         } else valid = false;
 
-        String local = ((JCheckBox) components.get("local")).isSelected() ? "true" : "false";
-        String timezone = ((JComboBox<?>) components.get("timezone")).getSelectedItem().toString();
+        String local = components.get("local").getValue();
+        String timezone = components.get("timezone").getValue();
 
         set("local", local);
         set("timezone", timezone);
@@ -275,34 +289,5 @@ public class SearchSettings extends Setting {
         }
 
         return false; // if it goes past the try-catch block we return invalid
-    }
-
-    @Override
-    public void isModified() {
-        try {
-            MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = getHash();
-            
-            List<String> strList = new ArrayList<>();
-
-            strList.add(String.valueOf(((JCheckBox) components.get("local")).isSelected()));
-            strList.add(((JTextComponent) components.get("min_id")).getText());
-            strList.add(((JTextComponent) components.get("max_id")).getText());
-            strList.add(((JComboBox<?>) components.get("timezone")).getSelectedItem().toString());
-            // can't wait to have to add more to this manually as settings expand e.e
-
-            strList.sort((str1, str2) -> str1.length() - str2.length());
-
-            strList.forEach((string) -> mDigest.update(string.getBytes()));
-
-            byte[] output = mDigest.digest();
-
-            boolean equal = MessageDigest.isEqual(hash, output);
-
-            SettingsMenu.state.setSaveState(getId().toString(), equal);
-            SettingsMenu.state.notifyUser();
-        } catch (IOException | NoSuchAlgorithmException errs) {
-            ErrorHandler.report(errs);
-        }
     }
 }

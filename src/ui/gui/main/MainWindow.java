@@ -231,6 +231,7 @@ public class MainWindow {
 
     public static void externalPlayerSearch(Number id) {
         lastModifed = "id";
+        showingError = false;
 
         SwingWorker<Void, Void> searcher = new SwingWorker<Void, Void>() {
             @Override
@@ -248,6 +249,8 @@ public class MainWindow {
                 } catch (InterruptedException | ExecutionException ex) {
                     ex.printStackTrace();
                     presentError(ErrorType.PLAYER, id.toString());
+                } finally {
+                    components.get("errMsg").getParent().setVisible(showingError); // the error box itself
                 }
             }
         };

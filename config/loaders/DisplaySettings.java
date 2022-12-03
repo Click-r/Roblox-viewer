@@ -8,23 +8,20 @@ import java.io.IOException;
 
 import java.nio.charset.Charset;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.util.AbstractMap.SimpleEntry;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import javax.swing.JComponent;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.border.*;
 import javax.swing.event.*;
+import javax.swing.text.JTextComponent;
 
 import loaders.base.*;
 
 import ui.gui.err.ErrorHandler;
-import ui.gui.utilities.SettingsMenu;
 
 public class DisplaySettings extends Setting {
 
@@ -80,6 +77,7 @@ public class DisplaySettings extends Setting {
         usernameInput.setToolTipText("Must be a username");
         usernameInput.setText(get("start_user"));
         usernameInput.setName("start_user");
+        usernameInput.getDocument().putProperty("parentComponent", usernameInput);
 
         themeSetting.add(themeSelection);
         themeSetting.add(restartReminder);
@@ -90,21 +88,32 @@ public class DisplaySettings extends Setting {
         DocumentListener docListen = new DocumentListener(){
             @Override
             public void insertUpdate(DocumentEvent e) {
+                JTextComponent comp = ((JTextComponent) e.getDocument().getProperty("parentComponent"));
+
+                String text = comp.getText();
+                components.get(comp.getName()).setValue(text);
+
                 isModified();
             }
             @Override
             public void removeUpdate(DocumentEvent e) {
-                isModified();
+                insertUpdate(e);
             }
             @Override
             public void changedUpdate(DocumentEvent e) {
-                isModified();
+                insertUpdate(e);
             }
         };
 
         ActionListener actListener = new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) {
+                JComponent comp = (JComponent) e.getSource();
+
+                if (comp instanceof JComboBox) {
+                    components.get(comp.getName()).setValue(String.valueOf(((JComboBox<?>) comp).getSelectedIndex()));
+                }
+
                 isModified();
             }
         };
@@ -115,8 +124,8 @@ public class DisplaySettings extends Setting {
         dispPanel.add(themeSetting);
         dispPanel.add(userDisplaySetting);
 
-        components.put("current_theme", themeSelection);
-        components.put("start_user", usernameInput);
+        components.put("current_theme", new SimpleEntry<JComponent, String>(themeSelection, get("current_theme")));
+        components.put("start_user", new SimpleEntry<JComponent, String>(usernameInput, get("start_user")));
 
         return dispPanel;
     }
@@ -126,13 +135,13 @@ public class DisplaySettings extends Setting {
     public boolean applyChanges() {
         boolean valid = true;
 
-        String newStartUser = ((JTextField) components.get("start_user")).getText();
+        String newStartUser = components.get("start_user").getValue();
 
         if (Charset.forName("US-ASCII").newEncoder().canEncode(newStartUser)) { // make sure it is an ascii name
             set("start_user", newStartUser);
         } else valid = false;
 
-        String themeNum = String.valueOf(((JComboBox<?>) components.get("current_theme")).getSelectedIndex());
+        String themeNum = components.get("current_theme").getValue();
 
         if (themeNum.matches("[0-1]") && themeNum.length() == 1) {
             set("current_theme", themeNum);
@@ -151,31 +160,4 @@ public class DisplaySettings extends Setting {
 
         return false;
     }
-
-    @Override
-    public void isModified() {
-        try {
-            MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = getHash();
-
-            List<String> strList = new ArrayList<>();
-
-            strList.add(String.valueOf(((JComboBox<?>) components.get("current_theme")).getSelectedIndex()));
-            strList.add(((JTextField) components.get("start_user")).getText());
-
-            strList.sort((str1, str2) -> str1.length() - str2.length());
-
-            strList.forEach((string) -> mDigest.update(string.getBytes()));
-
-            byte[] output = mDigest.digest();
-
-            boolean equal = MessageDigest.isEqual(hash, output);
-            
-            SettingsMenu.state.setSaveState(getId().toString(), equal);
-            SettingsMenu.state.notifyUser();
-        } catch (NoSuchAlgorithmException | IOException exc) {
-            ErrorHandler.report(exc);
-        }
-    }
-    
 }

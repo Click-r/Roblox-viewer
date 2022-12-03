@@ -8,8 +8,11 @@ import java.io.InputStream;
 
 import java.nio.file.Paths;
 
+import java.util.AbstractMap.SimpleEntry;
+
 import java.util.Properties;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,11 +28,14 @@ import java.security.NoSuchAlgorithmException;
 
 import main.Controller;
 
+import ui.gui.err.ErrorHandler;
+import ui.gui.utilities.SettingsMenu;
+
 public abstract class Setting {
     protected SettingId id;
     protected String path;
     protected Properties configFile;
-    protected Map<String, JComponent> components;
+    protected Map<String, SimpleEntry<JComponent, String>> components;
 
     public Setting(SettingId create) throws IOException {
         id = create;
@@ -39,7 +45,7 @@ public abstract class Setting {
         path = Controller.runningAsJar ? System.getProperty("user.dir") + "/" + path : path; // distinction between IDE and jar
 
         configFile = getConfig();
-        components = new HashMap<String, JComponent>();
+        components = new HashMap<String, SimpleEntry<JComponent, String>>();
     }
 
     public SettingId getId() {
@@ -51,8 +57,10 @@ public abstract class Setting {
     }
 
     private void resetInputsUI() {
-        components.forEach((setting, component) -> {
+        components.forEach((setting, pair) -> {
             String setValue = get(setting + "_DEFAULT");
+
+            JComponent component = pair.getKey();
 
             if (component instanceof JTextComponent) {
                 ((JTextComponent) component).setText(setValue);
@@ -125,16 +133,38 @@ public abstract class Setting {
 
         config.forEach((name, value) -> {
             if (!((String)name).endsWith("_DEFAULT"))
-                strList.add(value.toString());
+                strList.add(name.toString() + value.toString());
         });
 
-        strList.sort((str1, str2) -> str1.length() - str2.length());
+        Collections.sort(strList);
 
         strList.forEach((string) -> mDigest.update(string.getBytes()));
 
         byte[] output = mDigest.digest();
 
         return output;
+    }
+
+    public void isModified() {
+        try {
+            MessageDigest mDigest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = getHash();
+
+            List<String> valList = new ArrayList<>();
+            components.forEach((settingName, pair) -> valList.add(settingName + pair.getValue()));
+
+            Collections.sort(valList);
+
+            valList.forEach(string -> mDigest.update(string.getBytes()));
+            byte[] output = mDigest.digest();
+
+            boolean equal = MessageDigest.isEqual(hash, output);
+
+            SettingsMenu.state.setSaveState(getId().toString(), equal);
+            SettingsMenu.state.notifyUser();
+        } catch (NoSuchAlgorithmException | IOException excs) {
+            ErrorHandler.report(excs);
+        }
     }
 
     public void set(String key, String value) {
@@ -148,6 +178,4 @@ public abstract class Setting {
     abstract public JPanel getSettingPanel(Rectangle bounds);
 
     abstract public boolean applyChanges();
-
-    abstract public void isModified();
 }
