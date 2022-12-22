@@ -4,10 +4,13 @@ import java.net.URISyntaxException;
 
 import java.nio.file.*;
 
+import loaders.AdvancedSettings;
+
 import java.io.IOException;
 
 import ui.gui.err.ErrorHandler;
 import ui.gui.main.MainWindow;
+import ui.gui.utilities.DebugConsole;
 
 public class Controller {
     public final static String version = "1.3b";
@@ -68,10 +71,16 @@ public class Controller {
         // TODO: clean this up sometime
     }
 
-    public static void main(String[] args) throws URISyntaxException {
+    public static void main(String[] args) throws URISyntaxException, IOException {
         System.setProperty("file.encoding", "UTF-8");
 
         initFiles();
+
+        AdvancedSettings advSettings = new AdvancedSettings();
+
+        if (Boolean.valueOf(advSettings.get("debugConsole"))) {
+            DebugConsole.display();
+        }
 
         MainWindow mw = new MainWindow();
         mw.display();

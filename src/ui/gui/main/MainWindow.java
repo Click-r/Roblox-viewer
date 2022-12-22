@@ -69,7 +69,7 @@ public class MainWindow {
     private JTextComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo, Map<String, Color> palette){
         final Color text = palette.get("text");
         
-        JTextPane ioDISP = new JTextPane();
+        JTextPane ioDISP = new JTextPane(); // TODO: change this to JLabel w/ text
         ioDISP.setText(inpOutInfo + ":");
         if (last == null)
             ioDISP.setBounds(4, 15, 67, 25);
