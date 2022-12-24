@@ -2,6 +2,7 @@ package ui.gui.utilities;
 
 import java.awt.Dimension;
 
+import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
 import java.awt.Color;
@@ -22,7 +23,41 @@ import javax.swing.border.LineBorder;
 import main.Controller;
 
 public class DebugConsole extends JFrame {
-    private static PrintStream receiving;
+    
+    private static class LogStream extends ByteArrayOutputStream {
+        private static JTextArea receive;
+
+        private int prev = 0;
+
+        public LogStream(JTextArea writeTo) {
+            super();
+            receive = writeTo;
+        }
+
+        @Override
+        public void write(int b) {
+            super.write(b);
+
+            receive.append(Character.toString((char) b));
+        }
+
+        
+        @Override
+        public void write(byte[] b, int off, int len) {
+            super.write(b, off, len);
+            
+            if (len == 2 && ("" + (char) b[0] + (char) b[1]).equals("\r\n")) {
+                receive.append("\r\n"); // account for the newline write
+            } else {
+                for (int i = prev; i < count; i++)
+                    receive.append(Character.toString((char) buf[i]));
+            }
+
+            prev = count;
+        }
+    }
+
+    private static LogStream receiving;
 
     private static JFrame build() {
         JFrame frame = new JFrame(Controller.title + " - Debug Console");
@@ -57,6 +92,7 @@ public class DebugConsole extends JFrame {
         log.setLineWrap(true);
         log.setWrapStyleWord(true);
         log.setBorder(new LineBorder(new Color(0, 0, 0), 1));
+        receiving = new LogStream(log);
 
         JScrollPane logScroll = new JScrollPane(log);
         logScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -145,5 +181,8 @@ public class DebugConsole extends JFrame {
 
     public static void display() {
         build();
+
+        System.setOut(new PrintStream(receiving));
+        //System.out.println("Hello Worldddddddddddddddddddddddddddddddddd!");
     }
 }
