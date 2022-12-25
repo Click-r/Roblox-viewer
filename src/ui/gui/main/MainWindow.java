@@ -66,24 +66,27 @@ public class MainWindow {
         IMAGE
     };
 
-    private JTextComponent createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo, Map<String, Color> palette){
+    private JLabel createIOField(JComponent parentTo, String inpOutInfo, JComponent last, Color backG, boolean editable, int w, int h, String Default, HashMap<String, JTextComponent> appendTo, Map<String, Color> palette){
         final Color text = palette.get("text");
         
-        JTextPane ioDISP = new JTextPane(); // TODO: change this to JLabel w/ text
+        JLabel ioDISP = new JLabel(inpOutInfo + ":");
+        ioDISP.setHorizontalAlignment(SwingConstants.LEFT);
         ioDISP.setText(inpOutInfo + ":");
         if (last == null)
-            ioDISP.setBounds(4, 15, 67, 25);
+            ioDISP.setBounds(5, 15, 67, 25);
         else
-            ioDISP.setBounds(4, last.getY() + 10 + 20, 67, 25);
-        ioDISP.setEditable(false);
+            ioDISP.setBounds(5, last.getY() + 10 + 20, 67, 25);
         ioDISP.setBackground(backG);
         ioDISP.setOpaque(true);
         ioDISP.setForeground(text);
 
+        Font labelFont = ioDISP.getFont();
+        ioDISP.setFont(labelFont.deriveFont(labelFont.getStyle() & ~Font.BOLD)); // unbold it
+
         JTextField ioF = new JTextField();
         ioF.setBorder(null);
         ioF.setColumns(1);
-        ioF.setBounds(ioDISP.getWidth() + 4, ioDISP.getY(), w, h);
+        ioF.setBounds(ioDISP.getWidth() + ioDISP.getX(), ioDISP.getY(), w, h);
         ioF.setEditable(editable);
         ioF.setHorizontalAlignment(JTextField.LEFT);
         ioF.setBackground(palette.get("background"));
@@ -279,8 +282,6 @@ public class MainWindow {
         } catch (IOException ioex) {
             ErrorHandler.report(ioex);
         }
-
-        JTextComponent lastTxt = null;
 
         int x,y;
         x = 800;
@@ -481,6 +482,8 @@ public class MainWindow {
         imageSection.add(openOutfits);
 
         toolbar = new ToolBarManager(frame);
+
+        JLabel lastTxt = null;
 
         HashMap<String, JTextComponent> comps = new HashMap<>();
 

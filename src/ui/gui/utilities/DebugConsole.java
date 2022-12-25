@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
+import java.util.Calendar;
+
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Insets;
@@ -25,9 +27,10 @@ import main.Controller;
 public class DebugConsole extends JFrame {
     
     private static class LogStream extends ByteArrayOutputStream {
-        private static JTextArea receive;
+        private JTextArea receive;
 
         private int prev = 0;
+        private String toAppend = "";
 
         public LogStream(JTextArea writeTo) {
             super();
@@ -45,12 +48,23 @@ public class DebugConsole extends JFrame {
         @Override
         public void write(byte[] b, int off, int len) {
             super.write(b, off, len);
+
+            if (toAppend.isEmpty()) {
+                Calendar time = Calendar.getInstance();
+                String timeString = String.format("[%d:%d:%d] ",
+                                                  time.get(Calendar.HOUR_OF_DAY),
+                                                  time.get(Calendar.MINUTE),
+                                                  time.get(Calendar.SECOND));
+                
+                toAppend += timeString;
+            }
+
+            for (int i = prev; i < count; i++)
+                toAppend += (char) buf[i];
             
-            if (len == 2 && ("" + (char) b[0] + (char) b[1]).equals("\r\n")) {
-                receive.append("\r\n"); // account for the newline write
-            } else {
-                for (int i = prev; i < count; i++)
-                    receive.append(Character.toString((char) buf[i]));
+            if ((char) b[len - 1] == '\n') {
+                receive.append(toAppend);
+                toAppend = "";
             }
 
             prev = count;
