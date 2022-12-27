@@ -626,7 +626,7 @@ public class MainWindow {
 
                     long min, max, newId;
                     min = 1L;
-                    max = 3_000_000_000L;
+                    max = 4_000_000_000L;
                     newId = min;
 
                     try {

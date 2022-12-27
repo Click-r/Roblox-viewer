@@ -13,7 +13,7 @@ import ui.gui.main.MainWindow;
 import ui.gui.utilities.DebugConsole;
 
 public class Controller {
-    public final static String version = "1.3b";
+    public final static String version = "1.4";
     public final static String title = "RBLXInfoViewer";
     public final static String author = "Cli_ck";
 
@@ -78,9 +78,8 @@ public class Controller {
 
         AdvancedSettings advSettings = new AdvancedSettings();
 
-        if (Boolean.valueOf(advSettings.get("debugConsole"))) {
+        if (Boolean.valueOf(advSettings.get("debugConsole")))
             DebugConsole.display();
-        }
 
         MainWindow mw = new MainWindow();
         mw.display();

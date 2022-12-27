@@ -1,8 +1,15 @@
 package ui.gui.utilities;
 
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 
 import java.util.Calendar;
@@ -28,12 +35,15 @@ public class DebugConsole extends JFrame {
     
     private static class LogStream extends ByteArrayOutputStream {
         private JTextArea receive;
+        private String pref;
 
         private int prev = 0;
         private String toAppend = "";
 
-        public LogStream(JTextArea writeTo) {
+        public LogStream(JTextArea writeTo, String prefix) {
             super();
+
+            pref = prefix;
             receive = writeTo;
         }
 
@@ -51,12 +61,12 @@ public class DebugConsole extends JFrame {
 
             if (toAppend.isEmpty()) {
                 Calendar time = Calendar.getInstance();
-                String timeString = String.format("[%d:%d:%d] ",
+                String timeString = String.format("[%02d:%02d:%02d] ",
                                                   time.get(Calendar.HOUR_OF_DAY),
                                                   time.get(Calendar.MINUTE),
                                                   time.get(Calendar.SECOND));
                 
-                toAppend += timeString;
+                toAppend += timeString + pref + " ";
             }
 
             for (int i = prev; i < count; i++)
@@ -71,7 +81,8 @@ public class DebugConsole extends JFrame {
         }
     }
 
-    private static LogStream receiving;
+    private static LogStream stdoutRecv;
+    private static LogStream stderrRecv;
 
     private static JFrame build() {
         JFrame frame = new JFrame(Controller.title + " - Debug Console");
@@ -85,7 +96,24 @@ public class DebugConsole extends JFrame {
         frame.setResizable(true);
         frame.setBackground(bgcolour);
         frame.setLayout(new GridBagLayout());
-        frame.setVisible(true);
+
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                if (stdoutRecv != null && stderrRecv != null) { // if these are not null, they have been set -> we have permission to set the output streams
+                    System.setOut(new PrintStream(new FileOutputStream(FileDescriptor.out)));
+                    System.setErr(new PrintStream(new FileOutputStream(FileDescriptor.err)));
+                }
+                // redirect output and error streams to original source
+
+                try {
+                    stdoutRecv.close();
+                    stderrRecv.close();
+                } catch (IOException iex) {
+                    iex.printStackTrace();
+                }
+            }
+        });
 
         GridBagConstraints c = new GridBagConstraints();
 
@@ -106,7 +134,8 @@ public class DebugConsole extends JFrame {
         log.setLineWrap(true);
         log.setWrapStyleWord(true);
         log.setBorder(new LineBorder(new Color(0, 0, 0), 1));
-        receiving = new LogStream(log);
+        stdoutRecv = new LogStream(log, "[STDOUT]");
+        stderrRecv = new LogStream(log, "[STDERR]");
 
         JScrollPane logScroll = new JScrollPane(log);
         logScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -133,7 +162,7 @@ public class DebugConsole extends JFrame {
         c.ipady = 0;
         textPanel.add(inpDisplayText, c);
 
-        JTextField commandLine = new JTextField();
+        JTextField commandLine = new JTextField(); // TODO: input commands
         c.fill = GridBagConstraints.HORIZONTAL;
         c.gridwidth = GridBagConstraints.REMAINDER;
         c.gridx = 1;
@@ -161,6 +190,12 @@ public class DebugConsole extends JFrame {
 
         clearButton = new JButton("Clear");
         clearButton.setCursor(cursor);
+        clearButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                log.setText("");
+            }
+        });
         c.gridx = 0;
         c.gridy = 0;
         c.gridwidth = 1;
@@ -180,6 +215,12 @@ public class DebugConsole extends JFrame {
 
         closeButton = new JButton("Close");
         closeButton.setCursor(cursor);
+        closeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose();
+            }
+        });
         c.gridx = 2;
         c.gridy = 0;
         c.gridwidth = 1;
@@ -194,9 +235,17 @@ public class DebugConsole extends JFrame {
     }
 
     public static void display() {
-        build();
+        JFrame frame = build();
 
-        System.setOut(new PrintStream(receiving));
-        //System.out.println("Hello Worldddddddddddddddddddddddddddddddddd!");
+        try {
+            System.setOut(new PrintStream(stdoutRecv));
+            System.setErr(new PrintStream(stderrRecv));
+
+            frame.setVisible(true);
+        } catch (SecurityException exc) {
+            System.out.println("Insufficient permissions for changing stdout and stderr.");
+
+            frame.dispose();
+        }
     }
 }
