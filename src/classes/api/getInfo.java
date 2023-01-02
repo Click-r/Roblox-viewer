@@ -29,7 +29,7 @@ import ui.gui.err.ErrorHandler;
 
 public class getInfo {
 
-    final public static int numData = classes.Player.class.getFields().length;
+    final public static int numData = Player.class.getFields().length;
     final public static int numEndpoints = 5;
 
     @SuppressWarnings("static-access")

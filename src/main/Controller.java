@@ -11,6 +11,7 @@ import java.io.IOException;
 import ui.gui.err.ErrorHandler;
 import ui.gui.main.MainWindow;
 import ui.gui.utilities.DebugConsole;
+import ui.gui.utilities.SearchHistory;
 
 public class Controller {
     public final static String version = "1.4";
@@ -54,7 +55,6 @@ public class Controller {
         } // deals with the settings directory
 
         target = current + "\\misc";
-
         Path misc = Paths.get(target);
 
         if (Files.isDirectory(misc) || !runningAsJar) {
@@ -68,6 +68,25 @@ public class Controller {
             }
         } // deals with misc directory
 
+        target = current + "\\cache";
+        Path cache = Paths.get(target);
+
+        if (Files.isDirectory(cache) || !runningAsJar) {
+            System.out.println("Cache exists");
+        } else {
+            try {
+                Files.createDirectory(cache);
+
+                Path playersDir = Paths.get(target + "\\players");
+                Files.createDirectory(playersDir);
+
+                Path logsDir = Paths.get(target + "\\logs");
+                Files.createDirectory(logsDir);
+            } catch (IOException iex) {
+                ErrorHandler.report(iex);
+            }
+        }
+
         // TODO: clean this up sometime
     }
 
@@ -80,6 +99,8 @@ public class Controller {
 
         if (Boolean.valueOf(advSettings.get("debugConsole")))
             DebugConsole.display();
+        
+        SearchHistory.display();
 
         MainWindow mw = new MainWindow();
         mw.display();

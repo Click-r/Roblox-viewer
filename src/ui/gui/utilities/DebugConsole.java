@@ -60,12 +60,7 @@ public class DebugConsole extends JFrame {
             super.write(b, off, len);
 
             if (toAppend.isEmpty()) {
-                Calendar time = Calendar.getInstance();
-                String timeString = String.format("[%02d:%02d:%02d] ",
-                                                  time.get(Calendar.HOUR_OF_DAY),
-                                                  time.get(Calendar.MINUTE),
-                                                  time.get(Calendar.SECOND));
-                
+                String timeString = String.format("[%tT] ", Calendar.getInstance());
                 toAppend += timeString + pref + " ";
             }
 
@@ -86,7 +81,7 @@ public class DebugConsole extends JFrame {
 
     private static JFrame build() {
         JFrame frame = new JFrame(Controller.title + " - Debug Console");
-        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        frame.setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 
         final Color bgcolour = new Color(238, 238, 238);
 

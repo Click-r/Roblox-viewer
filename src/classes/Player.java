@@ -10,20 +10,24 @@ import java.util.Set;
 
 import java.awt.Image;
 
+import java.io.Serializable;
+
+import classes.api.Cacher;
 import classes.api.getInfo;
 
 import ui.gui.err.ErrorHandler;
 
 /** A class for the player which allows for general information to be retrieved. Utilizies ROBLOX API endpoints to retrieve the data. */
-public class Player {
+public class Player implements Serializable {
 
-    private long delay = -1L; // ping
+    private transient long delay = -1L; // ping
+    private static final long serialVersionUID = 87846547L;
 
     public Long id;
     public String name, created, description, lastonline, dispname;
     public Integer friends, followings, followers;
     public Boolean banned, online;
-    public Image image;
+    public transient Image image; // bufferedimages are not serializable in and of themselves
 
     /**
      * <p>Takes any <code>Number</code> as a user ID and retrieves information about the user.</p>
@@ -39,6 +43,8 @@ public class Player {
             long now = System.currentTimeMillis();
             load(getInfo.getInformation(num));
             delay = (System.currentTimeMillis() - now) / getInfo.numEndpoints;
+
+            cachePlr();
         } catch (NumberFormatException | SocketTimeoutException err) {}
     }
 
@@ -54,6 +60,8 @@ public class Player {
         long now = System.currentTimeMillis();
         load(getInfo.searchByUsername(username));
         delay = (System.currentTimeMillis() - now) / getInfo.numEndpoints;
+
+        cachePlr();
     }
     
     /**
@@ -91,6 +99,11 @@ public class Player {
 
     public long getDelay() {
         return delay;
+    }
+
+    private void cachePlr() {
+        Cacher cache = new Cacher();
+        cache.writePlayerObject(this);
     }
 
     private void load(Map<String, Object> data) {
