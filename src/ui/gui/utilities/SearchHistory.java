@@ -49,6 +49,7 @@ public class SearchHistory extends JFrame {
 
         JPanel labelsPanel = new JPanel(new GridBagLayout());
         labelsPanel.setBackground(bgcolour);
+        labelsPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(0, 0, 0)));
         c.gridx = 0;
         c.gridy = 0;
         c.anchor = GridBagConstraints.FIRST_LINE_START;

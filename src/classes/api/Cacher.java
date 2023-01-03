@@ -1,5 +1,6 @@
 package classes.api;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,6 +11,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Deque;
+import java.util.concurrent.LinkedBlockingDeque;
+
 import classes.Player;
 
 import main.Controller;
@@ -18,13 +24,43 @@ public class Cacher {
     final static boolean runningAsJar = Controller.runningAsJar;
     private static Path cacheDir;
 
+    private static int maxEntries = 5;
+    private static Deque<File> entries = new LinkedBlockingDeque<>(maxEntries);
+
     public Cacher() {
+
         if (cacheDir == null) {
             String current = System.getProperty("user.dir");
             Path dirPath = Paths.get(current + "\\cache");
 
-            if (Files.isDirectory(dirPath) && runningAsJar)
+            if (Files.isDirectory(dirPath) && runningAsJar) {
                 cacheDir = dirPath;
+
+                File[] playerFiles = Paths.get(dirPath + "\\players").toFile().listFiles();
+                Arrays.sort(playerFiles, (file1, file2) -> {
+                    String fileStr1 = ((File) file1).getName().replaceAll("[^\\d]", ""); // clear string name of alphabetical characters
+                    Date fileDate1 = new Date(Long.valueOf(fileStr1));
+
+                    String fileStr2 = ((File) file2).getName().replaceAll("[^\\d]", "");
+                    Date fileDate2 = new Date(Long.valueOf(fileStr2));
+
+                    return fileDate1.compareTo(fileDate2);
+                }); // this sorts the files into ascending order based on time created
+
+                for (int idx = playerFiles.length - 1; idx >= 0; idx--) {
+                    File file = playerFiles[idx];
+
+                    if (file.isFile() && file.getName().endsWith(".plyr")) { // safety checks
+                        if (entries.size() < maxEntries) {
+                            entries.offerFirst(file);
+                        } else {
+                            boolean deleted = file.delete();
+                            if (!deleted)
+                                System.out.println("Couldn't delete " + file.getName());
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -32,8 +68,22 @@ public class Cacher {
         String saveAs = "Player_" + System.currentTimeMillis();
 
         if (runningAsJar) {
-            try (ObjectOutputStream objOutput = new ObjectOutputStream(new FileOutputStream(cacheDir + "\\players\\" + saveAs + ".plyr"))) {
+            String name = cacheDir + "\\players\\" + saveAs + ".plyr";
+
+            try (ObjectOutputStream objOutput = new ObjectOutputStream(new FileOutputStream(name))) {
                 objOutput.writeObject(plr);
+                
+                File toAdd = new File(name);
+                boolean success = entries.offerFirst(toAdd);
+
+                if (!success) {
+                    File removed = entries.removeLast();
+
+                    if (!removed.delete())
+                        System.out.println("Couldn't delete " + removed.getName());
+                    
+                    entries.offerFirst(toAdd);
+                }
             } catch (IOException excp) {
                 excp.printStackTrace();
             }
