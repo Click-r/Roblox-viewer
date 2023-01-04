@@ -24,8 +24,8 @@ public class Cacher {
     final static boolean runningAsJar = Controller.runningAsJar;
     private static Path cacheDir;
 
-    private static int maxEntries = 5;
-    private static Deque<File> entries = new LinkedBlockingDeque<>(maxEntries);
+    public static final int maxEntries = 5;
+    public static Deque<File> entries = new LinkedBlockingDeque<>(maxEntries);
 
     public Cacher() {
 
@@ -51,10 +51,11 @@ public class Cacher {
                     File file = playerFiles[idx];
 
                     if (file.isFile() && file.getName().endsWith(".plyr")) { // safety checks
-                        if (entries.size() < maxEntries) {
-                            entries.offerFirst(file);
-                        } else {
+                        boolean accepted = entries.offerFirst(file);
+
+                        if (!accepted) {
                             boolean deleted = file.delete();
+
                             if (!deleted)
                                 System.out.println("Couldn't delete " + file.getName());
                         }
@@ -92,7 +93,7 @@ public class Cacher {
 
     public Object readPlayerObject(String fileName) {
         if (runningAsJar) {
-            try (ObjectInputStream objInput = new ObjectInputStream(new FileInputStream(cacheDir + "\\players\\" + fileName + ".plyr"))) {
+            try (ObjectInputStream objInput = new ObjectInputStream(new FileInputStream(cacheDir + "\\players\\" + fileName))) {
                 return objInput.readObject();
             } catch (IOException | ClassNotFoundException excp) {
                 excp.printStackTrace();
@@ -101,5 +102,4 @@ public class Cacher {
 
         return null;
     }
-
 }
