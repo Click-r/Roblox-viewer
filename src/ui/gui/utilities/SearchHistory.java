@@ -6,6 +6,8 @@ import java.awt.Insets;
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowAdapter;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -16,6 +18,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 
 import java.io.File;
 
@@ -29,20 +32,25 @@ import classes.api.Cacher;
 import main.Controller;
 
 public class SearchHistory extends JFrame {
+    private static boolean displaying = false;
     private static Map<String, JComponent> components = new HashMap<>();
+    private static Player[] playerEntries = new Player[Cacher.maxEntries];
+
+    private static Color alternatingColor(int n) {
+        if (n % 2 == 0)
+            return new Color(245, 245, 245);
+        else
+            return new Color(238, 238, 238);
+    }
 
     private static JPanel createUserEntry(Player user, int idx) {
         JPanel toCreate = new JPanel(new GridBagLayout());
-
-        if (idx % 2 == 0)
-            toCreate.setBackground(new Color(245, 245, 245));
-        else
-            toCreate.setBackground(new Color(238, 238, 238));
-        // alternating colours
+        toCreate.setBackground(alternatingColor(idx));
 
         GridBagConstraints c = new GridBagConstraints();
 
         JLabel index = new JLabel((idx + 1) + ".");
+        index.setName("idx");
         c.gridx = 0;
         c.gridy = 0;
         c.weightx = 0.5;
@@ -50,19 +58,84 @@ public class SearchHistory extends JFrame {
         c.gridwidth = 1;
         c.gridheight = GridBagConstraints.REMAINDER;
         c.anchor = GridBagConstraints.FIRST_LINE_START;
-        toCreate.add(index, c);
+        toCreate.add(index, c, 0);
 
         JLabel name = new JLabel(user.name);
         c.gridx = 1;
-        toCreate.add(name, c);
+        toCreate.add(name, c, 1);
 
         JLabel id = new JLabel(String.valueOf(user.id));
         c.gridx = 2;
-        toCreate.add(id, c);
+        toCreate.add(id, c, 2);
 
         toCreate.validate();
 
         return toCreate;
+    }
+
+    public static void lastPlayerRemoved() {
+        if (displaying) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    JPanel prevSearchesPanel = (JPanel) components.get("prevSearches");
+
+                    playerEntries[0] = null;
+                    prevSearchesPanel.remove(0);
+        
+                    GridBagConstraints c = new GridBagConstraints();
+                    c.gridx = 0;
+                    c.weightx = 1;
+                    c.weighty = 0;
+                    c.anchor = GridBagConstraints.NORTH;
+                    c.fill = GridBagConstraints.HORIZONTAL;
+                    c.gridwidth = GridBagConstraints.REMAINDER;
+                    c.gridheight = 1;
+        
+                    for (int i = 1; i <= playerEntries.length - 1; i++) {
+                        playerEntries[i - 1] = playerEntries[i];
+                        c.gridy = i - 1;
+        
+                        JPanel entry = (JPanel) prevSearchesPanel.getComponent(i - 1);
+                        prevSearchesPanel.remove(entry);
+        
+                        entry.setBackground(alternatingColor(i - 1));
+                        ((JLabel) entry.getComponent(0)).setText(i + ".");
+        
+                        prevSearchesPanel.add(entry, c, i - 1);
+                    }
+        
+                    prevSearchesPanel.revalidate();
+                }
+            });
+        }
+    }
+
+    public static void playerAdded(Player added) {
+        if (displaying) {
+            int insertAt = Cacher.entries.size() - 1;
+
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    JPanel prevSearchesPanel = (JPanel) components.get("prevSearches");
+                    GridBagConstraints c = new GridBagConstraints();
+                    c.gridx = 0;
+                    c.gridy = insertAt;
+                    c.weightx = 1;
+                    c.weighty = 0;
+                    c.anchor = GridBagConstraints.NORTH;
+                    c.fill = GridBagConstraints.HORIZONTAL;
+                    c.gridwidth = GridBagConstraints.REMAINDER;
+                    c.gridheight = 1;
+        
+                    playerEntries[insertAt] = added;
+                    prevSearchesPanel.add(createUserEntry(added, insertAt), c, insertAt);
+        
+                    prevSearchesPanel.revalidate();
+                }
+            });
+        }
     }
 
     private static JFrame build() {
@@ -77,6 +150,18 @@ public class SearchHistory extends JFrame {
         frame.setResizable(true);
         frame.setBackground(bgcolour);
         frame.setLayout(new GridBagLayout());
+
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowOpened(WindowEvent e) {
+                displaying = true;
+            }
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+                displaying = false;
+            }
+        });
 
         GridBagConstraints c = new GridBagConstraints();
 
@@ -142,7 +227,7 @@ public class SearchHistory extends JFrame {
         c.gridwidth = GridBagConstraints.REMAINDER;
         c.gridheight = GridBagConstraints.REMAINDER;
         c.fill = GridBagConstraints.BOTH;
-        searchesPanel.add(lastEntry, c);
+        searchesPanel.add(lastEntry, c, -1); // end component
 
         JScrollPane searchesScroll = new JScrollPane(searchesPanel);
         searchesScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -271,12 +356,14 @@ public class SearchHistory extends JFrame {
         actionsPanel.add(clearHist, c);
 
         JButton delEntry = new JButton("Delete Entry");
+        delEntry.setEnabled(false);
         delEntry.setCursor(buttonCursor);
         c.gridx = 1;
         c.gridy = 0;
         actionsPanel.add(delEntry, c);
 
         JButton searchEntry = new JButton("Search");
+        searchEntry.setEnabled(false);
         searchEntry.setCursor(buttonCursor);
         c.gridx = 2;
         c.gridy = 0;
@@ -288,32 +375,41 @@ public class SearchHistory extends JFrame {
     }
 
     public static void display() {
-        JFrame frame = build();
+        if (Controller.runningAsJar) {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    JFrame frame = build();
 
-        Deque<File> cacheEntries = Cacher.entries;
-        Cacher cache = new Cacher();
-
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridx = 0;
-        c.weightx = 1;
-        c.weighty = 0;
-        c.anchor = GridBagConstraints.NORTH;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.gridwidth = GridBagConstraints.REMAINDER;
-        c.gridheight = 1;
-
-        int idx = 0;
-        for (File plrFile : cacheEntries) {
-            Player player = (Player) cache.readPlayerObject(plrFile.getName());
-            JPanel entry = createUserEntry(player, idx);
-
-            c.gridy = idx;
-            components.get("prevSearches").add(entry, c);
-
-            idx++;
+                    Deque<File> cacheEntries = Cacher.entries;
+                    Cacher cache = new Cacher();
+        
+                    GridBagConstraints c = new GridBagConstraints();
+                    c.gridx = 0;
+                    c.weightx = 1;
+                    c.weighty = 0;
+                    c.anchor = GridBagConstraints.NORTH;
+                    c.fill = GridBagConstraints.HORIZONTAL;
+                    c.gridwidth = GridBagConstraints.REMAINDER;
+                    c.gridheight = 1;
+        
+                    int idx = 0;
+                    for (File plrFile : cacheEntries) {
+                        c.gridy = idx;
+        
+                        Player player = (Player) cache.readPlayerObject(plrFile.getName());
+                        JPanel entry = createUserEntry(player, idx);
+        
+                        components.get("prevSearches").add(entry, c, idx);
+                        playerEntries[idx] = player;
+        
+                        idx++;
+                    }
+        
+                    frame.pack();
+                    frame.setVisible(true);
+                }
+            });
         }
-
-        frame.pack();
-        frame.setVisible(true);
     }
 }

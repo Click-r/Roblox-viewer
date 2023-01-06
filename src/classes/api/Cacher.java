@@ -19,6 +19,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import classes.Player;
 
 import main.Controller;
+import ui.gui.utilities.SearchHistory;
 
 public class Cacher {
     final static boolean runningAsJar = Controller.runningAsJar;
@@ -80,11 +81,17 @@ public class Cacher {
                 if (!success) {
                     File removed = entries.removeLast();
 
-                    if (!removed.delete())
+                    if (!removed.delete()) {
                         System.out.println("Couldn't delete " + removed.getName());
+                        return;
+                    } else {
+                        SearchHistory.lastPlayerRemoved();
+                    }
                     
                     entries.offerFirst(toAdd);
                 }
+
+                SearchHistory.playerAdded(plr);
             } catch (IOException excp) {
                 excp.printStackTrace();
             }
@@ -101,5 +108,21 @@ public class Cacher {
         }
 
         return null;
+    }
+
+    public boolean removePlayerObject(Player toRemove) {
+        if (runningAsJar) {
+            String name = toRemove.name;
+
+            Path path = Paths.get(cacheDir + "\\players\\" + name + ".plyr");
+            File playerFile = path.toFile();
+
+            if (playerFile.exists() && playerFile.isFile()) {
+                if (entries.remove(playerFile))
+                    return playerFile.delete();
+            }
+        }
+
+        return false;
     }
 }
