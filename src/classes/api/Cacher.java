@@ -19,6 +19,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import classes.Player;
 
 import main.Controller;
+
 import ui.gui.utilities.SearchHistory;
 
 public class Cacher {

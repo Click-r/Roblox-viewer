@@ -8,6 +8,8 @@ import java.awt.GridBagLayout;
 import java.awt.GridBagConstraints;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -35,6 +37,7 @@ public class SearchHistory extends JFrame {
     private static boolean displaying = false;
     private static Map<String, JComponent> components = new HashMap<>();
     private static Player[] playerEntries = new Player[Cacher.maxEntries];
+    private static JPanel selectedEntry = null;
 
     private static Color alternatingColor(int n) {
         if (n % 2 == 0)
@@ -44,8 +47,53 @@ public class SearchHistory extends JFrame {
     }
 
     private static JPanel createUserEntry(Player user, int idx) {
+        Color normalCol = alternatingColor(idx);
+
         JPanel toCreate = new JPanel(new GridBagLayout());
-        toCreate.setBackground(alternatingColor(idx));
+        toCreate.setBackground(normalCol);
+        toCreate.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (selectedEntry != null) {
+                    String indexText = ((JLabel) selectedEntry.getComponent(0)).getText();
+                    indexText = indexText.replace(".", "");
+
+                    int idxPrevious = Integer.valueOf(indexText);
+                    selectedEntry.setBackground(alternatingColor(idxPrevious));
+                } else {
+                    ((JButton) components.get("delEntry")).setEnabled(true);
+                    ((JButton) components.get("searchEntry")).setEnabled(true);
+                }
+                
+                selectedEntry = toCreate;
+                selectedEntry.setBackground(new Color(154, 184, 211));
+
+                JTextArea infoPreviewArea = (JTextArea) components.get("infoBox");
+
+                String text = 
+                String.format("Name:%s\nID:%d\nDisplay Name:%s\nFriends:%d\nFollowings:%d\nFollowers:%d\nCreated:%s\nBanned:%s\nLast Online:%s\n\nDescription:%s",
+                          user.name, user.id, user.dispname, user.friends, user.followings, user.followers, user.created, user.banned, user.lastonline, user.description);
+                
+                infoPreviewArea.setText(text);
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (selectedEntry != toCreate) {
+                    if (idx % 2 == 0)
+                        toCreate.setBackground(new Color(147, 177, 204));
+                    else
+                        toCreate.setBackground(new Color(154, 184, 211));
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (selectedEntry != toCreate) {
+                    toCreate.setBackground(normalCol);
+                }
+            }
+        });
 
         GridBagConstraints c = new GridBagConstraints();
 
@@ -80,6 +128,14 @@ public class SearchHistory extends JFrame {
                 public void run() {
                     JPanel prevSearchesPanel = (JPanel) components.get("prevSearches");
 
+                    if (prevSearchesPanel.getComponent(0) == selectedEntry) {
+                        selectedEntry = null;
+                        ((JTextArea) components.get("infoBox")).setText("");
+
+                        ((JButton) components.get("delEntry")).setEnabled(false);
+                        ((JButton) components.get("searchEntry")).setEnabled(false);
+                    }
+
                     playerEntries[0] = null;
                     prevSearchesPanel.remove(0);
         
@@ -95,13 +151,18 @@ public class SearchHistory extends JFrame {
                     for (int i = 1; i <= playerEntries.length - 1; i++) {
                         playerEntries[i - 1] = playerEntries[i];
                         c.gridy = i - 1;
-        
+
                         JPanel entry = (JPanel) prevSearchesPanel.getComponent(i - 1);
+                        boolean isSelected = (entry == selectedEntry);
+
                         prevSearchesPanel.remove(entry);
-        
-                        entry.setBackground(alternatingColor(i - 1));
+                        
+                        if (isSelected) 
+                            entry.setBackground(new Color(154, 184, 211));
+                        else
+                            entry.setBackground(alternatingColor(i - 1));
                         ((JLabel) entry.getComponent(0)).setText(i + ".");
-        
+
                         prevSearchesPanel.add(entry, c, i - 1);
                     }
         
@@ -321,6 +382,7 @@ public class SearchHistory extends JFrame {
         infoPreview.setLineWrap(true);
         infoPreview.setWrapStyleWord(true);
         infoPreview.setEditable(false);
+        components.put("infoBox", infoPreview);
 
         JScrollPane infoScroll = new JScrollPane(infoPreview);
         infoScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -361,6 +423,7 @@ public class SearchHistory extends JFrame {
         c.gridx = 1;
         c.gridy = 0;
         actionsPanel.add(delEntry, c);
+        components.put("delEntry", delEntry);
 
         JButton searchEntry = new JButton("Search");
         searchEntry.setEnabled(false);
@@ -368,6 +431,7 @@ public class SearchHistory extends JFrame {
         c.gridx = 2;
         c.gridy = 0;
         actionsPanel.add(searchEntry, c);
+        components.put("searchEntry", searchEntry);
 
         frame.pack();
 
