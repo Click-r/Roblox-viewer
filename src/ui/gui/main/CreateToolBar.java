@@ -8,6 +8,7 @@ import javax.swing.JFrame;
 import javax.swing.JToolBar;
 
 import ui.gui.utilities.AboutMenu;
+import ui.gui.utilities.SearchHistory;
 import ui.gui.utilities.SettingsMenu;
 
 import java.util.HashMap;
@@ -21,6 +22,7 @@ public class CreateToolBar {
 
         JButton settings = new JButton("Settings");
         JButton about = new JButton("About");
+        JButton searchHistory = new JButton("Search History");
 
         settings.addActionListener(new ActionListener() {
             @Override
@@ -40,15 +42,28 @@ public class CreateToolBar {
             }
         });
 
+        searchHistory.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SearchHistory.display();
+
+                // TODO: do this one properly
+            }
+        });
+
         settings.setName("Settings");
         about.setName("About");
+        searchHistory.setName("Search History");
 
         compDict.put(settings.getName(), settings);
         compDict.put(about.getName(), about);
+        compDict.put(searchHistory.getName(), searchHistory);
 
         toolbar.add(settings);
         toolbar.addSeparator();
         toolbar.add(about);
+        toolbar.addSeparator();
+        toolbar.add(searchHistory);
         toolbar.setBounds(0, 0, target.getWidth(), 40);
 
         bar = toolbar;

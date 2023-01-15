@@ -21,12 +21,17 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+
+import java.text.SimpleDateFormat;
 
 import java.io.File;
 
 import java.util.Map;
-import java.util.Deque;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import classes.Player;
 import classes.api.Cacher;
@@ -75,6 +80,21 @@ public class SearchHistory extends JFrame {
                           user.name, user.id, user.dispname, user.friends, user.followings, user.followers, user.created, user.banned, user.lastonline, user.description);
                 
                 infoPreviewArea.setText(text);
+
+                int cacheSize = Cacher.entries.size() - 1;
+                int index = Arrays.asList(playerEntries).indexOf(user);
+                File plrFile = (File) Cacher.entries.toArray()[cacheSize - index]; // first one in our cacher entries is the last one in playerEntries
+
+                String fileName = plrFile.getName();
+                fileName = fileName.replaceAll("[^\\d]", "");
+
+                long timestamp = Long.valueOf(fileName);
+                Date date = new Date(timestamp);
+
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss z");
+                String formatted = dateFormat.format(date);
+
+                ((JLabel) components.get("infoText")).setText(String.format("User Information (Cached at %s):", formatted));
             }
 
             @Override
@@ -98,7 +118,6 @@ public class SearchHistory extends JFrame {
         GridBagConstraints c = new GridBagConstraints();
 
         JLabel index = new JLabel((idx + 1) + ".");
-        index.setName("idx");
         c.gridx = 0;
         c.gridy = 0;
         c.weightx = 0.5;
@@ -134,6 +153,7 @@ public class SearchHistory extends JFrame {
 
                         ((JButton) components.get("delEntry")).setEnabled(false);
                         ((JButton) components.get("searchEntry")).setEnabled(false);
+                        ((JLabel) components.get("infoText")).setText("User Information (Cached at {date}):");
                     }
 
                     playerEntries[0] = null;
@@ -377,6 +397,7 @@ public class SearchHistory extends JFrame {
         c.anchor = GridBagConstraints.LINE_START;
         c.fill = GridBagConstraints.HORIZONTAL;
         cachedInfoPreview.add(infoText, c);
+        components.put("infoText", infoText);
 
         JTextArea infoPreview = new JTextArea(Player.class.getFields().length - 1, 28); // subtract 1 from player fields because image is transient
         infoPreview.setLineWrap(true);
@@ -440,14 +461,14 @@ public class SearchHistory extends JFrame {
 
     public static void display() {
         if (Controller.runningAsJar) {
-            SwingUtilities.invokeLater(new Runnable() {
+            SwingWorker<Void, Void> setup = new SwingWorker<Void,Void>() {
                 @Override
-                public void run() {
+                protected Void doInBackground() throws Exception {
                     JFrame frame = build();
-
-                    Deque<File> cacheEntries = Cacher.entries;
-                    Cacher cache = new Cacher();
         
+                    Iterator<File> cacheEntries = Cacher.entries.descendingIterator();
+                    Cacher cache = new Cacher();
+                
                     GridBagConstraints c = new GridBagConstraints();
                     c.gridx = 0;
                     c.weightx = 1;
@@ -456,24 +477,39 @@ public class SearchHistory extends JFrame {
                     c.fill = GridBagConstraints.HORIZONTAL;
                     c.gridwidth = GridBagConstraints.REMAINDER;
                     c.gridheight = 1;
-        
+                
                     int idx = 0;
-                    for (File plrFile : cacheEntries) {
+                    
+                    while (cacheEntries.hasNext()) {
+                        File plrFile = cacheEntries.next();
+
                         c.gridy = idx;
-        
+                
                         Player player = (Player) cache.readPlayerObject(plrFile.getName());
                         JPanel entry = createUserEntry(player, idx);
-        
+                
                         components.get("prevSearches").add(entry, c, idx);
                         playerEntries[idx] = player;
-        
+                
                         idx++;
                     }
-        
+                
                     frame.pack();
                     frame.setVisible(true);
+
+                    return null;
                 }
-            });
+                
+                protected void done() {
+                    try {
+                        get();
+                    } catch (Exception err) {
+                        err.printStackTrace();
+                    }
+                }
+            };
+
+            setup.execute();
         }
     }
 }

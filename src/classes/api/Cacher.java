@@ -53,7 +53,7 @@ public class Cacher {
                     File file = playerFiles[idx];
 
                     if (file.isFile() && file.getName().endsWith(".plyr")) { // safety checks
-                        boolean accepted = entries.offerFirst(file);
+                        boolean accepted = entries.offerLast(file); // offer last because we're iterating backwards
 
                         if (!accepted) {
                             boolean deleted = file.delete();

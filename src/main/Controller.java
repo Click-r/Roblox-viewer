@@ -11,7 +11,6 @@ import java.io.IOException;
 import ui.gui.err.ErrorHandler;
 import ui.gui.main.MainWindow;
 import ui.gui.utilities.DebugConsole;
-import ui.gui.utilities.SearchHistory;
 
 public class Controller {
     public final static String version = "1.4";
@@ -99,8 +98,6 @@ public class Controller {
 
         if (Boolean.valueOf(advSettings.get("debugConsole")))
             DebugConsole.display();
-        
-        SearchHistory.display();
 
         MainWindow mw = new MainWindow();
         mw.display();
